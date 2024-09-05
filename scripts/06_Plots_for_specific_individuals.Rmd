@@ -1,0 +1,45 @@
+---
+title: "Individual plots"
+output: html_notebook
+---
+
+```{r}
+A <- 
+  sim_storage[[1]] %>% 
+  relocate(id) %>% 
+  arrange(id,year) %>% 
+  group_by(id) %>% 
+  # Pick an individual with OA
+  group_by(id) %>% 
+  mutate(oa_x=max(oa)) %>% 
+  filter(oa_x>0) %>% 
+  # Pick an individual with a TKA
+  mutate(tka_x=max(tka)) %>% 
+  filter(tka_x>0) %>% 
+  # Pick young in 2013
+  mutate(age2013=max(ifelse(year==2013,age,0))) %>% 
+  filter(age2013<50) %>% 
+  # Someone who didn't have oa in 2013 
+  mutate(oa2013=max(ifelse(year==2013&oa==1,1,0))) %>% 
+  filter(oa2013<1) %>%  
+  select(id,age,oa,tka,bmi,oacost)
+```
+
+```{r}
+Z <- 
+  A %>% 
+  filter(id==255) %>%
+  pivot_longer(cols=-c(id,age),names_to = 'var',values_to = 'y') 
+
+
+Z %>% 
+  ggplot(aes(x=age,y=y,color=var)) +
+  geom_line() +
+  facet_grid(rows = vars(var),scales = 'free_y') +
+  labs(x="Age",y="") +
+  scale_x_continuous(breaks = scales::pretty_breaks()) +
+  scale_y_continuous(breaks= scales::pretty_breaks()) +
+  theme_minimal() +
+    theme(legend.position = 'none')
+  
+```

@@ -1,0 +1,366 @@
+---
+title: "Model validation"
+author: "AUS-OA"
+date: "2024-03-11"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    code_folding: hide
+---
+
+# Overview
+
+This section compares the simulated results with data.
+
+```{r}
+# Markdown options
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+options(dplyr.summarise.inform = FALSE)
+
+# Packages
+if (!require("pacman")) install.packages("pacman")
+p_load(
+  here,       # for file paths
+  readxl,     # for reading in excel files
+  tidyverse,  # for data manipulation
+  logr,       # for logging
+  arrow,       # for parquet files (parquet takes less space than csv)
+  gt          # for table development and display
+)
+options(dplyr.summarise.inform = FALSE) 
+
+# Graph options
+my_theme <- 
+  theme_bw(base_family = 'serif') +
+  theme(
+    axis.title.x = element_text(margin = margin(t = 10),size=14),
+    axis.title.y =element_text(margin = margin(r = 10),size=14),
+    axis.text = element_text(size = 12),
+    legend.background = element_blank(),
+    legend.text = element_text(size=14),
+    legend.title = element_text(size=16)
+  ) 
+theme_set(my_theme)
+colors <- c('#EE7733', '#0077BB', '#EE3377', '#009988', '#33BBEE', '#CC3311', 
+            'darkmagenta','black','tan4',"firebrick","#B2DF8A"  )
+
+# Load graph functions
+source(here('scripts','functions','graph_functions_fcn.R'))
+
+```
+
+
+# Simulation setup
+```{r}
+sim_setup %>% 
+  kbl() %>% 
+   kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+
+```{r include=FALSE}
+Mstat <- Model_stats %>% filter(year<=2025) %>% 
+  rename(mean=Mean_mean, lower_CI=Mean_lower_CI, upper_CI=Mean_upper_CI)
+
+## Function to plot observed vs simulated data
+plot_data <- 
+  function(data, y_axis_title) {
+    fig <- 
+      ggplot(data, aes(x = year)) +
+      geom_line(
+        data= data %>% filter(Source=='Simulated'),
+        aes(y = mean, color = Source)
+      ) +
+      
+      
+      facet_grid(sex ~ age_group) +
+      theme(legend.position = 'top', axis.text.x = element_text(angle = 45, hjust = 1)) +
+      
+      geom_point(
+        data = data %>% filter(Source == 'Observed'),
+        aes(y = mean, x = year, color = Source)) +
+      
+      geom_errorbar(
+        data = data %>% filter(Source == 'Observed'), 
+        aes(x = year, ymin = lower_CI, ymax = upper_CI), width = 0.2) +
+      scale_x_continuous(breaks = scales::pretty_breaks()) +
+      scale_color_manual(values = colors) +
+      scale_fill_manual(values = colors) +
+      labs(
+        title = "",
+        x = "Year",
+        y = y_axis_title,
+        color = "",
+        fill = ""
+      )
+    
+    if(probabilistic==T){
+      fig <- 
+        fig + 
+        geom_ribbon(
+          data = data %>% filter(Source == 'Simulated'),
+          aes(ymin = lower_CI, ymax = upper_CI), 
+          fill = "blue", alpha = 0.25) 
+    }
+    fig
+  }
+
+```
+
+# BMI
+```{r}
+A <- 
+  bind_rows(
+    read_csv(here('supporting_data','Cleaned_validation_data_BMI.csv'),
+             show_col_types = F) %>% 
+      mutate(Source='Observed') %>% 
+      filter(age_cat!='75–84') %>% 
+      mutate(age_cat=ifelse(age_cat=='85 years and over'|age_cat=='75 years and over',
+                            '75+',age_cat)) %>% 
+      rename(age_group=age_cat) %>% 
+      select(Source,year,sex,age_group,mean,lower_CI,upper_CI) ,
+    
+    Mstat %>% 
+      ungroup() %>% 
+      filter(str_detect(variable,'bmi_overweight_or_obese')) %>% 
+      mutate(Source='Simulated') %>% 
+      select(Source,year,sex,age_group,mean,lower_CI,upper_CI)
+  ) %>% 
+  filter(!str_detect(age_group,'All')) %>% 
+  # Age groups are looking funny... harmonize
+  mutate(
+    age_group =
+      case_when(
+        str_detect(age_group,'45') ~ '45-54',
+        str_detect(age_group,'55') ~ '55-64',
+        str_detect(age_group,'65') ~ '65-74',
+        str_detect(age_group,'75') ~ '75+'
+      )
+  ) %>% 
+  filter(!is.na(age_group)) %>% 
+  mutate(sex=ifelse(str_detect(sex,'Male'),'Male','Female'))
+
+
+# Plot
+plot_data(A, "Overweight or obese (%)")
+
+ggsave(
+  here('output','figures',
+       paste0('AUS_OA_Validation_BMI_',
+              scenario,'_',scenario,
+              ".png")
+       ), 
+       width = 10, height = 10, units = "in", dpi=300)
+
+
+
+```
+
+# OA
+```{r}
+# Load OA observed and simulated
+A <- 
+  bind_rows(
+    read_csv(
+      here('supporting_data','Cleaned_validation_data_OA.csv'),
+      show_col_types = F
+    ) %>% 
+      mutate(Source='Observed') %>%
+      filter(sex!='All') %>%
+      rename(mean=percent) %>% 
+      select(Source,year,sex,age_group,mean,lower_CI,upper_CI) ,
+    Mstat %>%
+      ungroup() %>%
+      filter(variable=='oa') %>%
+      mutate(Source='Simulated') %>%
+      select(Source,year,sex,age_group,mean,lower_CI,upper_CI) %>% 
+      filter(age_group!='All 45 years and above')
+  ) %>% 
+  filter(!str_detect(age_group,'All')&!str_detect(age_group,'35')) %>% 
+  mutate(sex=ifelse(str_detect(sex,'Male'),'Male','Female'))
+
+plot_data(A, "Osteoarthritis prevalence (%)")
+ggsave(
+  here('output','figures',
+       paste0('AUS_OA_Validation_OA_',
+              scenario,'_',scenario,
+              ".png")
+  ), 
+  width = 10, height = 10, units = "in", dpi=300)
+
+```
+
+# TKA
+```{r}
+# Load TKA observed and simulated
+A <- 
+  bind_rows(
+    read_csv(
+      here('supporting_data','Cleaned_validation_data_TKR.csv'),
+      show_col_types = F
+    ) %>% 
+      mutate(Source='Observed') %>% 
+      rename(mean=rate) %>% 
+      filter(!str_detect(age_group,'All')&!str_detect(age_group,'<')),
+    Mstat %>% 
+      ungroup() %>% 
+      filter(variable=='tka') %>% 
+      mutate(Source='Simulated') %>%
+      filter(!str_detect(age_group,'All')&!str_detect(age_group,'<')) 
+  ) %>% 
+  select(Source,year,sex,age_group,mean,lower_CI,upper_CI) %>% 
+  filter(sex!='Persons') %>% 
+  filter(year>2013)
+
+plot_data(A, "TKA rate per 100,000")
+
+ggsave(
+  here('output','figures',
+       paste0('AUS_OA_Validation_TKA_',
+              scenario,
+              ".png")
+  ), 
+  width = 10, height = 10, units = "in", dpi=300)
+
+
+A$upper_CI <- NULL
+A$lower_CI <- NULL
+
+A_table <- melt(A, id.vars = c('Source','year','age_group','sex'))
+A_table <- dcast(A_table, year + age_group ~ Source + sex, mean )
+
+A_table$Observed_Female <- round(A_table$Observed_Female,1)
+A_table$Observed_Male <- round(A_table$Observed_Male,1)
+A_table$Simulated_Female <- round(A_table$Simulated_Female,1)
+A_table$Simulated_Male <- round(A_table$Simulated_Male,1)
+
+
+A_table <- A_table[,c('year', 'age_group',
+                      'Simulated_Male','Observed_Male',
+                      'Simulated_Female','Observed_Female')]
+
+A_table <- A_table %>% 
+  arrange(age_group)
+
+page_size_default_table <- ifelse(length(unique(A_table$year)) > 15, 15, length(unique(A_table$year)))
+
+A_table %>% 
+  gt() %>%
+  tab_spanner(
+    label = "Males",
+    columns = c(Simulated_Male, Observed_Male)) %>%
+  tab_spanner(
+    label = "Females",
+    columns = c(Simulated_Female, Observed_Female)) %>%
+   cols_label(
+    year = "Year",
+    age_group = "Age Band",
+    Simulated_Male = "Simulated",
+    Observed_Male = "Observed",
+    Simulated_Female = "Simulated",
+    Observed_Female = "Observed") %>%
+  opt_interactive(page_size_default = page_size_default_table)
+  
+  
+  # kbl(col.names = c('Source', 'Year', 'Age Band', 'Males (per 100,000)', 'Females (per 100,000)')) %>% 
+  #  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+
+# Complications
+```{r}
+# Load TKA observed and simulated
+
+
+# find mean and CI for complications
+
+# 1. Find the mean for each sex and age group
+complications <- 
+  Mstat %>% 
+  select("variable","year","sex","age_group","N_mean","N_sd") %>% 
+  filter(year>2013) %>%
+  filter(!str_detect(age_group,'All')&!str_detect(age_group,'<')) %>% #) %>% 
+  
+  ungroup() %>% 
+  filter(variable=='comp') 
+
+names(complications)[5:6] <- c('comp_mean','comp_sd')
+
+tka <- 
+  Mstat %>% 
+  select("variable","year","sex","age_group","N_mean","N_sd") %>% 
+  filter(year>2013) %>%
+  filter(!str_detect(age_group,'All')&!str_detect(age_group,'<')) %>% #) %>% 
+  ungroup() %>% 
+  filter(variable=='tka')
+
+names(tka)[5:6] <- c('tka_mean','tka_sd')
+
+complications <- merge(complications[,2:6],tka[,2:6],by=c("year","sex","age_group"))
+
+complications$comp_value <- complications$comp_mean/complications$tka_mean
+
+complications$comp_value_SEM <- sqrt(complications$comp_mean*(complications$tka_mean-complications$comp_mean)/complications$tka_mean^3)
+
+complications$upper_CI <- complications$comp_value + 1.96*complications$comp_value_SEM
+complications$lower_CI <- complications$comp_value - 1.96*complications$comp_value_SEM
+
+complications <- complications[c("sex","age_group","comp_value","upper_CI","lower_CI", "year")]
+
+complications$sources <- 'Simulated'
+
+names(complications) <- c("sex", "age_group", "percent", "lower_CI", "upper_CI",  "year", "Source")
+
+validation_data_complications <- read_csv(
+      here('supporting_data','Cleaned_validation_data_Complications.csv'),
+      show_col_types = F) %>%
+  mutate(Source='Observed') %>%
+  filter(year>2013)
+
+validation_data_complications$sex[which(validation_data_complications$sex == "Females")] <- "Female"
+validation_data_complications$sex[which(validation_data_complications$sex == "Males")] <- "Male"
+
+complications <- rbind(complications, validation_data_complications)
+
+names(complications)[which(names(complications) == "percent")] <- "mean"
+
+complications$mean <- complications$mean * 100
+complications$lower_CI <- complications$lower_CI * 100
+complications$upper_CI <- complications$upper_CI * 100
+
+plot_data(complications, "Complications (percentage of procedures)")
+
+# A <- 
+#   # bind_rows(
+#     # read_csv(
+#     #   here('supporting_data','Cleaned_validation_data_TKR.csv'),
+#     #   show_col_types = F
+#     # ) %>% 
+#     #   mutate(Source='Observed') %>% 
+#     #   rename(mean=rate) %>% 
+#     #   filter(!str_detect(age_group,'All')&!str_detect(age_group,'<')),
+#     Mstat %>% 
+#       ungroup() %>% 
+#       filter(variable=='comp') %>% 
+#       mutate(Source='Simulated') %>%
+#       filter(!str_detect(age_group,'All')&!str_detect(age_group,'<')) %>% #) %>% 
+#   select(Source,year,sex,age_group,mean,lower_CI,upper_CI) %>% 
+#   filter(sex!='Persons') %>% 
+#   filter(year>2013)
+# 
+# plot_data(A, "Complications rate per 100,000")
+
+ggsave(
+  here('output','figures',
+       paste0('AUS_OA_Validation_complications_',
+              scenario,
+              ".png")
+  ), 
+  width = 10, height = 10, units = "in", dpi=300)
+
+```
