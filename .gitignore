@@ -3,4 +3,7 @@
 .RData
 .Ruserdata
 *.parquet
-*.parquet
+
+# Ignore built documentation outputs
+Readme.html
+*.html
