@@ -9,6 +9,7 @@ editor: visual
 ## Introduction
 
 AUS-OA, a dynamic discrete time microsimulation model of osteoarthritis and its treatment in Australia. AUS-OA aims to provide policy makers and researchers with increased capacity to evaluate the burden and treatment of osteoarthritis across Australia.
+For citation information, see [CITATION.cff](CITATION.cff).
 
 ## Folder structure
 
