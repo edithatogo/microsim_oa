@@ -98,3 +98,7 @@ Once model statistics are compiled, the R markdown script `"04_AUS_OA_Validate_m
 Finnaly, `'00_AUS_OA_Master.R'` runs the markdown script `"05_AUS_OA_Simulation_results.Rmd"` that plots time trends by age and sex for key variables, and provide key summary statistics. The summary statistics are saved in `"output/model_stats/AUS_OA_Clean_Summary_statistics_{scenario}.csv"` . The script generates a report ``` "output/log/``AUS_OA_Simulation_results_{scenario}.html" ``` . All graphs that are produced in the script are saved in `"output/figures/"` within a sub-folder with the scenario name.
 
 The raw data from the attibute matrix is saved in `"output/raw_output/AUS_OA_Raw_output_{scenario}.csv"` . Further, the attribute matrix for each year is saved in `"input/population/"` if the simulation is run in deterministic mode.
+
+## Testing
+
+This project currently does not include automated tests. Running `make test` will simply print a message indicating that no tests are available.
