@@ -25,8 +25,6 @@ synpop_wave <- synpop_wave[, c(
 synpop_wave$hhweight <- synpop_wave$hhweight / pop_weight
 # calibration - HILDA weights seem to have a shortfall. Use for model.
 synpop_wave$hhweight <- scale_HILDA * synpop_wave$hhweight
-# testing
-# synpop_wave$hhweight <- 10
 
 # format data
 synpop_wave$state <- as.factor(synpop_wave$state)
@@ -49,30 +47,25 @@ inp <- specifyInput(
 )
 
 ## Generating structure of synthetic population
-simPop <- simStructure(inp,
+sim_pop <- simStructure(inp,
   method = "direct",
   basicHHvars = c("age", "sex")
 )
 
-simPop <- simCategorical(simPop,
+sim_pop <- simCategorical(sim_pop,
   additional = c("oa", "phi", "year12", "ccount", "mhc", "drugoa", "drugmh"),
   method = "distribution", nr_cpus = 1
 )
 
-#
-# regModel = ~ age + sex + bmi
-
-simPop <- simContinuous(simPop,
+sim_pop <- simContinuous(sim_pop,
   additional = "bmi",
-  # regModel = regModel,
   upper = 200000,
   nr_cpus = 1
 )
 
 
-simPop <- simContinuous(simPop,
+sim_pop <- simContinuous(sim_pop,
   additional = "sf6d",
-  # regModel = regModel,
   upper = 200000,
   equidist = FALSE,
   nr_cpus = 1
@@ -80,19 +73,19 @@ simPop <- simContinuous(simPop,
 
 
 ## Call population
-mysim <- data.frame(popData(simPop))
-mysim <- mysim[, c(
+my_sim <- data.frame(popData(sim_pop))
+my_sim <- my_sim[, c(
   "state", "age", "sex", "bmi", "oa", "mhc", "ccount", "sf6d",
   "phi", "year12", "drugoa", "drugmh"
 )]
 # Check number of NAs
-na_count <- sum(is.na(mysim))
+na_count <- sum(is.na(my_sim))
 print(na_count)
 # Either re-run or set to zero
-mysim[is.na(mysim)] <- 0
+my_sim[is.na(my_sim)] <- 0
 
 # Export data frame to a CSV file
-write.csv(mysim,
+write.csv(my_sim,
   file =
     here(simpop_file),
   row.names = FALSE
