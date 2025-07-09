@@ -2,7 +2,7 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
   # TKR customisation
   summary_TKR_observed_diff <-
     read_csv(here("data", "coefficent_selection", "TKR_correction_factors.csv"),
-      show_col_types = F
+      show_col_types = FALSE
     )
   # browser()
   #### setup adjustment factors in dataset and merge in previously calculated scaling factors
