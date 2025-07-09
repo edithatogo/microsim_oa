@@ -13,8 +13,8 @@ output:
 This file presents statistics for key variables in the AUS-OA model. To navigate to a specific variable, please click on the respective section in the table of contents.
 
 ```{r include=FALSE}
-knitr::opts_chunk$set(echo = F)
-folder <- paste0(here('output','figures'),"/",scenario)
+knitr::opts_chunk$set(echo = FALSE)
+folder <- paste0(here("output", "figures"), "/", scenario)
 if (file.exists(folder)) {
   print("Folder already exists. Please specify another input file name.")
   print("To overwrite, delete existing output files.")
@@ -23,24 +23,21 @@ if (file.exists(folder)) {
 }
 
 knitr::opts_chunk$set(
-  fig.path = paste0(folder,"/")
+  fig.path = paste0(folder, "/")
 )
 ```
 
 ```{r Plotting_functions}
 ## Function to plot simulated time series with confidence intervals
-plot_mean_CI <- 
-  function(data, y_axis_title,mean,lower_CI,upper_CI) {
-    fig <- 
+plot_mean_CI <-
+  function(data, y_axis_title, mean, lower_CI, upper_CI) {
+    fig <-
       ggplot(data, aes(x = year)) +
       geom_line(
-        aes(y = {{mean}}, color = sex)
+        aes(y = {{ mean }}, color = sex)
       ) +
-      
-      
-      facet_grid(sex ~ age_group, scales = 'free_y') +
-      theme(legend.position = 'none', axis.text.x = element_text(angle = 45, hjust = 1)) +
-      
+      facet_grid(sex ~ age_group, scales = "free_y") +
+      theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1)) +
       scale_x_continuous(breaks = scales::pretty_breaks()) +
       scale_color_manual(values = colors) +
       scale_fill_manual(values = colors) +
@@ -51,71 +48,68 @@ plot_mean_CI <-
         color = "",
         fill = ""
       )
-    
-    if(probabilistic==T){
+
+    if (probabilistic == TRUE) {
       fig <-
         fig +
         geom_ribbon(
           data = data,
-          aes(ymin = {{lower_CI}}, ymax = {{upper_CI}}),
-          fill = "blue", alpha = 0.25)
-    }
-    fig
-  }
-
-plot_yvar <- 
-  function(data, yvar, y_axis_title) {
-    fig <- 
-      ggplot(data, aes(x = year)) +
-      geom_line(
-        aes(y = {{yvar}}, color = sex)
-      ) +
-      
-      
-      facet_grid(sex ~ age_group, scales = 'free_y') +
-      theme(legend.position = 'none', axis.text.x = element_text(angle = 45, hjust = 1)) +
-      
-      scale_x_continuous(breaks = scales::pretty_breaks()) +
-      scale_color_manual(values = colors) +
-      scale_fill_manual(values = colors) +
-      labs(
-        title = "",
-        x = "Year",
-        y = y_axis_title,
-        color = "",
-        fill = ""
-      )
-    
-
-    fig
-  }
-
-f_plot_distribution <- 
-  function(var,yr,mean,lower_CI,upper_CI){
-    X <- 
-      Z %>% 
-      filter(variable==var&year==yr&age_group!='All 45 years and above')
-    
-    fig <- 
-      X %>% 
-      ggplot(aes(x=age_group,y={{mean}})) +
-      geom_col(aes(fill = sex), position = position_dodge(0.8), width = 0.7) +
-      scale_fill_manual(values = colors) +
-      labs(x = "Age group", y = X$description[1], fill = "") +
-      facet_wrap(~ year, ncol = 2) +
-      theme(legend.position = "top") 
-    
-    if(probabilistic==T){
-      fig <- 
-        fig +
-        geom_errorbar(
-          aes(ymin = {{lower_CI}}, ymax = {{upper_CI}}, group = sex),
-          width = 0.2, position = position_dodge(0.8)
+          aes(ymin = {{ lower_CI }}, ymax = {{ upper_CI }}),
+          fill = "blue", alpha = 0.25
         )
     }
     fig
   }
 
+plot_yvar <-
+  function(data, yvar, y_axis_title) {
+    fig <-
+      ggplot(data, aes(x = year)) +
+      geom_line(
+        aes(y = {{ yvar }}, color = sex)
+      ) +
+      facet_grid(sex ~ age_group, scales = "free_y") +
+      theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1)) +
+      scale_x_continuous(breaks = scales::pretty_breaks()) +
+      scale_color_manual(values = colors) +
+      scale_fill_manual(values = colors) +
+      labs(
+        title = "",
+        x = "Year",
+        y = y_axis_title,
+        color = "",
+        fill = ""
+      )
+
+
+    fig
+  }
+
+f_plot_distribution <-
+  function(var, yr, mean, lower_CI, upper_CI) {
+    X <-
+      Z %>%
+      filter(variable == var & year == yr & age_group != "All 45 years and above")
+
+    fig <-
+      X %>%
+      ggplot(aes(x = age_group, y = {{ mean }})) +
+      geom_col(aes(fill = sex), position = position_dodge(0.8), width = 0.7) +
+      scale_fill_manual(values = colors) +
+      labs(x = "Age group", y = X$description[1], fill = "") +
+      facet_wrap(~year, ncol = 2) +
+      theme(legend.position = "top")
+
+    if (probabilistic == TRUE) {
+      fig <-
+        fig +
+        geom_errorbar(
+          aes(ymin = {{ lower_CI }}, ymax = {{ upper_CI }}, group = sex),
+          width = 0.2, position = position_dodge(0.8)
+        )
+    }
+    fig
+  }
 ```
 
 ## Simulation settings
@@ -123,9 +117,9 @@ f_plot_distribution <-
 The following table displays the model settings used in this simulation round.
 
 ```{r}
-sim_setup %>% 
-  kbl() %>% 
-   kable_styling(bootstrap_options = c("striped", "hover"))
+sim_setup %>%
+  kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 ## Trends over time {.tabset}
@@ -133,245 +127,239 @@ sim_setup %>%
 ### BMI (overweight and obese) {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='bmi_overweight_or_obese')
+Z <-
+  Model_stats %>%
+  filter(variable == "bmi_overweight_or_obese")
 ```
 
 #### Percent
 
 ```{r BMI_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (%)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
-
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (%)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Frequency
 
 ```{r BMI_time_trend_freq}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (N)"),N_mean,N_lower_CI,N_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (N)"), N_mean, N_lower_CI, N_upper_CI)
 ```
 
 ### OA (osteoarthritis) {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='oa')
+Z <-
+  Model_stats %>%
+  filter(variable == "oa")
 ```
 
 #### Percent
 
 ```{r OA_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (%)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
-
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (%)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Frequency
 
 ```{r OA_time_trend_freq}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (N)"),N_mean,N_lower_CI,N_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (N)"), N_mean, N_lower_CI, N_upper_CI)
 ```
 
 ### Medication for OA {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='drugoa')
+Z <-
+  Model_stats %>%
+  filter(variable == "drugoa")
 ```
 
 #### Percent
 
 ```{r OA_drug_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (%)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
-
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (%)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Frequency
 
 ```{r OA_drug_trend_freq}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (N)"),N_mean,N_lower_CI,N_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (N)"), N_mean, N_lower_CI, N_upper_CI)
 ```
 
 ### TKA (total knee replacement) {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='tka')
+Z <-
+  Model_stats %>%
+  filter(variable == "tka")
 ```
 
 #### Percent
 
 ```{r TKA_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (%)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
-
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (%)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Frequency
 
 ```{r TKA_time_trend_freq}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (N)"),N_mean,N_lower_CI,N_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (N)"), N_mean, N_lower_CI, N_upper_CI)
 ```
 
 ### TKA complications {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='comp')
+Z <-
+  Model_stats %>%
+  filter(variable == "comp")
 ```
 
 #### Percent
 
 ```{r TKA_comp_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (%)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
-
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (%)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Frequency
 
 ```{r TKA_comp_time_trend_freq}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (N)"),N_mean,N_lower_CI,N_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (N)"), N_mean, N_lower_CI, N_upper_CI)
 ```
 
 ### Revision 1
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='revision1')
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (N)"),N_mean,N_lower_CI,N_upper_CI)
+Z <-
+  Model_stats %>%
+  filter(variable == "revision1")
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (N)"), N_mean, N_lower_CI, N_upper_CI)
 ```
 
 ### Revision 2
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='revision2')
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (N)"),N_mean,N_lower_CI,N_upper_CI)
+Z <-
+  Model_stats %>%
+  filter(variable == "revision2")
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (N)"), N_mean, N_lower_CI, N_upper_CI)
 ```
 
 ### Quality adjusted life years {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='qaly')
+Z <-
+  Model_stats %>%
+  filter(variable == "qaly")
 ```
 
 #### Average
 
 ```{r QALY_time_trend_mean}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Mean)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
-
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Mean)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Total
 
 ```{r QALY_time_trend_sum}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Total)"),Sum_mean,Sum_lower_CI,Sum_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Total)"), Sum_mean, Sum_lower_CI, Sum_upper_CI)
 ```
 
 ### OA cost {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='oacost')
+Z <-
+  Model_stats %>%
+  filter(variable == "oacost")
 ```
 
 #### Average
 
 ```{r OA_cost_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Mean)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Mean)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Total
 
 ```{r OA_cost_time_trend_sum}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Total)"),Sum_mean,Sum_lower_CI,Sum_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Total)"), Sum_mean, Sum_lower_CI, Sum_upper_CI)
 ```
 
 ### TKA cost {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='tkacost')
+Z <-
+  Model_stats %>%
+  filter(variable == "tkacost")
 ```
 
 #### Average
 
 ```{r TKA_cost_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Total)"),Sum_mean,Sum_lower_CI,Sum_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Total)"), Sum_mean, Sum_lower_CI, Sum_upper_CI)
 ```
 
 #### Total
 
 ```{r TKA_cost_time_trend_sum}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Total)"),Sum_mean,Sum_lower_CI,Sum_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Total)"), Sum_mean, Sum_lower_CI, Sum_upper_CI)
 ```
 
 ### Revision cost {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='rehabcost')
+Z <-
+  Model_stats %>%
+  filter(variable == "rehabcost")
 ```
 
 #### Average
 
 ```{r Rehab_cost_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Mean)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Mean)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Total
 
 ```{r Rehab_cost_time_trend_sum}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Total)"),Sum_mean,Sum_lower_CI,Sum_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Total)"), Sum_mean, Sum_lower_CI, Sum_upper_CI)
 ```
 
 ### Revision cost {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='revcost')
+Z <-
+  Model_stats %>%
+  filter(variable == "revcost")
 ```
 
 #### Average
 
 ```{r Revision_cost_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Mean)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Mean)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Total
 
 ```{r Revision_cost_time_trend_sum}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Total)"),Sum_mean,Sum_lower_CI,Sum_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Total)"), Sum_mean, Sum_lower_CI, Sum_upper_CI)
 ```
 
 ### Total cost {.tabset}
 
 ```{r}
-Z <- 
-  Model_stats %>% 
-  filter(variable=='totalcost')
+Z <-
+  Model_stats %>%
+  filter(variable == "totalcost")
 ```
 
 #### Average
 
 ```{r Total_cost_time_trend_percent}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Mean)"),Mean_mean,Mean_lower_CI,Mean_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Mean)"), Mean_mean, Mean_lower_CI, Mean_upper_CI)
 ```
 
 #### Total
 
 ```{r Total_cost_time_trend_sum}
-Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Total)"),Sum_mean,Sum_lower_CI,Sum_upper_CI)
+Z %>% plot_mean_CI(., str_glue("{Z$description[1]} (Total)"), Sum_mean, Sum_lower_CI, Sum_upper_CI)
 ```
 
 ## Distribution {.tabset}
@@ -381,7 +369,7 @@ Z %>% plot_mean_CI(.,str_glue("{Z$description[1]} (Total)"),Sum_mean,Sum_lower_C
 ```{r}
 Z <- Model_stats
 for (yr in sort(unique(Z$year))) {
-  print(f_plot_distribution('bmi_overweight_or_obese',yr,Mean_mean,Mean_lower_CI,Mean_upper_CI))
+  print(f_plot_distribution("bmi_overweight_or_obese", yr, Mean_mean, Mean_lower_CI, Mean_upper_CI))
 }
 ```
 
@@ -389,7 +377,7 @@ for (yr in sort(unique(Z$year))) {
 
 ```{r}
 for (yr in sort(unique(Z$year))) {
-  print(f_plot_distribution('oa',yr,Mean_mean,Mean_lower_CI,Mean_upper_CI))
+  print(f_plot_distribution("oa", yr, Mean_mean, Mean_lower_CI, Mean_upper_CI))
 }
 ```
 
@@ -397,6 +385,6 @@ for (yr in sort(unique(Z$year))) {
 
 ```{r}
 for (yr in sort(unique(Z$year))) {
-  print(f_plot_distribution('tka',yr,Mean_mean,Mean_lower_CI,Mean_upper_CI))
+  print(f_plot_distribution("tka", yr, Mean_mean, Mean_lower_CI, Mean_upper_CI))
 }
 ```

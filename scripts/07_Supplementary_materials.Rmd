@@ -22,7 +22,7 @@ knitr::opts_chunk$set(message = FALSE)
 
 # Packages
 if (!require("pacman")) install.packages("pacman")
-p_load(here,tidyverse,readxl,arrow)
+p_load(here, tidyverse, readxl, arrow)
 options(dplyr.summarise.inform = FALSE)
 
 # Select input folder
@@ -31,16 +31,16 @@ print("PLEASE CHOOSE THE INPUT FILE FROM THE MENU...")
 input_file <- choose.files(input_file)
 scenario <- gsub(".xlsx$", "", basename(input_file))
 scenario <- gsub("ausoa_input_", "", scenario)
-sim_setup <- 
-  read_excel(input_file, sheet = "Simulation inputs") %>% 
+sim_setup <-
+  read_excel(input_file, sheet = "Simulation inputs") %>%
   rename(
     param = `Base population parameters`,
     spec  = `Value`
-  ) %>% 
+  ) %>%
   filter(!is.na(spec))
 
 # Create supplementary materials folder if it does not exist
-folder <- paste0(here('output','supplementary_materials'),"/",scenario)
+folder <- paste0(here("output", "supplementary_materials"), "/", scenario)
 if (file.exists(folder)) {
   print("Folder already exists. Please specify another input file name.")
   print("To overwrite, delete existing output files.")
@@ -49,65 +49,66 @@ if (file.exists(folder)) {
 }
 
 knitr::opts_chunk$set(
-  fig.path = paste0(folder,"/")
+  fig.path = paste0(folder, "/")
 )
 
 # Graphics options
 # Graph options
-my_theme <- 
-  theme_bw(base_family = 'serif') +
+my_theme <-
+  theme_bw(base_family = "serif") +
   theme(
-    axis.title.x = element_text(margin = margin(t = 10),size=14),
-    axis.title.y =element_text(margin = margin(r = 10),size=14),
+    axis.title.x = element_text(margin = margin(t = 10), size = 14),
+    axis.title.y = element_text(margin = margin(r = 10), size = 14),
     axis.text = element_text(size = 12),
     legend.background = element_blank(),
-    legend.text = element_text(size=14),
-    legend.title = element_text(size=16)
-  ) 
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 16)
+  )
 theme_set(my_theme)
-colors <- c('#EE3377', '#0077BB','#009988','firebrick', '#33BBEE', '#CC3311', 
-            'darkmagenta','black','tan4'  )
-excel <- c('#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5', '#70AD47', '#264478', '#FF0000', '#FF9900')
-
+colors <- c(
+  "#EE3377", "#0077BB", "#009988", "firebrick", "#33BBEE", "#CC3311",
+  "darkmagenta", "black", "tan4"
+)
+excel <- c("#4472C4", "#ED7D31", "#A5A5A5", "#FFC000", "#5B9BD5", "#70AD47", "#264478", "#FF0000", "#FF9900")
 ```
 
 ## 1.1 Synthetic base population
 
 ```{r}
-hilda_file <- 
+hilda_file <-
   here(
-    'input','population',
-    sim_setup$spec[sim_setup$param=='Input data for base population']
+    "input", "population",
+    sim_setup$spec[sim_setup$param == "Input data for base population"]
   )
 
-base_file <- here('input','population','am.parquet')
+base_file <- here("input", "population", "am.parquet")
 
-HILDA <- 
-  read_csv(hilda_file,show_col_types = F)
+HILDA <-
+  read_csv(hilda_file, show_col_types = FALSE)
 
-BASE <- 
+BASE <-
   read_parquet(base_file)
 ```
 
 #### Figure S1: Age/sex distribution, HILDA vs synthetic AUS-OA population
 
 ```{r}
-fig_name <- "S1_Age_sex_distribution_HILDA_vs_syn" 
+fig_name <- "S1_Age_sex_distribution_HILDA_vs_syn"
 
-Z <- 
+Z <-
   bind_rows(
-    HILDA %>% 
-      select(sex,age) %>% 
-      mutate(source='obs'),
-    BASE %>% 
-      select(sex,age) %>% 
-      mutate(source='syn')
-  ) 
+    HILDA %>%
+      select(sex, age) %>%
+      mutate(source = "obs"),
+    BASE %>%
+      select(sex, age) %>%
+      mutate(source = "syn")
+  )
 
-p <- 
-  Z %>% 
-  ggplot(aes(x=age,fill=source)) +
-   geom_histogram(position = "dodge", bins = 20) +
+p <-
+  Z %>%
+  ggplot(aes(x = age, fill = source)) +
+  geom_histogram(position = "dodge", bins = 20) +
   facet_wrap(~sex) +
   labs(x = "Age", y = "Count", fill = "") +
   scale_color_manual(values = excel)
@@ -116,16 +117,22 @@ pg <- ggplot_build(p)$data[[1]] %>% as_tibble()
 
 
 ggsave(
-  here(folder,
-       paste0(fig_name,".png")
-       ), 
-       width = 10, height = 10, units = "in", dpi=300)
+  here(
+    folder,
+    paste0(fig_name, ".png")
+  ),
+  width = 10, height = 10, units = "in", dpi = 300
+)
 
 
-write_csv(Z,here(folder,
-                 paste0("Raw_",fig_name,".csv")))
-write_csv(Z,here(folder,
-                 paste0("ggplot_",fig_name,".csv")))
+write_csv(Z, here(
+  folder,
+  paste0("Raw_", fig_name, ".csv")
+))
+write_csv(Z, here(
+  folder,
+  paste0("ggplot_", fig_name, ".csv")
+))
 
 
 p
@@ -134,21 +141,21 @@ p
 #### Figure S2: Sex/BMI distribution, HILDA vs synthetic AUS-OA population, 2013
 
 ```{r}
-fig_name <- "S2_Sex_bmi_distribution_HILDA_vs_syn" 
-Z <- 
+fig_name <- "S2_Sex_bmi_distribution_HILDA_vs_syn"
+Z <-
   bind_rows(
-    HILDA %>% 
-      select(sex,bmi) %>% 
-      mutate(source='obs'),
-    BASE %>% 
-      select(sex,bmi) %>% 
-      mutate(source='syn')
-  ) 
+    HILDA %>%
+      select(sex, bmi) %>%
+      mutate(source = "obs"),
+    BASE %>%
+      select(sex, bmi) %>%
+      mutate(source = "syn")
+  )
 
-p <- 
-  Z %>% 
-  ggplot(aes(x=bmi,fill=source)) +
-   geom_histogram(position = "dodge", bins = 20) +
+p <-
+  Z %>%
+  ggplot(aes(x = bmi, fill = source)) +
+  geom_histogram(position = "dodge", bins = 20) +
   facet_wrap(~sex) +
   labs(x = "BMI", y = "Count", fill = "") +
   scale_color_manual(values = excel)
@@ -157,16 +164,22 @@ pg <- ggplot_build(p)$data[[1]] %>% as_tibble()
 
 
 ggsave(
-  here(folder,
-       paste0(fig_name,".png")
-       ), 
-       width = 10, height = 10, units = "in", dpi=300)
+  here(
+    folder,
+    paste0(fig_name, ".png")
+  ),
+  width = 10, height = 10, units = "in", dpi = 300
+)
 
 
-write_csv(Z,here(folder,
-                 paste0("Raw_",fig_name,".csv")))
-write_csv(Z,here(folder,
-                 paste0("ggplot_",fig_name,".csv")))
+write_csv(Z, here(
+  folder,
+  paste0("Raw_", fig_name, ".csv")
+))
+write_csv(Z, here(
+  folder,
+  paste0("ggplot_", fig_name, ".csv")
+))
 
 
 p
@@ -175,22 +188,22 @@ p
 #### Figure S3: Osteoarthritis by age,sex, and BMI, HILDA vs synthetic AUSOA- population 2013
 
 ```{r}
-fig_name <- "S3_OA_by_age_sex_distribution_HILDA_vs_syn" 
-Z <- 
+fig_name <- "S3_OA_by_age_sex_distribution_HILDA_vs_syn"
+Z <-
   bind_rows(
-    HILDA %>% 
-      select(sex,age,oa) %>% 
-      mutate(source='obs'),
-    BASE %>% 
-      select(sex,age,oa) %>% 
-      mutate(source='syn')
-  ) 
+    HILDA %>%
+      select(sex, age, oa) %>%
+      mutate(source = "obs"),
+    BASE %>%
+      select(sex, age, oa) %>%
+      mutate(source = "syn")
+  )
 
-p <- 
-  Z %>% 
-  ggplot(aes(x=age,fill=source)) +
-   geom_histogram(position = "dodge", bins = 20) +
-  facet_grid(sex~oa) +
+p <-
+  Z %>%
+  ggplot(aes(x = age, fill = source)) +
+  geom_histogram(position = "dodge", bins = 20) +
+  facet_grid(sex ~ oa) +
   labs(x = "Age", y = "Count", fill = "") +
   scale_color_manual(values = excel)
 
@@ -198,16 +211,22 @@ pg <- ggplot_build(p)$data[[1]] %>% as_tibble()
 
 
 ggsave(
-  here(folder,
-       paste0(fig_name,".png")
-       ), 
-       width = 10, height = 10, units = "in", dpi=300)
+  here(
+    folder,
+    paste0(fig_name, ".png")
+  ),
+  width = 10, height = 10, units = "in", dpi = 300
+)
 
 
-write_csv(Z,here(folder,
-                 paste0("Raw_",fig_name,".csv")))
-write_csv(Z,here(folder,
-                 paste0("ggplot_",fig_name,".csv")))
+write_csv(Z, here(
+  folder,
+  paste0("Raw_", fig_name, ".csv")
+))
+write_csv(Z, here(
+  folder,
+  paste0("ggplot_", fig_name, ".csv")
+))
 
 
 p
@@ -216,41 +235,47 @@ p
 #### Figure S4: Quality of life/sex/osteoarthritis, HILDA vs synthetic AUS-OA population 2013
 
 ```{r}
-fig_name <- "S4_Quality_of_life_by_oa_sex_HILDA_vs_syn" 
-Z <- 
+fig_name <- "S4_Quality_of_life_by_oa_sex_HILDA_vs_syn"
+Z <-
   bind_rows(
-    HILDA %>% 
-      select(sex,age,sf6d,oa) %>% 
-      mutate(source='obs'),
-    BASE %>% 
-      select(sex,age,sf6d,oa) %>% 
-      mutate(source='syn')
-  ) %>% 
-  mutate(oa=as_factor(oa))
+    HILDA %>%
+      select(sex, age, sf6d, oa) %>%
+      mutate(source = "obs"),
+    BASE %>%
+      select(sex, age, sf6d, oa) %>%
+      mutate(source = "syn")
+  ) %>%
+  mutate(oa = as_factor(oa))
 
 
-p <- 
-  Z %>% 
-  ggplot(aes(x=source,y=sf6d,fill=source)) +
-  facet_grid(sex~oa) +
+p <-
+  Z %>%
+  ggplot(aes(x = source, y = sf6d, fill = source)) +
+  facet_grid(sex ~ oa) +
   geom_boxplot() +
-  geom_point(position = 'jitter',alpha=0.2,size=0.1) +
-  labs(x="",fill="")
+  geom_point(position = "jitter", alpha = 0.2, size = 0.1) +
+  labs(x = "", fill = "")
 
 pg <- ggplot_build(p)$data[[1]] %>% as_tibble()
 
 
 ggsave(
-  here(folder,
-       paste0(fig_name,".png")
-       ), 
-       width = 10, height = 10, units = "in", dpi=300)
+  here(
+    folder,
+    paste0(fig_name, ".png")
+  ),
+  width = 10, height = 10, units = "in", dpi = 300
+)
 
 
-write_csv(Z,here(folder,
-                 paste0("Raw_",fig_name,".csv")))
-write_csv(Z,here(folder,
-                 paste0("ggplot_",fig_name,".csv")))
+write_csv(Z, here(
+  folder,
+  paste0("Raw_", fig_name, ".csv")
+))
+write_csv(Z, here(
+  folder,
+  paste0("ggplot_", fig_name, ".csv")
+))
 
 
 p
@@ -262,35 +287,37 @@ Need to pre-process data
 
 ```{r}
 p_load(synthpop)
-pop_weight <- 
-    sim_setup$spec[sim_setup$param=='Population scale'] %>% 
-    as.numeric()
-  
-  scale_HILDA <- 
-    sim_setup$spec[sim_setup$param=='Population adjuster'] %>% 
-    as.numeric()
-  
-  input_data <- 
-    sim_setup$spec[sim_setup$param=='Input data for base population'] %>%
-    as.character()
-  
-  input_data <- 
-    here('input','population',input_data)
-  
- # RUN THE SYNTHETIC POPULATION GENERATOR
-p_load(simPop, haven, tidyr, dplyr, party,synthpop,here)
+pop_weight <-
+  sim_setup$spec[sim_setup$param == "Population scale"] %>%
+  as.numeric()
+
+scale_HILDA <-
+  sim_setup$spec[sim_setup$param == "Population adjuster"] %>%
+  as.numeric()
+
+input_data <-
+  sim_setup$spec[sim_setup$param == "Input data for base population"] %>%
+  as.character()
+
+input_data <-
+  here("input", "population", input_data)
+
+# RUN THE SYNTHETIC POPULATION GENERATOR
+p_load(simPop, haven, tidyr, dplyr, party, synthpop, here)
 ## STATA dataset
 synpop_wave <- read.csv(input_data)
-synpop_wave <- synpop_wave[,c("age","sex","bmi","oa","sf6d",
-                              "phi","year12","drugoa","drugmh","mhc","state",
-                              "ccount", "hhrhid", "hhweight")]
+synpop_wave <- synpop_wave[, c(
+  "age", "sex", "bmi", "oa", "sf6d",
+  "phi", "year12", "drugoa", "drugmh", "mhc", "state",
+  "ccount", "hhrhid", "hhweight"
+)]
 
 # adjust weighting (leaving as is will create full population)
-synpop_wave$hhweight <- synpop_wave$hhweight/pop_weight
-# calibration - HILDA weights seem to have a shortfall. Use for model. 
-synpop_wave$hhweight <- scale_HILDA*synpop_wave$hhweight
+synpop_wave$hhweight <- synpop_wave$hhweight / pop_weight
+# calibration - HILDA weights seem to have a shortfall. Use for model.
+synpop_wave$hhweight <- scale_HILDA * synpop_wave$hhweight
 # testing
-#synpop_wave$hhweight <- 10
+# synpop_wave$hhweight <- 10
 
 # format data
 synpop_wave$state <- as.factor(synpop_wave$state)
@@ -305,44 +332,52 @@ synpop_wave$mhc <- as.factor(synpop_wave$mhc)
 # SIMULATING DATASET ------------------------------------------------------
 
 ## Selecting variable to define population
-inp <- specifyInput(data = synpop_wave,
-                    hhid = "hhrhid",
-                    strata = "state",
-                    weight = "hhweight")
+inp <- specifyInput(
+  data = synpop_wave,
+  hhid = "hhrhid",
+  strata = "state",
+  weight = "hhweight"
+)
 
 ## Generating structure of synthetic population
 simPop <- simStructure(inp,
-                       method = "direct",
-                       basicHHvars = c("age","sex"))
+  method = "direct",
+  basicHHvars = c("age", "sex")
+)
 
 simPop <- simCategorical(simPop,
-                         additional = c("oa","phi","year12","ccount", "mhc", "drugoa","drugmh"),
-                         method="distribution", nr_cpus=1)
+  additional = c("oa", "phi", "year12", "ccount", "mhc", "drugoa", "drugmh"),
+  method = "distribution", nr_cpus = 1
+)
 
-# 
+#
 # regModel = ~ age + sex + bmi
 
 simPop <- simContinuous(simPop,
-                        additional = "bmi",
-                        #regModel = regModel,
-                        upper = 200000,
-                        nr_cpus = 1)
+  additional = "bmi",
+  # regModel = regModel,
+  upper = 200000,
+  nr_cpus = 1
+)
 
 
 simPop <- simContinuous(simPop,
-                        additional = "sf6d",
-                        #regModel = regModel,
-                        upper = 200000,
-                        equidist = FALSE,
-                        nr_cpus = 1)
+  additional = "sf6d",
+  # regModel = regModel,
+  upper = 200000,
+  equidist = FALSE,
+  nr_cpus = 1
+)
 
 
 ## Call population
 mysim <- data.frame(popData(simPop))
-mysim <- mysim[,c("state", "age", "sex", "bmi", "oa", "mhc", "ccount", "sf6d", 
-                  "phi", "year12", "drugoa", "drugmh")]
+mysim <- mysim[, c(
+  "state", "age", "sex", "bmi", "oa", "mhc", "ccount", "sf6d",
+  "phi", "year12", "drugoa", "drugmh"
+)]
 # Check number of NAs
-na_count <-sum(is.na(mysim))
+na_count <- sum(is.na(mysim))
 print(na_count)
 # Either re-run or set to zero
 mysim[is.na(mysim)] <- 0
