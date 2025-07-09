@@ -1,0 +1,12 @@
+# config/life_tables_2013.csv
+#
+# This file contains the life tables for 2013.
+#
+# You will need to populate this file with the data from the
+# "Life tables 2013" sheet of your ausoa_input_public.xlsx file.
+
+Age,Male_qx,Female_qx
+0,0.004,0.003
+1,0.0004,0.0003
+...
+100,1,1

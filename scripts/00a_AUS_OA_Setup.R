@@ -36,33 +36,9 @@ colors <- c(
 
 
 # Load the input file
-if (exists("scenario")) {
-  input_file <-
-    here("input", "scenarios", paste0("ausoa_input_", scenario, ".xlsx"))
-} else {
-  input_file <- here("input", "scenarios", "choose file.txt")
-  print("PLEASE CHOOSE THE INPUT FILE FROM THE MENU...")
-  input_file <- choose.files(input_file)
-  scenario <- gsub(".xlsx$", "", basename(input_file))
-  scenario <- gsub("ausoa_input_", "", scenario)
-}
+sim_setup <- yaml::read_yaml(here("config", "simulation_setup.yml"))
 
-sim_setup <-
-  read_excel(input_file, sheet = "Simulation inputs") %>%
-  rename(
-    param = `Base population parameters`,
-    spec  = `Value`
-  ) %>%
-  filter(!is.na(spec))
-
-
-probabilistic <-
-  sim_setup$spec[sim_setup$param == "Probabilistic"] %>% as.logical()
-calibration_mode <-
-  sim_setup$spec[sim_setup$param == "Calibration mode"] %>% as.logical()
-
-parallel <-
-  sim_setup$spec[sim_setup$param == "Parallelize"] %>% as.logical()
-
-startyear <-
-  sim_setup$spec[sim_setup$param == "Simulation start year"] %>% as.integer()
+probabilistic <- sim_setup$probabilistic
+calibration_mode <- sim_setup$calibration_mode
+parallel <- sim_setup$parallelize
+startyear <- sim_setup$simulation_start_year

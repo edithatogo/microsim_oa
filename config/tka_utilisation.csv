@@ -1,0 +1,10 @@
+# config/tka_utilisation.csv
+#
+# This file contains the TKA utilisation data.
+#
+# You will need to populate this file with the data from the
+# "TKA utilisation" sheet of your ausoa_input_public.xlsx file.
+
+Year,Age_45_54_Male,Age_55_64_Male,Age_65_74_Male,Age_75_plus_Male,Age_45_54_Female,Age_55_64_Female,Age_65_74_Female,Age_75_plus_Female
+2013,100,200,300,400,110,220,330,440
+2014,110,210,310,410,120,230,340,450

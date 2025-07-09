@@ -1,0 +1,12 @@
+# config/coefficients.csv
+#
+# This file contains the model's coefficients.
+#
+# You will need to populate this file with the data from the
+# "Parameter inputs" sheet of your ausoa_input_public.xlsx file.
+
+Parameter,Mean,Standard Error,Distribution,Live
+c1_cons,0.1,0.01,normal,0.1
+c1_year12,0.05,0.01,normal,0.05
+c1_age,0.01,0.001,normal,0.01
+c1_bmi,0.02,0.002,normal,0.02

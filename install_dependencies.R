@@ -18,5 +18,7 @@ pacman::p_load(
   arrow,
   reshape2,
   gt,
-  testthat # for testing
+  testthat, # for testing
+  yaml, # for reading yaml files
+  readr # for reading csv files
 )

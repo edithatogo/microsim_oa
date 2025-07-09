@@ -3,29 +3,7 @@
 # original code written in MATLAB by: Chris Schilling, September 2023
 
 
-# Simulation setup file
-sim_setup <-
-  read_excel(input_file, sheet = "Simulation inputs") %>%
-  rename(
-    param = `Base population parameters`,
-    spec  = `Value`
-  ) %>%
-  filter(!is.na(spec))
 
-
-
-probabilistic <-
-  sim_setup$spec[sim_setup$param == "Probabilistic"] %>% as.logical()
-calibration_mode <-
-  sim_setup$spec[sim_setup$param == "Calibration mode"] %>% as.logical()
-
-
-if (calibration_mode == TRUE) {
-  print(
-    "Using supplied coefficients for calibration mode, probabilistic mode off"
-  )
-  probabilistic <- FALSE
-}
 
 # Set seed
 set_seed <- sim_setup$spec[sim_setup$param == "Set seed"] %>% as.logical()
@@ -48,9 +26,7 @@ numyears <-
   as.integer()
 
 # setup population
-lt <- read_excel(input_file,
-  sheet = "Life tables 2013", range = "N6:AG107"
-)
+lt <- read_csv(here("config", "life_tables_2013.csv"), show_col_types = FALSE)
 
 if (startyear == 2013) {
   am_file <- "am.parquet"

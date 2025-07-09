@@ -5,16 +5,7 @@ library(stringr)
 library(reshape2)
 
 # load coefficent data
-pin <- read_excel(input_file,
-  sheet = "Parameter inputs", range = "A6:K500"
-) %>%
-  filter(!is.na(Parameter))
-
-
-pin <- pin[which(is.na(pin$Parameter) == FALSE), ]
-
-# modify variable name
-names(pin)[which(names(pin) == "Standard Error")] <- "standard_error"
+pin <- read_csv(here("config", "coefficients.csv"), show_col_types = FALSE)
 
 # get equation families to allocate sample sizes
 pin$equation_family <- NA
@@ -24,9 +15,7 @@ for (split_counter in 1:nrow(pin)) {
 }
 
 # load observed data on TKR rates in the population by age and gender
-tkadata <- read_excel(input_file,
-  sheet = "TKA utilisation", range = "A7:I48"
-)
+tkadata <- read_csv(here("config", "tka_utilisation.csv"), show_col_types = FALSE)
 
 tkadata_melt <- melt(tkadata, id.vars = "Year")
 # sample sizes
