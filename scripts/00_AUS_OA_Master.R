@@ -17,13 +17,13 @@ source(here("scripts", "00c_AUS_OA_Run_model_outer.R"))
 proc.time() - ptm
 
 # Save the model output to a csv file
-Z <- as_tibble(sim_storage[[1]]) %>%
+z_data <- as_tibble(sim_storage[[1]]) %>%
   relocate(year, id, age, sex) %>%
   arrange(id, year)
 
 new_filename <-
   paste0(here("output", "raw_output"), "/AUS-OA_Raw_results_", scenario, ".csv")
-write_csv(Z, new_filename)
+write_csv(z_data, new_filename)
 
 #-------------------------------------------------------------------------------
 # 4. COMPILE MODEL STATISTICS
@@ -34,7 +34,7 @@ new_filename <- paste0(
   stats_directory,
   "/AUS-OA_Results_", scenario, ".csv"
 )
-write_csv(Model_stats, new_filename)
+write_csv(model_stats, new_filename)
 #-------------------------------------------------------------------------------
 # 5. VALIDATE MODEL
 ## The following script runs a markdown file that compares the model results

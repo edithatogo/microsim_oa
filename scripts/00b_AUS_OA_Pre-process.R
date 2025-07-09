@@ -8,15 +8,16 @@ simpop_file <-
   as.character()
 simpop_file <- here("input", "population", simpop_file)
 
-runsimpop <-
-  sim_setup$spec[sim_setup$param == "Generate new base population?"] %>% as.logical()
+run_sim_pop <-
+  sim_setup$spec[sim_setup$param == "Generate new base population?"] %>%
+  as.logical()
 
-if (startyear == 2013 & (runsimpop == T | !file.exists(simpop_file))) {
+if (startyear == 2013 && (run_sim_pop == TRUE || !file.exists(simpop_file))) {
   pop_weight <-
     sim_setup$spec[sim_setup$param == "Population scale"] %>%
     as.numeric()
 
-  scale_HILDA <-
+  scale_hilda <-
     sim_setup$spec[sim_setup$param == "Population adjuster"] %>%
     as.numeric()
 
@@ -41,7 +42,7 @@ if (startyear == 2013) {
 
 
 am_file <- here("input", "population", str_glue("am_{startyear}.parquet"))
-if (!file.exists(am_file) & startyear != 2013) {
+if (!file.exists(am_file) && startyear != 2013) {
   stop("Attribute matrix for specified start year does not exist.
        Run the simulation from 2013 to specified start year
        in deterministic mode to save the attribute matrix. Then re-run

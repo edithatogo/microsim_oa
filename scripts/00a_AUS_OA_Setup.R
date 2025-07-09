@@ -36,12 +36,16 @@ colors <- c(
 
 
 # Load the input file
-input_file <- here("input", "scenarios", "choose file.txt")
-print("PLEASE CHOOSE THE INPUT FILE FROM THE MENU...")
-input_file <- choose.files(input_file)
-
-scenario <- gsub(".xlsx$", "", basename(input_file))
-scenario <- gsub("ausoa_input_", "", scenario)
+if (exists("scenario")) {
+  input_file <-
+    here("input", "scenarios", paste0("ausoa_input_", scenario, ".xlsx"))
+} else {
+  input_file <- here("input", "scenarios", "choose file.txt")
+  print("PLEASE CHOOSE THE INPUT FILE FROM THE MENU...")
+  input_file <- choose.files(input_file)
+  scenario <- gsub(".xlsx$", "", basename(input_file))
+  scenario <- gsub("ausoa_input_", "", scenario)
+}
 
 sim_setup <-
   read_excel(input_file, sheet = "Simulation inputs") %>%

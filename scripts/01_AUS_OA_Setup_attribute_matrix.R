@@ -1,11 +1,9 @@
 # % Load synthetic dataset
-am <- read_csv(simpop_file, show_col_types = F)
+am <- read_csv(simpop_file, show_col_types = FALSE)
 
 # % Set up attribute matrix with additional variables
 # % add id
-# id = 1:n;
-# am.id = transpose(id);
-am$id <- 1:nrow(am)
+am$id <- seq_len(nrow(am))
 
 # % add year
 am$year <- as.numeric(startyear)
@@ -83,7 +81,6 @@ am$bmi3539 <- ifelse(am$bmi_cat == levels(am$bmi_cat)[4], 1, 0)
 am$bmi40 <- ifelse(am$bmi_cat == levels(am$bmi_cat)[5], 1, 0)
 
 # % QALY - initialise to first year HRQOL
-# am.qaly = am.sf6d;
 am$qaly <- am$sf6d
 
 # % transition vars
