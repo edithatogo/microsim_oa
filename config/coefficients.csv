@@ -1,12 +1,461 @@
-# config/coefficients.csv
-#
-# This file contains the model's coefficients.
-#
-# You will need to populate this file with the data from the
-# "Parameter inputs" sheet of your ausoa_input_public.xlsx file.
-
-Parameter,Mean,Standard Error,Distribution,Live
-c1_cons,0.1,0.01,normal,0.1
-c1_year12,0.05,0.01,normal,0.05
-c1_age,0.01,0.001,normal,0.01
-c1_bmi,0.02,0.002,normal,0.02
+Parameter list,...2,...3,...4,...5,...6,...7,...8,...9,...10,...11
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Probabilistic?,No,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Parameter,Live,Probabilistic,Mean,Standard Error,Distribution,alpha,beta,Description,Source,Status
+c1_bmi,1.18E-2,1.1045090079511256E-2,1.18E-2,7.1428571428571429E-4,Normal,NA,NA,BMI equation 1 coefficients - weight gain for men <50,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c1_age,-6.4999999999999997E-3,-6.9612106438835929E-3,-6.4999999999999997E-3,6.1224489795918364E-4,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c1_year12,-1.29E-2,-2.1187050858347253E-2,-1.29E-2,6.1224489795918373E-3,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c1_cons,9.0899999999999995E-2,0.12038519239116152,9.0899999999999995E-2,3.0612244897959183E-2,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c2_bmi,1.5100000000000001E-2,1.991195752534625E-2,1.5100000000000001E-2,6.3775510204081634E-3,Normal,NA,NA,BMI equation 2 coefficients - weight gain for men 50+,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c2_age,0,0,0,0,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c2_year12,-7.3099999999999998E-2,-5.1438497043008964E-2,-7.3099999999999998E-2,1.2244897959183675E-2,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c2_cons,-0.29870000000000002,-0.31832064500484358,-0.29870000000000002,3.6428571428571435E-2,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c3_bmi_low,1.8499999999999999E-2,1.903877063627139E-2,1.8499999999999999E-2,7.6530612244897966E-4,Normal,NA,NA,BMI equation 3 coefficients - weight gain for women < 50,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c3_bmi_high,0,0,0,0,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c3_age,-5.0000000000000001E-3,-5.3754552044754222E-3,-5.0000000000000001E-3,2.5510204081632655E-4,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c3_cons,-8.6099999999999996E-2,-7.736680107672643E-2,-8.6099999999999996E-2,2.0765306122448979E-2,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c4_bmi_low,8.0000000000000002E-3,6.4955437757241042E-3,8.0000000000000002E-3,1.2755102040816328E-3,Normal,NA,NA,BMI equation 4 coefficients - weight gain for women 50+ high SEP,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c4_bmi_high,0,0,0,0,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c4_age,-5.8999999999999999E-3,-7.6039306964862082E-3,-5.8999999999999999E-3,8.673469387755102E-4,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c4_cons,0.20910000000000001,0.24090678209811806,0.20910000000000001,5.9183673469387757E-2,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c5_bmi_low,1.8700000000000001E-2,1.955531036495357E-2,1.8700000000000001E-2,1.4795918367346938E-3,Normal,NA,NA,BMI equation 5 coefficients - weight gain for women 50+ low SEP,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c5_bmi_high,6.6E-3,7.4177514179226758E-3,6.6E-3,1.7346938775510204E-3,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c5_age,0,0,0,0,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c5_cons,-0.3478,-0.2977712434488165,-0.3478,3.8418367346938778E-2,Normal,NA,NA,NA,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+c6_age1m,-1.307877,-1.1134350584216963,-1.307877,0.23460610000000001,Normal,NA,NA,OA incidence coefficients,Analysis of HILDA,Ok
+c6_age2m,0,0,0,0,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_age3m,0.43055599999999999,0.48648900636359627,0.43055599999999999,0.18196119999999999,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_age4m,0.7647294,0.26938266939767225,0.7647294,0.18270700000000001,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_age5m,1.163035,1.1499112110105967,1.163035,0.1833747,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_age1f,-0.91492030000000002,-0.93054987538790435,-0.91492030000000002,0.20375589999999999,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_age2f,0.29354360000000002,0.2539403911603525,0.29354360000000002,0.18356510000000001,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_age3f,1.1769970000000001,1.0292035847258587,1.1769970000000001,0.16233210000000001,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_age4f,1.275752,1.5028734636635712,1.275752,0.16603480000000001,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_age5f,1.424917,1.6228237405760557,1.424917,0.1724629,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_bmi0,0,0,0,0,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_bmi1,0.32080999999999998,0.27587708014653933,0.32080999999999998,8.6653499999999994E-2,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_bmi2,0.31955499999999998,0.28094212283704417,0.31955499999999998,0.10165920000000001,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_bmi3,0.52930390000000005,0.40617507724450425,0.52930390000000005,0.13044829999999999,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_bmi4,0.66032869999999999,0.79155162809649204,0.66032869999999999,0.15753829999999999,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_year12,-0.1484694,-0.21513335451871496,-0.1484694,7.1580199999999997E-2,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c6_cons,-3.726394,-3.6122827699364044,-3.726394,0.1646745,Normal,NA,NA,NA,Analysis of HILDA,Ok
+c7_sex,0.1819664,0.21004384159449027,0.1819664,0.13338410000000001,Normal,NA,NA,OA progression KL2 to 3 coefficients,Analysis of OAI,Ok
+c7_age1,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_age2,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_age3,0.30655260000000001,8.7081458135408296E-2,0.30655260000000001,0.16860459999999999,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_age4,0.37704929999999998,0.26015134551895525,0.37704929999999998,0.17254559999999999,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_age5,0.4659025,0.59412078401664548,0.4659025,0.2494103,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_bmi0,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_bmi1,0.42630299999999999,0.56686638241599885,0.42630299999999999,0.20684949999999999,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_bmi2,0.71563069999999995,0.7248771443199461,0.71563069999999995,0.20670759999999999,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_bmi3,0.95869579999999999,0.78591197636078425,0.95869579999999999,0.2467654,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_bmi4,0.41874420000000001,0.31865930611923998,0.41874420000000001,0.41282740000000001,Normal,NA,NA,NA,Analysis of OAI,Ok
+c7_cons,-2.386558,-2.9455392152229063,-2.386558,0.2452927,Normal,NA,NA,NA,Analysis of OAI,Ok
+c8_sex,0,0,0,0,Normal,NA,NA,OA progression KL3 to 4 coefficients,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_age1,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_age2,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_age3,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_age4,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_age5,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_bmi0,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_bmi1,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_bmi2,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_bmi3,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_bmi4,0,0,0,0,Normal,NA,NA,NA,Analysis of OAI and literature - no age or BMI effects,Ok
+c8_cons,-2,-2.0810565191036279,-2,0.3212043,Normal,NA,NA,NA,Analysis of OAI and literature - calibrated up slightly to increase progression,Ok
+c9_age,0.51,0.47963330531013881,0.51,1.0204081632653071E-2,Normal,NA,NA,Incidence of TKA,Based on Sharm's work with HR by KL score addition,Ok
+c9_age2,-3.8999999999999998E-3,-3.9957020429851392E-3,-3.8999999999999998E-3,1.0204081632653044E-4,Normal,NA,NA,NA,Based on Sharm's work with HR by KL score addition,Ok
+c9_drugoa,0.41,0.40706328750035298,0.41,1.5306122448979605E-2,Normal,NA,NA,NA,Based on Sharm's work with HR by KL score addition,Ok
+c9_ccount,-0.14000000000000001,-0.14704301826573543,-0.14000000000000001,1.0204081632653071E-2,Normal,NA,NA,NA,Based on Sharm's work with HR by KL score addition,Ok
+c9_mhc,-0.14000000000000001,-0.14794144821756955,-0.14000000000000001,2.0408163265306128E-2,Normal,NA,NA,NA,Based on Sharm's work with HR by KL score addition,Ok
+c9_tkr,0.97,0.98249781898794919,0.97,2.5510204081632678E-2,Normal,NA,NA,NA,Based on Sharm's work with HR by KL score addition,Ok
+c9_cons,5.5999999999999997E-9,6.144832359801422E-9,5.5999999999999997E-9,5.5999999999999993E-10,Normal,NA,NA,NA,Based on Sharm's work with HR by KL score addition,Ok
+c9_kl2hr,8.1701882901593359E-2,7.1061266745555407E-2,8.1701882901593359E-2,8.1701882901593359E-3,Normal,NA,NA,NA,Based on Sharm's work with HR by KL score addition,Ok
+c9_kl3hr,1.3520296258403774,1.35355162344947,1.3520296258403774,0.13520296258403774,Normal,NA,NA,NA,Based on Sharm's work with HR by KL score addition,Ok
+c9_kl4hr,4.9433293604216422,4.9460723892893803,4.9433293604216422,0.49433293604216422,Normal,NA,NA,NA,Based on Sharm's work with HR by KL score addition,Ok
+c10_1,0,0,0,0,Point estimate,NA,NA,Incidence of a comorbidity by age group,Calibrated to population norms,Ok
+c10_2,0.01,0.01,0.01,0,Point estimate,NA,NA,NA,Calibrated to population norms,Ok
+c10_3,0.02,0.02,0.02,0,Point estimate,NA,NA,NA,Calibrated to population norms,Ok
+c10_4,0.05,0.05,0.05,0,Point estimate,NA,NA,NA,Calibrated to population norms,Ok
+c10_5,0.1,0.1,0.1,0,Point estimate,NA,NA,NA,Calibrated to population norms,Ok
+c11_kl2,0.2,0.2,0.2,0,Point estimate,NA,NA,Chance of using OA drug by KL score,Calibrated to data with HILDA - aiming for 40% of OA sufferers,Ok
+c11_kl3,0.5,0.5,0.5,0,Point estimate,NA,NA,NA,Calibrated to data with HILDA - aiming for 40% of OA sufferers,Ok
+c11_kl4,0.8,0.8,0.8,0,Point estimate,NA,NA,NA,Calibrated to data with HILDA - aiming for 40% of OA sufferers,Ok
+c12_male,2E-3,2E-3,2E-3,0,Point estimate,NA,NA,Incidence of mental illness,Calibrated to population norms,Ok
+c12_female,3.0000000000000001E-3,3.0000000000000001E-3,3.0000000000000001E-3,0,Point estimate,NA,NA,NA,Calibrated to population norms,Ok
+c14_kl2,-4.2000000000000003E-2,-4.1373630919034739E-2,-4.2000000000000003E-2,2.1000000000000003E-3,Normal,NA,NA,HRQOL decrements due to KL,Wilson et al 2018 based on OAI data: Radiographic knee osteoarthritis impacts multiple dimensions of health-related quality of life: data from the Osteoarthritis Initiative,Ok
+c14_kl3,-5.9999999999999984E-3,-5.8590713755481433E-3,-5.9999999999999984E-3,2.9999999999999992E-4,Normal,NA,NA,HRQOL decrements due to KL,Wilson et al 2018 based on OAI data: Radiographic knee osteoarthritis impacts multiple dimensions of health-related quality of life: data from the Osteoarthritis Initiative,Ok
+c14_kl4,-2.9000000000000005E-2,-2.8554703723875644E-2,-2.9000000000000005E-2,1.4500000000000003E-3,Normal,NA,NA,HRQOL decrements due to KL,Wilson et al 2018 based on OAI data: Radiographic knee osteoarthritis impacts multiple dimensions of health-related quality of life: data from the Osteoarthritis Initiative,Ok
+c14_ccount,-1.2999999999999999E-2,-1.3806224013397516E-2,-1.2999999999999999E-2,2.5999999999999999E-3,Normal,NA,NA,HRQOL decrement due to comorbidities,Analysis of HILDA data;,Ok
+c14_mhc,-0.03,-3.0231622115130211E-2,-0.03,6.0000000000000001E-3,Normal,NA,NA,HRQOL decrement due to presence of mental health condition,Analysis of HILDA data;,Ok
+c14_bmi,-5.0000000000000001E-3,-6.4011574453944889E-3,-5.0000000000000001E-3,1E-3,Normal,NA,NA,HRQOL decrement due to BMI,"Calibrated to Carrello, J., Hayes, A., Killedar, A., Von Huben, A., Baur, L.A., Petrou, S. and Lung, T., 2021. Utility decrements associated with adult overweight and obesity in Australia: a systematic review and meta-analysis. Pharmacoeconomics, 39, pp.503-519.",Ok
+c14_rev,-0.05,-5.1618662777236708E-2,-0.05,0.01,Normal,NA,NA,HRQOL decrement due to a TKA revision,Analysis of SMART data;,Ok
+c14_age75,-2.8000000000000001E-2,-3.1084961523351697E-2,-2.8000000000000001E-2,5.5999999999999999E-3,Normal,NA,NA,HRQOL decrement due to age,Analysis of HILDA data;,Ok
+c15_male,2.7150799999999999E-2,3.7699000839738386E-2,2.7150799999999999E-2,6.6233999999999998E-3,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_age3,-3.47084E-2,-4.1329567347996463E-2,-3.47084E-2,1.7806900000000001E-2,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_age4,-2.9120699999999999E-2,-3.6013768528695082E-2,-2.9120699999999999E-2,1.73122E-2,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_age5,-5.3826699999999998E-2,-6.8824240397474687E-2,-5.3826699999999998E-2,1.75704E-2,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_bmi3,0,0,0,0,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_bmi4,-3.6868199999999997E-2,-4.4421040519914565E-2,-3.6868199999999997E-2,1.32544E-2,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_kl3,0,0,0,0,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_kl4,0,0,0,0,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_mhc,-4.2555799999999998E-2,-3.7098758257555785E-2,-4.2555799999999998E-2,8.3192000000000006E-3,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_sf6d,-0.6224864,-0.68070567681358807,-0.6224864,2.4749699999999999E-2,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_ccount,-8.1509000000000009E-3,-7.4972244737400457E-3,-8.1509000000000009E-3,2.6175E-3,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_cons,0.55116960000000004,0.6143652456776918,0.55116960000000004,2.8298400000000001E-2,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c15_comp,-1.72386E-2,-1.6186701765515538E-2,-1.72386E-2,7.4283999999999999E-3,Normal,NA,NA,Year 1 HRQOL improvements post TKA,Specific analysis of SMART,Ok
+c16_male,0,0,0,0,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_age3,0,0,0,0,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_age4,0,0,0,0,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_age5,0.41542109999999999,0.63146503601321058,0.41542109999999999,0.26915909999999998,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_bmi3,0.44690790000000002,0.18720916280428301,0.44690790000000002,0.21172959999999999,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_bmi4,0.58499760000000001,0.94313544591216258,0.58499760000000001,0.2248298,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_kl3,0,0,0,0,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_kl4,0,0,0,0,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_mhc,0,0,0,0,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_sf6d,0,0,0,0,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_ccount,0.17425650000000001,0.13063702229367852,0.17425650000000001,3.9674000000000001E-2,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c16_cons,-2.0238830000000001,-2.1669411282300342,-2.0238830000000001,0.473497,Normal,NA,NA,TKA complication logistic regression,Specific analysis of SMART,Ok
+c17_male,-0.54125270000000003,-0.71022314995813252,-0.54125270000000003,0.1087279,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_age3,0.25523980000000002,0,0.25523980000000002,0.36505120000000002,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_age4,1.2191559999999999,1.0996730995639525,1.2191559999999999,0.35128530000000002,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_age5,2.1177459999999999,2.0182959466371821,2.1177459999999999,0.35290899999999997,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_bmi3,0,0,0,0,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_bmi4,0,0,0,0,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_kl3,0,0,0,0,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_kl4,0,0,0,0.1355865,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_mhc,0,0,0,0,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_sf6d,-2.8143220000000002,-3.2590297583843348,-2.8143220000000002,0.48723899999999998,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_ccount,0.21254129999999999,0.21534357760792933,0.21254129999999999,4.2242500000000002E-2,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_cons,0,0,0,0,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_comp,0.65107380000000004,0.55147896308037048,0.65107380000000004,0.1128517,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+c17_public,-1.214969,-1.5410312442725183,-1.214969,0.157113,Normal,NA,NA,TKA inpatient rehab logistic regression,Specific analysis of SMART,Ok
+p_tka_qol,-0.04,-0.04,-0.04,0,Point estimate,NA,NA,HRQOL decrement that happens in year that have surgery,Calibrated; based on Schilling et al regression to the mean,Ok
+p_tka_qolmid,0.09,0.09,0.09,0,Point estimate,NA,NA,Minimum important HRQOL improvement to have benefited from surgery,Zhou et al 2022,Ok
+p_ffs_adj,1,1,1,0,Point estimate,NA,NA,Adjuster for fit for surgery. To implement SMART Choice. Baseline is calibrated to ensure around 80% of those getting surgeries are fit for surgery,NA,Ok
+p_KL2init,0.56299999999999994,0.56299999999999994,0.56299999999999994,0,Point estimate,NA,NA,KL distribution for initialising population,Based on average from literature,Ok
+p_KL3init,0.33450000000000002,0.33450000000000002,0.33450000000000002,0,Point estimate,NA,NA,NA,Based on average from literature,Ok
+p_KL4init,0.10150000000000001,0.10150000000000001,0.10150000000000001,0,Point estimate,NA,NA,NA,Based on average from literature,Ok
+hr_BMI_mort,1.3,1.2597336517444064,1.3,3.3163265306122451E-2,Normal,NA,NA,Mortality hazard due to BMI,"Based on Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+hr_SEP_mort,1.39,1.3660485292942652,1.39,0.20408163265306123,Normal,NA,NA,Mortality hazard due to low SEP,"Hayes et al, Socioeconomic inequalities in obesity: modelling future trends in Australia",Ok
+chs_tkacost_public,22.25662342165549,22.759717141673317,22.25662342165549,1.1128311710827745,Normal,NA,NA,TKA cost public,IHACPA,Ok
+chs_tkacost_private,23.374988589870519,24.14129449214936,23.374988589870519,1.1687494294935259,Normal,NA,NA,TKA cost private,IHACPA,Ok
+chs_revcost_public,40.825419258333334,36.443640693264186,40.825419258333334,2.0412709629166668,Normal,NA,NA,Revision cost public,IHACPA,Ok
+chs_revcost_private,34.435258275881843,35.46802256352877,34.435258275881843,1.7217629137940922,Normal,NA,NA,Revision cost private,IHACPA,Ok
+chs_inpatient_rehabcost_public,13.466957536529966,13.593837435564707,13.466957536529966,0.67334787682649833,Normal,NA,NA,Inpatient rehab cost public,IHACPA,Ok
+chs_inpatient_rehabcost_private,13.466957536529966,15.182856348384076,13.466957536529966,2.3182796675873276,Normal,NA,NA,Inpatient rehab cost private,Assumed same as public,Ok
+chs_home_rehabcost,0.47010470769887308,-7.4923547652437639E-2,0.47010470769887308,0.39457753889628738,Normal,NA,NA,Home rehab cost,Naylor et al 2017,Ok
+chs_oa_annualcost,1,0.93321263689863287,1,0.05,Normal,NA,NA,Annual cost to health system for OA treatment,TBC,Ok
+cp_discountrate,0.05,0.05,0.05,0,Point estimate,NA,NA,Discount rate,MSAC/PBAC standardard,Ok
+cr_age,-4.3558780999999998E-2,-4.3552177215496785E-2,-4.3558780999999998E-2,4.3558780999999999E-4,Normal,NA,NA,Age,AOANJRR,Ok
+cr_age53,4.3454454000000003E-5,4.3449975987449255E-5,4.3454454000000003E-5,4.3454454000000003E-7,Normal,NA,NA,"pmax(Age - 53, 0)^3",AOANJRR,Ok
+cr_age63,-8.7659928000000001E-5,-8.6490337199997044E-5,-8.7659928000000001E-5,8.7659928000000004E-7,Normal,NA,NA,"pmax(Age - 63, 0)^3",AOANJRR,Ok
+cr_age69,-1.1446375E-4,-1.1513086264869016E-4,-1.1446375E-4,1.1446375000000001E-6,Normal,NA,NA,"pmax(Age - 69, 0)^3",AOANJRR,Ok
+cr_age74,2.2800638E-4,2.2889964529307567E-4,2.2800638E-4,2.2800638E-6,Normal,NA,NA,"pmax(Age - 74, 0)^3",AOANJRR,Ok
+cr_age83,-6.9337157E-5,-6.9089270373027734E-5,-6.9337157E-5,6.9337157E-7,Normal,NA,NA,"pmax(Age - 83, 0)^3",AOANJRR,Ok
+cr_female,-0.24672279,-0.24502865181184771,-0.24672279,2.4672279000000001E-3,Normal,NA,NA,Female Sex,AOANJRR,Ok
+cr_asa2,0.10171154,0.10349684854155367,0.10171154,1.0171154E-3,Normal,NA,NA,ASA 2,AOANJRR,Ok
+cr_asa3,0.36741162999999999,0.36361374198732915,0.36741162999999999,3.6741162999999999E-3,Normal,NA,NA,ASA 3,AOANJRR,Ok
+cr_asa4_5,0.70416953000000004,0.7107713163471604,0.70416953000000004,7.0416953000000003E-3,Normal,NA,NA,ASA 4 or 5,AOANJRR,Ok
+cr_bmi,-1.8108326000000001E-2,-1.8351426093419755E-2,-1.8108326000000001E-2,1.8108326000000001E-4,Normal,NA,NA,BMI,AOANJRR,Ok
+cr_bmi23,3.2005865000000002E-4,3.162447076256455E-4,3.2005865000000002E-4,3.2005865000000001E-6,Normal,NA,NA,"pmax(BMI - 23.3, 0)^3",AOANJRR,Ok
+cr_bmi27,-1.1781227E-3,-1.1655300469683252E-3,-1.1781227E-3,1.1781227E-5,Normal,NA,NA,"pmax(BMI - 27.9, 0)^3",AOANJRR,Ok
+cr_bmi31,1.2996087999999999E-3,1.298851983798213E-3,1.2996087999999999E-3,1.2996088E-5,Normal,NA,NA,"pmax(BMI - 31.1, 0)^3",AOANJRR,Ok
+cr_bmi34,-4.8967987000000002E-4,-4.9184269960396551E-4,-4.8967987000000002E-4,4.8967987000000002E-6,Normal,NA,NA,"pmax(BMI - 34.9, 0)^3",AOANJRR,Ok
+cr_bmi43,4.8135108000000001E-5,4.7605066746092962E-5,4.8135108000000001E-5,4.8135108000000006E-7,Normal,NA,NA,"pmax(BMI - 43.3, 0)^3",AOANJRR,Ok
+cr_public,-9.6982159999999998E-2,-9.84342972076446E-2,-9.6982159999999998E-2,9.6982159999999993E-4,Normal,NA,NA,Public Hospital,AOANJRR,Ok
+cr_k_min,-5.9005820499999997,-5.9682651981479697,-5.9005820499999997,5.90058205E-2,Normal,NA,NA,Table 2a: Knot locations,AOANJRR,Ok
+cr_k_1,-1.87523036,-1.8548072350487139,-1.87523036,1.8752303599999999E-2,Normal,NA,NA,Table 2a: Knot locations,AOANJRR,Ok
+cr_k_2,-0.59727713999999998,-0.60065849941322236,-0.59727713999999998,5.9727714000000001E-3,Normal,NA,NA,Table 2a: Knot locations,AOANJRR,Ok
+cr_k_3,-7.4581939999999999E-2,-7.5060218844231544E-2,-7.4581939999999999E-2,7.4581940000000002E-4,Normal,NA,NA,Table 2a: Knot locations,AOANJRR,Ok
+cr_k_4,0.26483580000000001,0.26199899178710473,0.26483580000000001,2.648358E-3,Normal,NA,NA,Table 2a: Knot locations,AOANJRR,Ok
+cr_k_5,0.58710196999999997,0.5786985721902933,0.58710196999999997,5.8710196999999997E-3,Normal,NA,NA,Table 2a: Knot locations,AOANJRR,Ok
+cr_k_6,0.90845726000000004,0.92807717549640578,0.90845726000000004,9.0845726000000002E-3,Normal,NA,NA,Table 2a: Knot locations,AOANJRR,Ok
+cr_k_7,1.28707511,1.2871411527086023,1.28707511,1.2870751099999999E-2,Normal,NA,NA,Table 2a: Knot locations,AOANJRR,Ok
+cr_k_max,2.0371497199999999,2.0363391333428229,2.0371497199999999,2.0371497199999998E-2,Normal,NA,NA,Table 2a: Knot locations,AOANJRR,Ok
+cr_lambda_1,0.49288388589628551,0.49535642137331248,0.49288388589628551,4.9288388589628553E-3,Normal,NA,NA,Table 2b: Scale knot values (kmax-kvalue)/(kmax-kmin),AOANJRR,Ok
+cr_lambda_2,0.33188660644298895,0.32982164199368985,0.33188660644298895,3.3188660644298896E-3,Normal,NA,NA,Table 2b: Scale knot values (kmax-kvalue)/(kmax-kmin),AOANJRR,Ok
+cr_lambda_3,0.26603716542565914,0.26043435266397058,0.26603716542565914,2.6603716542565915E-3,Normal,NA,NA,Table 2b: Scale knot values (kmax-kvalue)/(kmax-kmin),AOANJRR,Ok
+cr_lambda_4,0.22327712391319568,0.22200438963171293,0.22327712391319568,2.232771239131957E-3,Normal,NA,NA,Table 2b: Scale knot values (kmax-kvalue)/(kmax-kmin),AOANJRR,Ok
+cr_lambda_5,0.18267784702430176,0.18420157321859723,0.18267784702430176,1.8267784702430175E-3,Normal,NA,NA,Table 2b: Scale knot values (kmax-kvalue)/(kmax-kmin),AOANJRR,Ok
+cr_lambda_6,0.14219332332012019,0.14091352955140574,0.14219332332012019,1.4219332332012018E-3,Normal,NA,NA,Table 2b: Scale knot values (kmax-kvalue)/(kmax-kmin),AOANJRR,Ok
+cr_lambda_7,9.4494829471921046E-2,9.3865647802819571E-2,9.4494829471921046E-2,9.4494829471921044E-4,Normal,NA,NA,Table 2b: Scale knot values (kmax-kvalue)/(kmax-kmin),AOANJRR,Ok
+cr_gamma_0,1.83422113,1.830275655304235,1.83422113,1.8342211300000001E-2,Normal,NA,NA,Table 3: Spline basis coefficients,AOANJRR,Ok
+cr_gamma_1,1.6795395,1.6941634018027483,1.6795395,1.6795395000000001E-2,Normal,NA,NA,Table 3: Spline basis coefficients,AOANJRR,Ok
+cr_gamma_2,0.17794716999999999,0.1759884035523657,0.17794716999999999,1.7794716999999999E-3,Normal,NA,NA,Table 3: Spline basis coefficients,AOANJRR,Ok
+cr_gamma_3,-0.36101472000000001,-0.36208294545295311,-0.36101472000000001,3.6101472000000003E-3,Normal,NA,NA,Table 3: Spline basis coefficients,AOANJRR,Ok
+cr_gamma_4,-1.7243350000000001E-2,-1.7481674940063061E-2,-1.7243350000000001E-2,1.724335E-4,Normal,NA,NA,Table 3: Spline basis coefficients,AOANJRR,Ok
+cr_gamma_5,0.29195757,0.29552376969482008,0.29195757,2.9195757E-3,Normal,NA,NA,Table 3: Spline basis coefficients,AOANJRR,Ok
+cr_gamma_6,-0.14661968,-0.14591262498197816,-0.14661968,1.4661968E-3,Normal,NA,NA,Table 3: Spline basis coefficients,AOANJRR,Ok
+cr_gamma_7,0.17093190999999999,0.17303359889548173,0.17093190999999999,1.7093191E-3,Normal,NA,NA,Table 3: Spline basis coefficients,AOANJRR,Ok
+cr_gamma_8,-4.8522700000000002E-2,-4.8434481374378037E-2,-4.8522700000000002E-2,4.8522700000000002E-4,Normal,NA,NA,Table 3: Spline basis coefficients,AOANJRR,Ok
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Current end,0,NA,NA,NA,NA,NA,NA,NA,NA,NA

@@ -1,19 +1,16 @@
-# config/simulation_setup.yml
-#
-# This file contains the main simulation parameters.
-#
-# You will need to populate this file with the data from the
-# "Simulation inputs" sheet of your ausoa_input_public.xlsx file.
-
-simulation_start_year: 2013
-simulation_length_years: 10
-probabilistic: true
-number_of_simulations: 10
-set_seed: true
-parallelize: true
-calibration_mode: false
-input_data_for_base_population: "mysim_public.csv"
-population_scale: 100
-population_adjuster: 1.0
-generate_new_base_population: true
-simpop_file: "am.parquet"
+Base population parameters: Value
+Generate new base population?: 'FALSE'
+Input data for base population: synpop_wave13imp3.csv
+Population scale: '1000'
+Population adjuster: '1.026'
+Synthetic population if not generating a new one: mysim_public.csv
+NA: .na.character
+Simulation parameters: Value
+Simulation start year: '2013'
+Simulation length (years): '10'
+Probabilistic: 'TRUE'
+Number of simulations: '5'
+Parallelize: 'TRUE'
+Cores: '4'
+Calibration mode: 'TRUE'
+Set seed: 'TRUE'

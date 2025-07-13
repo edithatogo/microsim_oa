@@ -6,7 +6,14 @@
 
 
 # Set seed
-set_seed <- sim_setup$spec[sim_setup$param == "Set seed"] %>% as.logical()
+set_seed <- sim_setup# AUS-OA simulation in R
+# candidate version 2 - written 28/02/2024
+# original code written in MATLAB by: Chris Schilling, September 2023
+
+
+
+
+Set seed`
 if (set_seed == TRUE) {
   seed_iter <- seed # maybe redundant but making sure the seed value is read in
   set.seed(seed_iter)
@@ -19,11 +26,22 @@ source(here("scripts", "functions", "OA_update_fcn.R"))
 source(here("scripts", "functions", "TKA_update_fcn_v2.R"))
 source(here("scripts", "functions", "revisions_fcn.R"))
 
-startyear <-
-  sim_setup$spec[sim_setup$param == "Simulation start year"] %>% as.integer()
-numyears <-
-  sim_setup$spec[sim_setup$param == "Simulation length (years)"] %>%
-  as.integer()
+startyear <- sim_setup# AUS-OA simulation in R
+# candidate version 2 - written 28/02/2024
+# original code written in MATLAB by: Chris Schilling, September 2023
+
+
+
+
+Simulation start year`
+numyears <- sim_setup# AUS-OA simulation in R
+# candidate version 2 - written 28/02/2024
+# original code written in MATLAB by: Chris Schilling, September 2023
+
+
+
+
+Simulation length (years)`
 
 # setup population
 lt <- read_csv(here("config", "life_tables_2013.csv"), show_col_types = FALSE)
@@ -51,20 +69,81 @@ age_edges <- c(min(am$age) - 1, 45, 55, 65, 75, 150)
 # will be sampled per individual for the simulation run,
 # if FALSE then the 'live' value from the supplied data will be used
 
-probabilistic <-
-  sim_setup$spec[sim_setup$param == "Probabilistic"] %>% as.logical()
+probabilistic <- sim_setup$Probabilistic
 
 # if calibration_mode = TRUE then the simulation will run with the supplied
-calibration_mode <-
-  sim_setup$spec[sim_setup$param == "Calibration mode"] %>% as.logical()
+calibration_mode <- sim_setup# AUS-OA simulation in R
+# candidate version 2 - written 28/02/2024
+# original code written in MATLAB by: Chris Schilling, September 2023
+
+
+
+
+# Set seed
+set_seed <- sim_setup# AUS-OA simulation in R
+# candidate version 2 - written 28/02/2024
+# original code written in MATLAB by: Chris Schilling, September 2023
+
+
+
+
+Set seed`
+if (set_seed == TRUE) {
+  seed_iter <- seed # maybe redundant but making sure the seed value is read in
+  set.seed(seed_iter)
+}
+
+# load functions
+source(here("scripts", "functions", "simulation_cycle_fcn.R"))
+source(here("scripts", "functions", "BMI_mod_fcn.R"))
+source(here("scripts", "functions", "OA_update_fcn.R"))
+source(here("scripts", "functions", "TKA_update_fcn_v2.R"))
+source(here("scripts", "functions", "revisions_fcn.R"))
+
+startyear <- sim_setup# AUS-OA simulation in R
+# candidate version 2 - written 28/02/2024
+# original code written in MATLAB by: Chris Schilling, September 2023
+
+
+
+
+Simulation start year`
+numyears <- sim_setup# AUS-OA simulation in R
+# candidate version 2 - written 28/02/2024
+# original code written in MATLAB by: Chris Schilling, September 2023
+
+
+
+
+Simulation length (years)`
+
+# setup population
+lt <- read_csv(here("config", "life_tables_2013.csv"), show_col_types = FALSE)
+
+if (startyear == 2013) {
+  am_file <- "am.parquet"
+  am <-
+    read_parquet(
+      here("input", "population", am_file)
+    )
+} else {
+  am_file <- str_glue("am_{startyear}.parquet")
+  am <-
+    read_parquet(
+      here("input", "population", am_file)
+    ) %>%
+    # These variables are not in original am
+    select(-kl0, -kl2, -kl3, -kl4, -kl_score)
+}
+
+bmi_edges <- c(0, 25, 30, 35, 40, 100)
+age_edges <- c(min(am$age) - 1, 45, 55, 65, 75, 150)
+Calibration mode`
 
 source(here("scripts", "setup_coefficents_v2.R"))
 
 # load time trend data for use in the TKA update function
-tka_time_trend <- read_excel(input_file,
-  sheet = "TKA utilisation",
-  range = "A53:I94", col_names = TRUE
-)
+tka_time_trend <- read_csv(here("config", "tka_utilisation.csv"), show_col_types = FALSE)
 
 # setup base OA and KL data
 source(here("scripts", "setup_base_OA_KL_data_v2.R"))
