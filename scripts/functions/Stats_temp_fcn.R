@@ -28,10 +28,13 @@ f_get_percent_N_from_binary <- function(df, group_vars) {
         )
       )
     ) %>%
-    ungroup() %>%
+    ungroup()
+
+  # Round percentage columns to 2 decimal places
+  summary_stats <- summary_stats %>%
     mutate(
       across(
-        .cols = -c({{ group_vars }}),
+        .cols = ends_with("_percent"),
         ~ round(.x * 100, 2)
       )
     )

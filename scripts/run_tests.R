@@ -39,3 +39,8 @@ new_filename <-
 write_csv(Z, new_filename)
 
 print(paste("Test results saved to:", new_filename))
+
+# 4. RUN UNIT TESTS
+print("\nRunning unit tests...")
+library(testthat)
+test_dir(here::here("tests", "testthat"))

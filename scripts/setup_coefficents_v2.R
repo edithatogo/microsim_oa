@@ -76,9 +76,7 @@ if (probabilistic == TRUE) {
   print("Assigning coefficients probabilistic where distribution specified")
   # undertake random draw for each individual for each coefficent
   for (coeff_counter in 1:nrow(pin)) {
-    if (coeff_counter >= 72) {
-      browser()
-    }
+    
     names(cycle.coefficents)[coeff_counter] <- pin[coeff_counter, 1]
 
     if (is.na(pin[coeff_counter, "Distribution"]) == FALSE) {

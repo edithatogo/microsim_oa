@@ -7,7 +7,8 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  am,
                                  mort_update_counter, lt,
                                  eq_cust,
-                                 TKA_time_trend) {
+                                 TKA_time_trend,
+                                 pin) {
   # extract relevant equation modification data
   BMI_cust <- eq_cust[["BMI"]]
   TKR_cust <- eq_cust[["TKR"]]
@@ -28,7 +29,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % OA incidence - based on HILDA analysis
 
-  OA_update_data <- OA_update(am_curr, am_new, cycle.coefficents, OA_cust)
+  OA_update_data <- OA_update(am_curr, am_new, cycle.coefficents, OA_cust, pin)
 
   # extract data.tables from output list
   am_curr <- OA_update_data[["am_curr"]]
@@ -66,7 +67,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # % Comorbidities
 
 
-  browser()
+  
   am_curr$cci <- cycle.coefficents$c10_1 * am_curr$age4554 +
     cycle.coefficents$c10_2 * am_curr$age4554 +
     cycle.coefficents$c10_3 * am_curr$age5564 +
@@ -99,7 +100,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## update TKA status (TKA, complications, revision, inpatient rehab)
   # % TKA
 
-  TKA_update_data <- TKA_update_fcn(am_curr, am_new, pin, TKA_time_trend, tkadata_melt)
+  TKA_update_data <- TKA_update_fcn(am_curr, am_new, pin, TKA_time_trend, OA_cust, cycle.coefficents)
 
   # extract data.tables from output list
   am_curr <- TKA_update_data[["am_curr"]]

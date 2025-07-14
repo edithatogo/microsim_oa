@@ -1,4 +1,6 @@
 # TKA REVISION
+library(dplyr)
+
 revisions_fcn <- function(cycle.coefficents, am_curr) {
   # Prepare data frames for calculation
   Coefs <-

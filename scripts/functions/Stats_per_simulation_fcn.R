@@ -1,5 +1,8 @@
 # EXTRACT STATISTICS FROM THE RESULT
-stats_per_simulation <- function(sim_number, group_vars) {
+library(tidyr)
+library(dplyr)
+
+stats_per_simulation <- function(sim_storage, sim_number, group_vars) {
   Z <- sim_storage[[sim_number]] %>%
     filter(dead == 0) %>%
     filter(age >= 45) %>%
@@ -13,7 +16,7 @@ stats_per_simulation <- function(sim_number, group_vars) {
       bmi_overweight_or_obese = ifelse(bmi >= 25, 1, 0),
       bmi_obese = ifelse(bmi >= 30, 1, 0)
     ) %>%
-    group_by(across(all_of(group_vars)))
+    group_by(across(any_of(group_vars)))
 
   Freq <- Z %>%
     summarise(
@@ -23,7 +26,7 @@ stats_per_simulation <- function(sim_number, group_vars) {
       )
     ) %>%
     pivot_longer(
-      cols = -all_of(group_vars),
+      cols = -any_of(group_vars),
       names_to = "variable", values_to = "N"
     )
 
@@ -35,7 +38,7 @@ stats_per_simulation <- function(sim_number, group_vars) {
       )
     ) %>%
     pivot_longer(
-      cols = -all_of(group_vars),
+      cols = -any_of(group_vars),
       names_to = "variable", values_to = "Mean"
     )
 
@@ -47,13 +50,13 @@ stats_per_simulation <- function(sim_number, group_vars) {
       )
     ) %>%
     pivot_longer(
-      cols = -all_of(group_vars),
+      cols = -any_of(group_vars),
       names_to = "variable", values_to = "Sum"
     )
 
   Stats <- Freq %>%
-    full_join(Means, by = c(all_of(group_vars), "variable")) %>%
-    full_join(Sum, by = c(all_of(group_vars), "variable")) %>%
+    full_join(Means, by = c(group_vars, "variable")) %>%
+    full_join(Sum, by = c(group_vars, "variable")) %>%
     mutate(sim_number = sim_number)
 
   return(Stats)
