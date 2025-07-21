@@ -12,4 +12,6 @@ Imports:
     forcats,
     ggplot2,
     stringr,
-    tidyr
+    tidyr,
+    yaml,
+    purrr

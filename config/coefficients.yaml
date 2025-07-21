@@ -1,0 +1,73 @@
+# Model Coefficients for AUS-OA V2
+# This file replaces the 'Parameter inputs' sheet in the Excel file.
+
+# Each top-level key is an equation family.
+# Each parameter has a 'live' value (the point estimate) and optional
+# properties for probabilistic sensitivity analysis (PSA), such as
+# 'distribution' and 'std_error'.
+
+c1: # BMI progression, males < 50
+  c1_cons:
+    live: 0.1
+    distribution: normal
+    std_error: 0.01
+  c1_year12:
+    live: -0.05
+    distribution: normal
+    std_error: 0.005
+  c1_age:
+    live: 0.01
+    distribution: normal
+    std_error: 0.001
+  c1_bmi:
+    live: 0.02
+    distribution: normal
+    std_error: 0.002
+
+c6: # OA initiation
+  c6_cons:
+    live: -5.0
+    distribution: normal
+    std_error: 0.1
+  c6_year12:
+    live: -0.2
+    distribution: normal
+    std_error: 0.02
+  c6_age1m:
+    live: 0.5
+    distribution: normal
+    std_error: 0.05
+
+# ... and so on for all other equation families (c2, c3, c4, c5, c7, c8, c9, etc.)
+
+costs:
+  chs_tkacost_public:
+    live: 20000
+  chs_tkacost_private:
+    live: 25000
+  chs_revcost_public:
+    live: 30000
+  chs_revcost_private:
+    live: 35000
+  chs_inpatient_rehabcost_public:
+    live: 5000
+  chs_inpatient_rehabcost_private:
+    live: 7000
+  chs_oa_annualcost:
+    live: 1000
+
+utilities:
+  c14_kl2:
+    live: -0.05
+  c14_kl3:
+    live: -0.1
+  c14_kl4:
+    live: -0.15
+  c14_rev:
+    live: -0.2
+  c14_bmi:
+    live: -0.005
+  c14_ccount:
+    live: -0.02
+  c14_mhc:
+    live: -0.03
