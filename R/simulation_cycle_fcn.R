@@ -1,7 +1,32 @@
-# goal: top level simulation function for the OA model
-# note: version 1, largely replicating the original matlab code by C. Schilling
-
-
+#' Run a Single Microsimulation Cycle
+#'
+#' This is the main function that drives the microsimulation for a single year (cycle).
+#' It orchestrates the updates for BMI, osteoarthritis, comorbidities, TKA,
+#' mortality, and other individual attributes.
+#'
+#' @param am_curr A data.frame representing the attribute matrix for the current
+#'   cycle (time `t`).
+#' @param cycle.coefficents A list or data.frame of all model coefficients for
+#'   the cycle.
+#' @param am_new A data.frame representing the attribute matrix for the next
+#'   cycle (time `t+1`), which will be populated by this function.
+#' @param age_edges A numeric vector defining the break points for age categories.
+#' @param bmi_edges A numeric vector defining the break points for BMI categories.
+#' @param am A data.frame, presumably the full attribute matrix (used for mortality).
+#'   Note: The usage of this parameter seems unusual and might need review.
+#' @param mort_update_counter A counter variable for the mortality loop.
+#'   Note: The usage of this parameter seems unusual and might need review.
+#' @param lt A data.frame representing the life table used for mortality calculations.
+#' @param eq_cust A list of data.frames containing customisation factors for
+#'   the model equations (BMI, TKR, OA).
+#' @param TKA_time_trend A value representing the time trend adjustment for TKA.
+#' @param pin A data.frame containing parameter inputs, such as utility values.
+#'
+#' @return A list containing three elements:
+#'   \item{am_curr}{The `am_curr` data.frame with intermediate calculations.}
+#'   \item{am_new}{The fully updated `am_new` data.frame for the next cycle.}
+#'   \item{summ_tka_risk}{A summary data.frame of TKA risk calculations.}
+#' @export
 simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  age_edges, bmi_edges,
                                  am,
@@ -244,3 +269,4 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   return(export_data)
 }
+

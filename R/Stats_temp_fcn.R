@@ -1,17 +1,15 @@
-# STATS FUNCTIONS
-#-------------------------------------------------------------------------------
-# FUNCTION: Get percentages and frequencies of binary variables by group
-
-# # Pre-cleaning
-# # If you want to use this function to get percentages for those who are
-# # alive, you would need to filter the data using filter(dead==0).
-#
-# # Specifying the group_vars argument:
-# # Example group_vars=c("year", "sex", "age_group")
-
+#' Get Percentages and Frequencies of Binary Variables
+#'
+#' Calculates the percentage and frequency of binary (0/1) variables for each
+#' level of specified grouping variables.
+#'
+#' @param df A data.frame containing the data.
+#' @param group_vars A character vector of variable names to group by.
+#' @return A data.frame with summary statistics (percentage and frequency) for
+#'   each binary variable and group combination.
+#' @importFrom dplyr select group_by summarise ungroup mutate across all_of ends_with
+#' @export
 f_get_percent_N_from_binary <- function(df, group_vars) {
-  require(dplyr)
-
   # Select the required columns and filter values in (0, 1)
   df_filtered <- df %>%
     select(all_of(group_vars), where(~ all(.x %in% c(0, 1))))
@@ -42,9 +40,18 @@ f_get_percent_N_from_binary <- function(df, group_vars) {
   return(summary_stats)
 }
 
+#' Get Mean, Frequency, and Sum of Numeric Variables
+#'
+#' Calculates the mean, frequency (count of 1s), and sum for all numeric
+#' variables for each level of specified grouping variables.
+#'
+#' @param df A data.frame containing the data.
+#' @param group_vars A character vector of variable names to group by.
+#' @return A data.frame with summary statistics (mean, frequency, sum) for
+#'   each numeric variable and group combination.
+#' @importFrom dplyr group_by summarise ungroup across all_of
+#' @export
 f_get_means_freq_sum <- function(df, group_vars) {
-  require(dplyr)
-
   # Select the required columns and filter values in (0, 1)
   df_filtered <- df
   # Group by specified variables and calculate summary statistics
@@ -65,7 +72,18 @@ f_get_means_freq_sum <- function(df, group_vars) {
   return(summary_stats)
 }
 
-## BMI SUMMARY
+#' Summarise BMI Data
+#'
+#' Processes the full simulation output to calculate the proportion of the
+#' population that is overweight or obese, stratified by year, age category,
+#' and sex.
+#'
+#' @param am_all A data.frame representing the full simulation output, containing
+#'   data for all individuals over all cycles.
+#' @return A data.frame with the summarised BMI statistics.
+#' @importFrom dplyr group_by summarise n
+#' @importFrom forcats fct_recode
+#' @export
 BMI_summary_data <- function(am_all) {
   # remove all individuals who are dead in the cycle
   am_all <- am_all[which(am_all$dead == 0), ]
@@ -111,6 +129,19 @@ BMI_summary_data <- function(am_all) {
   return(BMI_by_sex_and_year)
 }
 
+#' Plot BMI Summary Data for Validation
+#'
+#' Creates a plot comparing simulated BMI statistics against observed data,
+#' faceted by age category and sex.
+#'
+#' @param percent_overweight_and_obesity_by_sex_joint A data.frame of observed
+#'   BMI data.
+#' @param BMI_by_sex_and_year A data.frame of simulated BMI data, typically from
+#'   `BMI_summary_data()`.
+#' @param current.mod.value A value used to create a unique filename for the saved plot.
+#' @return A ggplot object is printed to the console and a file is saved to disk.
+#' @import ggplot2
+#' @export
 BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
                              BMI_by_sex_and_year,
                              current.mod.value) {
@@ -154,6 +185,20 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
   ggsave(paste0("output_figures/BMI_validation_modval_", current.mod.value, ".png"))
 }
 
+#' Calculate RMSE for BMI Summary
+#'
+#' Calculates the Root Mean Squared Error (RMSE) between simulated and observed
+#' BMI data to quantify model fit.
+#'
+#' @param percent_overweight_and_obesity_by_sex_joint A data.frame of observed
+#'   BMI data.
+#' @param BMI_by_sex_and_year A data.frame of simulated BMI data, typically from
+#'   `BMI_summary_data()`.
+#' @param current.mod.value (Not used) A value intended for file naming, currently
+#'   has no effect in the function.
+#' @return A data.frame containing the RMSE values, grouped by age category and sex.
+#' @importFrom dplyr group_by arrange summarise ungroup
+#' @export
 BMI_summary_RMSE <- function(percent_overweight_and_obesity_by_sex_joint,
                              BMI_by_sex_and_year,
                              current.mod.value) {
@@ -205,7 +250,16 @@ BMI_summary_RMSE <- function(percent_overweight_and_obesity_by_sex_joint,
 }
 
 
-## OA SUMMARY
+#' Summarise Osteoarthritis (OA) Data
+#'
+#' Processes the full simulation output to calculate the prevalence of OA,
+#' stratified by year, age group, and sex.
+#'
+#' @param am_all A data.frame representing the full simulation output.
+#' @return A data.frame with the summarised OA prevalence statistics.
+#' @importFrom dplyr filter select mutate group_by summarise bind_rows case_when
+#' @importFrom stringr str_replace
+#' @export
 OA_summary_fcn <- function(am_all) {
   Z <-
     am_all %>%

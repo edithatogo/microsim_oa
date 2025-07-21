@@ -1,7 +1,22 @@
-# EXTRACT STATISTICS FROM THE RESULT
-library(tidyr)
-library(dplyr)
-
+#' Calculate Statistics for a Single Simulation Run
+#'
+#' This function takes the output of a single simulation run, filters it for
+#' living individuals aged 45 and over, creates derived variables, and then
+#' calculates summary statistics (N, Mean, Sum) for all numeric variables,
+#' grouped by specified grouping variables.
+#'
+#' @param sim_storage A list where each element is a data.frame representing
+#'   the output of a single simulation run.
+#' @param sim_number The index of the simulation run to process from `sim_storage`.
+#' @param group_vars A character vector of variable names to group the summary
+#'   statistics by (e.g., c("year", "sex", "age_group")).
+#'
+#' @return A data.frame in long format containing the summary statistics (N,
+#'   Mean, Sum) for each variable and group combination for the specified
+#'   simulation run.
+#' @importFrom dplyr filter mutate group_by summarise across full_join case_when any_of
+#' @importFrom tidyr pivot_longer
+#' @export
 stats_per_simulation <- function(sim_storage, sim_number, group_vars) {
   Z <- sim_storage[[sim_number]] %>%
     filter(dead == 0) %>%
@@ -61,3 +76,4 @@ stats_per_simulation <- function(sim_storage, sim_number, group_vars) {
 
   return(Stats)
 }
+

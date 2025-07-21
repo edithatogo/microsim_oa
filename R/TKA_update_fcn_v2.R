@@ -1,5 +1,30 @@
-source(here::here("scripts", "functions", "apply_coefficent_customisations_fcn.R"))
-
+#' Update Total Knee Arthroplasty (TKA) Status (Version 2)
+#'
+#' This function models the probability of an individual undergoing a primary or
+#' secondary Total Knee Arthroplasty (TKA) in a given cycle. It calculates an
+#' initial risk based on individual characteristics and then adjusts this risk
+#' based on secular trends for different age and sex groups.
+#'
+#' @param am_curr A data.frame representing the attribute matrix for the current
+#'   cycle.
+#' @param am_new A data.frame representing the attribute matrix for the next
+#'   cycle, which will be updated by this function.
+#' @param pin A data.frame of parameter inputs (not currently used in this
+#'   version of the function, but may be kept for API consistency).
+#' @param TKA_time_trend A data.frame containing the secular trend scaling
+#'   factors for TKA risk by year, sex, and age group.
+#' @param OA_cust A data.frame with customisation factors for OA coefficients,
+#'   which are unusually applied to TKA coefficients here. This is flagged for
+#'   review in the code.
+#' @param cycle.coefficents A list or data.frame of model coefficients for the
+#'   TKA initiation equation.
+#'
+#' @return A list containing three elements:
+#'   \item{am_curr}{The `am_curr` data.frame with intermediate calculations.}
+#'   \item{am_new}{The `am_new` data.frame with updated TKA status (`tka`, `tka1`,
+#'   `tka2`, `agetka1`, `agetka2`).}
+#'   \item{summ_tka_risk}{A placeholder value (currently `1`).}
+#' @export
 TKA_update_fcn <- function(am_curr,
                            am_new,
                            pin,
@@ -115,3 +140,4 @@ TKA_update_fcn <- function(am_curr,
 
   return(export_data)
 }
+

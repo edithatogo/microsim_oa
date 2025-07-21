@@ -1,5 +1,26 @@
-source(here::here("scripts", "functions", "apply_coefficent_customisations_fcn.R"))
-
+#' Update Osteoarthritis (OA) Status
+#'
+#' This function models the initiation and progression of osteoarthritis (OA) for
+#' one simulation cycle. It calculates the probability of developing OA (KL grade 2)
+#' and progressing to KL grades 3 and 4 based on various risk factors.
+#'
+#' @param am_curr A data.frame representing the attribute matrix for the current
+#'   cycle. It contains the state of the population before the update.
+#' @param am_new A data.frame representing the attribute matrix for the next
+#'   cycle. This is where the updated OA status will be stored.
+#' @param cycle.coefficents A list or data.frame of model coefficients for the
+#'   OA initiation and progression equations.
+#' @param OA_cust A data.frame with customisation factors for OA coefficients.
+#' @param pin A data.frame containing parameter inputs, specifically the SF-6D
+#'   utility decrements associated with OA progression.
+#'
+#' @return A list containing two data.frames:
+#'   \item{am_curr}{The input `am_curr` with intermediate calculations and an
+#'   updated `sf6d_change` column.}
+#'   \item{am_new}{The `am_new` data.frame with updated OA status (`oa`, `kl2`,
+#'   `kl3`, `kl4`, `kl_score`).}
+#' @export
+#'
 OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust, pin) {
   
   am_curr$sf6d_change <- 0

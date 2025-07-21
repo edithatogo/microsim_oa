@@ -1,5 +1,33 @@
-# code to update BMI per cycle
-
+#' Update BMI for one cycle
+#'
+#' This function updates the Body Mass Index (BMI) for each individual in the
+#' attribute matrix for a single simulation cycle. The update rules are based on
+#' regression coefficients that differ by sex, age, and socioeconomic status.
+#'
+#' @param am_curr A data.frame or data.table representing the attribute matrix
+#'   of the population for the current cycle. It must contain columns for 'bmi',
+#'   'sex', 'age', and 'year12'.
+#' @param cycle.coefficents A list or data.frame containing the regression
+#'   coefficients for the BMI progression model.
+#' @param BMI_cust A data.frame containing calibration factors to be applied
+#'   to the BMI change.
+#'
+#' @return The updated attribute matrix (am_curr) with a new 'd_bmi' column
+#'   representing the change in BMI for the cycle.
+#' @export
+#'
+#' @examples
+#' # This is a simplified example and will not run without the full model setup.
+#' # am_sample <- data.frame(
+#' #   bmi = 25,
+#' #   sex = "[1] Male",
+#' #   age = 45,
+#' #   year12 = 1,
+#' #   d_bmi = 0
+#' # )
+#' # coeffs <- list(c1_cons = 0.1, c1_year12 = -0.05, c1_age = 0.01, c1_bmi = 0.02)
+#' # bmi_calib <- data.frame(covariate_set = "c1", proportion_reduction = 1.0)
+#' # updated_am <- BMI_mod_fcn(am_sample, coeffs, bmi_calib)
 BMI_mod_fcn <- function(am_curr, cycle.coefficents, BMI_cust) {
   # suppliment for coefficients https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6475338/bin/bmjopen-2018-026525supp001.pdf
   # from Hayes A, Tan EJ, Killedar A, Lung T. Socioeconomic inequalities in obesity: modelling future trends in Australia. BMJ Open. 2019 Mar 30;9(3):e026525. doi: 10.1136/bmjopen-2018-026525. PMID: 30928953; PMCID: PMC6475338.

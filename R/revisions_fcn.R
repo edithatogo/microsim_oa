@@ -1,6 +1,21 @@
-# TKA REVISION
-library(dplyr)
-
+#' Calculate TKA Revision Risk
+#'
+#' This function calculates the hazard of a total knee arthroplasty (TKA)
+#' revision for each individual in the attribute matrix. The model is based on
+#' a linear predictor for individual risk factors and a spline function to model
+#' the baseline hazard over time since the primary TKA.
+#'
+#' @param cycle.coefficents A data.frame or list containing the model
+#'   coefficients for the revision model, which must have names starting with "cr_".
+#' @param am_curr A data.frame representing the attribute matrix for the current
+#'   cycle. It must contain variables for age, sex, BMI, ASA score, public/private
+#'   status, and time since primary TKA (`agetka1`, `agetka2`).
+#'
+#' @return The updated `am_curr` data.frame with new columns for the calculated
+#'   revision hazard (`rev_haz1`, `rev_haz2`) and a binary indicator for whether
+#'   a revision occurred in this cycle (`revi`).
+#' @importFrom dplyr select bind_cols mutate n starts_with
+#' @export
 revisions_fcn <- function(cycle.coefficents, am_curr) {
   # Prepare data frames for calculation
   Coefs <-
@@ -146,3 +161,4 @@ revisions_fcn <- function(cycle.coefficents, am_curr) {
 
   return(am_curr)
 }
+

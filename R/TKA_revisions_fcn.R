@@ -1,6 +1,19 @@
-# Risk of TKA revision
-## This function calculates the risk of TKA revision for the AUS-OA model.
-
+#' Calculate TKA Revision Risk (Batch Processing Version)
+#'
+#' This function calculates the risk of TKA revision for all individuals across
+#' all cycles in the simulation output. It is a batch-processing alternative
+#' to the per-cycle `revisions_fcn`. The model uses a linear predictor for
+#' individual risk and a spline function for the baseline hazard over time.
+#'
+#' @param am_all A data.frame representing the full simulation output, containing
+#'   data for all individuals over all cycles.
+#' @param cycle.coefficents A data.frame or list containing the model
+#'   coefficients for the revision model (names starting with "cr_").
+#'
+#' @return The input `am_all` data.frame with added columns for revision hazards
+#'   and binary indicators for revision events.
+#' @importFrom dplyr mutate select group_by arrange across n lag
+#' @export
 TKA_revisions <- function(am_all, cycle.coefficents) {
   ## There are two parts to the revision model...
   ## Linear predictor
@@ -132,3 +145,4 @@ TKA_revisions <- function(am_all, cycle.coefficents) {
   am_all <- Z
   return(am_all)
 }
+
