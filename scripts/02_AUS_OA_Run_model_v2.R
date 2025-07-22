@@ -5,6 +5,7 @@
 # The 'ausoa' package should be loaded, which makes all model functions available.
 # library(ausoa) # Uncomment when running as a full package
 config <- load_config("config")
+source(here("R", "initialize_kl_grades_fcn.R"))
 
 # --- 2. Set Up Simulation Environment ---
 # Extract simulation settings from the config object
@@ -25,7 +26,7 @@ if (sim_params$set_seed) {
 # Load the base population attribute matrix
 start_year <- sim_params$start_year
 am_file <- file.path("input", "population", paste0("am_", start_year, ".parquet"))
-am <- arrow::read_parquet(am_file)
+am <- as.data.frame(arrow::read_parquet(am_file))
 
 # Define age and BMI category edges (could also be moved to config)
 bmi_edges <- c(0, 25, 30, 35, 40, 100)
@@ -37,22 +38,30 @@ age_edges <- c(min(am$age) - 1, 45, 55, 65, 75, 150)
 # This is a simplified version for demonstration. A full implementation would
 # handle the probabilistic draws here.
 all_coeffs <- unlist(config$coefficients)
-cycle.coefficents <- as.data.frame(as.list(all_coeffs[grep("\\.live$", names(all_coeffs))]))
-names(cycle.coefficents) <- gsub("\\.live$", "", names(cycle.coefficents))
+cycle.coefficents_df <- as.data.frame(as.list(all_coeffs[grep("\\.live$", names(all_coeffs))]))
+names(cycle.coefficents_df) <- gsub("\\.live$", "", names(cycle.coefficents_df))
+cycle.coefficents <- as.list(cycle.coefficents_df)
 
 
 # --- 5. Prepare Other Inputs ---
 # Life tables and TKA trends are now part of the config object
-lt <- config$life_tables
-tka_time_trend <- config$tka_utilisation
+input_file <- config$paths$input_file
+lt <- read_excel(input_file,
+  sheet = config$life_tables$sheet,
+  range = config$life_tables$range
+)
+tka_time_trend <- read_excel(input_file,
+  sheet = config$tka_utilisation$sheet,
+  range = config$tka_utilisation$range
+)
+
 
 # Calibration modifiers would also be in the config
-# For now, we replicate the old logic
 if (run_modes$calibration_mode) {
-  # In a real scenario, this would come from config$calibration
-  print("Calibration mode is on, but modifiers are not yet implemented in YAML.")
-  # eq_cust <- config$calibration
+  print("Calibration mode is on, coefficients modifiers are being used.")
+  eq_cust <- config$calibration
 } else {
+  print("Calibration mode is off. Not using coefficients modifiers.")
   # Create a placeholder for eq_cust
   eq_cust <- list(
     BMI = data.frame(proportion_reduction = 1),
@@ -61,8 +70,11 @@ if (run_modes$calibration_mode) {
   )
 }
 
+# --- 6. Initialize KL Grades ---
+am <- initialize_kl_grades(am, cycle.coefficents)
 
-# --- 6. Run Simulation Loop ---
+
+# --- 7. Run Simulation Loop ---
 am_all <- am
 am_curr <- am
 am_new <- am
@@ -85,8 +97,7 @@ for (i in 2:(num_years + 1)) {
     mort_update_counter = 1, # Note: review usage
     lt = lt,
     eq_cust = eq_cust,
-    TKA_time_trend = tka_time_trend,
-    pin = cycle.coefficents # 'pin' was the old name for coefficients
+    tka_time_trend = tka_time_trend
   )
 
   am_curr <- simulation_output_data[["am_curr"]]
@@ -103,7 +114,7 @@ for (i in 2:(num_years + 1)) {
   am_curr <- am_new
 }
 
-# --- 7. Post-processing (Costs) ---
+# --- 8. Post-processing (Costs) ---
 # Costs are now read from the config file
 am_all$tkacost <- am_all$tka * cycle.coefficents$chs_tkacost_public *
   (1 - am_all$phi) + am_all$tka * cycle.coefficents$chs_tkacost_private *

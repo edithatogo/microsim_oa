@@ -8,7 +8,7 @@
 #'
 #' @return A nested list containing all configuration parameters.
 #' @importFrom yaml read_yaml
-#' @importFrom purrr map list_files reduce
+#' @importFrom purrr map reduce
 #' @export
 load_config <- function(config_path = "config") {
   # Get all .yaml files in the directory

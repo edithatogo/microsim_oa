@@ -34,3 +34,23 @@ population:
 paths:
   input_directory: "input"
   output_directory: "output"
+  input_file: "input/scenarios/ausoa_input_public.xlsx"
+
+# --- Life Tables ---
+life_tables:
+  sheet: "Life tables 2013"
+  range: "N6:AG107"
+
+# --- TKA Utilisation ---
+tka_utilisation:
+  sheet: "TKA utilisation"
+  range: "A53:I94"
+
+# --- Calibration ---
+calibration:
+  BMI:
+    proportion_reduction: 1
+  OA:
+    proportion_reduction: 1
+  TKR:
+    proportion_reduction: 1

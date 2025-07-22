@@ -10,14 +10,12 @@ OA_update(am_curr, pin)
 \item{am_curr}{A data.frame representing the attribute matrix for the current
 cycle. It contains the state of the population before the update.}
 
-\item{pin}{A data.frame containing parameter inputs, specifically the SF-6D
-utility decrements associated with OA progression.}
-
 \item{am_new}{A data.frame representing the attribute matrix for the next
 cycle. This is where the updated OA status will be stored.}
 
 \item{cycle.coefficents}{A list or data.frame of model coefficients for the
-OA initiation and progression equations.}
+OA initiation and progression equations, which also contains the SF-6D
+utility decrements.}
 
 \item{OA_cust}{A data.frame with customisation factors for OA coefficients.}
 }

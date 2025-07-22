@@ -14,4 +14,7 @@ Imports:
     stringr,
     tidyr,
     yaml,
-    purrr
+    purrr,
+    here,
+    arrow,
+    tidyverse

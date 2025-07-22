@@ -19,8 +19,6 @@
 #' @param lt A data.frame representing the life table used for mortality calculations.
 #' @param eq_cust A list of data.frames containing customisation factors for
 #'   the model equations (BMI, TKR, OA).
-#' @param TKA_time_trend A value representing the time trend adjustment for TKA.
-#' @param pin A data.frame containing parameter inputs, such as utility values.
 #'
 #' @return A list containing three elements:
 #'   \item{am_curr}{The `am_curr` data.frame with intermediate calculations.}
@@ -31,9 +29,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  age_edges, bmi_edges,
                                  am,
                                  mort_update_counter, lt,
-                                 eq_cust,
-                                 TKA_time_trend,
-                                 pin) {
+                                 eq_cust) {
   # extract relevant equation modification data
   BMI_cust <- eq_cust[["BMI"]]
   TKR_cust <- eq_cust[["TKR"]]
@@ -54,7 +50,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % OA incidence - based on HILDA analysis
 
-  OA_update_data <- OA_update(am_curr, am_new, cycle.coefficents, OA_cust, pin)
+  OA_update_data <- OA_update(am_curr, am_new, cycle.coefficents, OA_cust)
 
   # extract data.tables from output list
   am_curr <- OA_update_data[["am_curr"]]
@@ -125,7 +121,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## update TKA status (TKA, complications, revision, inpatient rehab)
   # % TKA
 
-  TKA_update_data <- TKA_update_fcn(am_curr, am_new, pin, TKA_time_trend, OA_cust, cycle.coefficents)
+  TKA_update_data <- TKA_update_fcn(am_curr, am_new, OA_cust, cycle.coefficents)
 
   # extract data.tables from output list
   am_curr <- TKA_update_data[["am_curr"]]
@@ -264,7 +260,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   export_data <- list(
     am_curr = am_curr,
     am_new = am_new,
-    summ_tka_risk = summ_tka_risk
+    summ_tka_risk = summ_tna_risk
   )
 
   return(export_data)

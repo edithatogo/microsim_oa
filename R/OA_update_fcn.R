@@ -9,10 +9,9 @@
 #' @param am_new A data.frame representing the attribute matrix for the next
 #'   cycle. This is where the updated OA status will be stored.
 #' @param cycle.coefficents A list or data.frame of model coefficients for the
-#'   OA initiation and progression equations.
+#'   OA initiation and progression equations, which also contains the SF-6D
+#'   utility decrements.
 #' @param OA_cust A data.frame with customisation factors for OA coefficients.
-#' @param pin A data.frame containing parameter inputs, specifically the SF-6D
-#'   utility decrements associated with OA progression.
 #'
 #' @return A list containing two data.frames:
 #'   \item{am_curr}{The input `am_curr` with intermediate calculations and an
@@ -21,7 +20,7 @@
 #'   `kl3`, `kl4`, `kl_score`).}
 #' @export
 #'
-OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust, pin) {
+OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   
   am_curr$sf6d_change <- 0
   turn.out.inloop.summary <- FALSE
@@ -79,7 +78,7 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust, pin) {
   am_new$oa <- am_curr$oa_initiation_prob + am_curr$oa
   am_new$kl2 <- am_curr$oa_initiation_prob + am_curr$kl2
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_initiation_prob * pin$Live[which(pin$Parameter == "c14_kl2")])
+  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_initiation_prob * cycle.coefficents$c14_kl2)
 
   # update medication status, if newly OA test if the also get meds,
   # should only happen when a person is newly OA
@@ -121,7 +120,7 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust, pin) {
   oa_progression_rand <- runif(nrow(am_curr), 0, 1)
   am_curr$oa_progression_prob <- ifelse(am_curr$oa_progression_prob > oa_progression_rand, 1, 0)
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_prob * pin$Live[which(pin$Parameter == "c14_kl3")])
+  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_prob * cycle.coefficents$c14_kl3)
 
   am_new$kl3 <- am_curr$oa_progression_prob + am_curr$kl3
   am_new$kl2 <- am_curr$kl2 - am_curr$oa_progression_prob
@@ -150,7 +149,7 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust, pin) {
   oa_progression_kl3_kl4_rand <- runif(nrow(am_curr), 0, 1)
   am_curr$oa_progression_kl3_kl4_prob <- ifelse(am_curr$oa_progression_kl3_kl4_prob > oa_initiation_rand, 1, 0)
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_kl3_kl4_prob * pin$Live[which(pin$Parameter == "c14_kl4")])
+  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_kl3_kl4_prob * cycle.coefficents$c14_kl4)
 
   am_new$kl4 <- am_curr$oa_progression_kl3_kl4_prob + am_curr$kl4
   am_new$kl3 <- am_curr$kl3 - am_curr$oa_progression_kl3_kl4_prob
