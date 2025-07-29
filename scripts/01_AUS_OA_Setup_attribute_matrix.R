@@ -83,6 +83,11 @@ am$bmi40 <- ifelse(am$bmi_cat == levels(am$bmi_cat)[5], 1, 0)
 # % QALY - initialise to first year HRQOL
 am$qaly <- am$sf6d
 
+# % PROs - initialise with placeholder values
+# Scores from 0 to 100. Higher score = worse outcome (more pain, less function)
+am$pain <- ifelse(am$oa == 1, 60, 10)
+am$function_score <- ifelse(am$oa == 1, 50, 5)
+
 # % transition vars
 am$oai <- 0
 am$oap <- 0
@@ -90,6 +95,8 @@ am$tkai <- 0
 am$qx <- 0
 am$hr_mort <- 0
 am$tka_dqol <- 0
+am$d_pain <- 0
+am$d_function <- 0
 
 
 # Revision vars

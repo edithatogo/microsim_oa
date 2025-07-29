@@ -1,73 +1,142 @@
-# Model Coefficients for AUS-OA V2
-# This file replaces the 'Parameter inputs' sheet in the Excel file.
+coefficients:
+  # Model Coefficients for AUS-OA V2
+  # This file replaces the 'Parameter inputs' sheet in the Excel file.
 
-# Each top-level key is an equation family.
-# Each parameter has a 'live' value (the point estimate) and optional
-# properties for probabilistic sensitivity analysis (PSA), such as
-# 'distribution' and 'std_error'.
+  # Each top-level key is an equation family.
+  # Each parameter has a 'live' value (the point estimate) and optional
+  # properties for probabilistic sensitivity analysis (PSA), such as
+  # 'distribution' and 'std_error'.
 
-c1: # BMI progression, males < 50
-  c1_cons:
-    live: 0.1
-    distribution: normal
-    std_error: 0.01
-  c1_year12:
-    live: -0.05
-    distribution: normal
-    std_error: 0.005
-  c1_age:
-    live: 0.01
-    distribution: normal
-    std_error: 0.001
-  c1_bmi:
-    live: 0.02
-    distribution: normal
-    std_error: 0.002
+  c1: # BMI progression, males < 50
+    c1_cons:
+      live: 0.1
+      distribution: normal
+      std_error: 0.01
+    c1_year12:
+      live: -0.05
+      distribution: normal
+      std_error: 0.005
+    c1_age:
+      live: 0.01
+      distribution: normal
+      std_error: 0.001
+    c1_bmi:
+      live: 0.02
+      distribution: normal
+      std_error: 0.002
 
-c6: # OA initiation
-  c6_cons:
-    live: -5.0
-    distribution: normal
-    std_error: 0.1
-  c6_year12:
-    live: -0.2
-    distribution: normal
-    std_error: 0.02
-  c6_age1m:
-    live: 0.5
-    distribution: normal
-    std_error: 0.05
+  c6: # OA initiation
+    c6_cons:
+      live: -5.0
+      distribution: normal
+      std_error: 0.1
+    c6_year12:
+      live: -0.2
+      distribution: normal
+      std_error: 0.02
+    c6_age1m:
+      live: 0.5
+      distribution: normal
+      std_error: 0.05
 
-# ... and so on for all other equation families (c2, c3, c4, c5, c7, c8, c9, etc.)
+  c9: # TKA Initiation
+    c9_cons:
+      live: -10.0
+    c9_age:
+      live: 0.1
+    c9_age2:
+      live: 0.0
+    c9_drugoa:
+      live: 0.1
+    c9_ccount:
+      live: 0.05
+    c9_mhc:
+      live: 0.05
+    c9_tkr:
+      live: -0.5
+    c9_kl2hr:
+      live: 1.0
+    c9_kl3hr:
+      live: 1.5
+    c9_kl4hr:
+      live: 2.0
+    c9_pain:
+      live: 0.02 # Higher pain score increases probability
+      distribution: normal
+      std_error: 0.005
+    c9_function:
+      live: 0.01 # Higher function score (worse function) increases probability
+      distribution: normal
+      std_error: 0.005
 
-costs:
-  chs_tkacost_public:
-    live: 20000
-  chs_tkacost_private:
-    live: 25000
-  chs_revcost_public:
-    live: 30000
-  chs_revcost_private:
-    live: 35000
-  chs_inpatient_rehabcost_public:
-    live: 5000
-  chs_inpatient_rehabcost_private:
-    live: 7000
-  chs_oa_annualcost:
-    live: 1000
+  revision_model:
+    linear_predictor:
+      age: 0.02
+      female: -0.1
+      bmi: 0.03
+      public: 0.2
+    early_hazard: # Year 1
+      intercept: -6.0 # Baseline log-hazard
+    late_hazard: # Year 2+
+      intercept: -8.0
+      log_time: 1.1 # Effect of log(time since TKA)
 
-utilities:
-  c14_kl2:
-    live: -0.05
-  c14_kl3:
-    live: -0.1
-  c14_kl4:
-    live: -0.15
-  c14_rev:
-    live: -0.2
-  c14_bmi:
-    live: -0.005
-  c14_ccount:
-    live: -0.02
-  c14_mhc:
-    live: -0.03
+  # ... and so on for all other equation families (c2, c3, c4, c5, c7, c8, etc.)
+
+  costs:
+    # Costs associated with TKA events
+    tka_primary:
+      total: 22000
+      mbs_item: "49518" # Primary TKR
+      pbs_item: "N/A"
+      out_of_pocket: 2000
+    tka_revision:
+      total: 32000
+      mbs_item: "49524" # Revision of TKR
+      pbs_item: "N/A"
+      out_of_pocket: 3000
+    inpatient_rehab:
+      total: 6000
+      mbs_item: "N/A"
+      pbs_item: "N/A"
+      out_of_pocket: 500
+    
+    # Annual costs
+    oa_annual_management:
+      total: 1200
+      mbs_item: "23" # GP consult
+      pbs_item: "Various" # e.g., analgesics
+      out_of_pocket: 200
+
+    # Productivity and other costs (annual estimates)
+    productivity_loss:
+      value: 2500 # Placeholder for productivity loss cost
+    informal_care:
+      value: 1800 # Placeholder for informal care cost
+
+  # --- Discounting ---
+  # Applied to costs and outcomes
+  discount_rate:
+    value: 0.05
+
+  utilities:
+    c14_kl2:
+      live: -0.05
+    c14_kl3:
+      live: -0.1
+    c14_kl4:
+      live: -0.15
+    c14_rev:
+      live: -0.2
+    c14_bmi:
+      live: -0.005
+    c14_ccount:
+      live: -0.02
+    c14_mhc:
+      live: -0.03
+
+  initial_kl_grades:
+    p_KL2init:
+      live: 0.5
+    p_KL3init:
+      live: 0.2

@@ -1,6 +1,7 @@
 library(testthat)
 
-source(here::here("scripts", "functions", "OA_update_fcn.R"))
+source(here::here("R", "OA_update_fcn.R"))
+source(here::here("R", "apply_coefficent_customisations_fcn.R"))
 
 test_that("OA_update_fcn calculates OA progression correctly", {
   # 1. Set up mock data
@@ -53,7 +54,7 @@ test_that("OA_update_fcn calculates OA progression correctly", {
   )
 
   # 2. Call the function
-  result <- OA_update(am_curr, am_new, cycle.coefficents, OA_cust, pin)
+  result <- OA_update(am_curr, am_new, cycle.coefficents, OA_cust)
 
   # 3. Assert expectations
   # As the function uses random numbers, we can't check for exact values.

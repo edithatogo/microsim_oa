@@ -2,13 +2,14 @@
 # This file runs the entire AUS-OA model for a specific test scenario.
 
 # Set the scenario name
-scenario <- "test_scenario"
+scenario <- "public"
 
 # 1. SETUP THE MODEL
 # This script loads required packages, specifies graph options, and prompts the
 # user to select the input files.
 # In this test script, we will manually specify the input file.
 source(here::here("scripts", "00a_AUS_OA_Setup.R"), local = TRUE)
+parallel <- FALSE
 file_path <- here::here("input", "scenarios", "ausoa_input_public.xlsx")
 scenario_list <- read_excel(file_path, sheet = "Simulation inputs")
 scenario_selection <- scenario_list[1, ]

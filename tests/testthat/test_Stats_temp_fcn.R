@@ -3,7 +3,7 @@ library(dplyr)
 library(forcats)
 library(stringr)
 
-source(here::here("scripts", "functions", "Stats_temp_fcn.R"))
+source(here::here("R", "Stats_temp_fcn.R"))
 
 test_that("f_get_percent_N_from_binary calculates percentages and frequencies correctly", {
   # 1. Set up mock data

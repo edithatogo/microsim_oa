@@ -78,7 +78,7 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   am_new$oa <- am_curr$oa_initiation_prob + am_curr$oa
   am_new$kl2 <- am_curr$oa_initiation_prob + am_curr$kl2
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_initiation_prob * cycle.coefficents$c14_kl2)
+  am_curr$sf6d_change <- am_curr$sf6d_change + ifelse(length(am_curr$oa_initiation_prob) > 0, (am_curr$oa_initiation_prob * cycle.coefficents$c14_kl2), 0)
 
   # update medication status, if newly OA test if the also get meds,
   # should only happen when a person is newly OA
@@ -120,7 +120,7 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   oa_progression_rand <- runif(nrow(am_curr), 0, 1)
   am_curr$oa_progression_prob <- ifelse(am_curr$oa_progression_prob > oa_progression_rand, 1, 0)
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_prob * cycle.coefficents$c14_kl3)
+  am_curr$sf6d_change <- am_curr$sf6d_change + ifelse(length(am_curr$oa_progression_prob) > 0, (am_curr$oa_progression_prob * cycle.coefficents$c14_kl3), 0)
 
   am_new$kl3 <- am_curr$oa_progression_prob + am_curr$kl3
   am_new$kl2 <- am_curr$kl2 - am_curr$oa_progression_prob
@@ -149,7 +149,7 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   oa_progression_kl3_kl4_rand <- runif(nrow(am_curr), 0, 1)
   am_curr$oa_progression_kl3_kl4_prob <- ifelse(am_curr$oa_progression_kl3_kl4_prob > oa_initiation_rand, 1, 0)
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_kl3_kl4_prob * cycle.coefficents$c14_kl4)
+  am_curr$sf6d_change <- am_curr$sf6d_change + ifelse(length(am_curr$oa_progression_kl3_kl4_prob) > 0, (am_curr$oa_progression_kl3_kl4_prob * cycle.coefficents$c14_kl4), 0)
 
   am_new$kl4 <- am_curr$oa_progression_kl3_kl4_prob + am_curr$kl4
   am_new$kl3 <- am_curr$kl3 - am_curr$oa_progression_kl3_kl4_prob

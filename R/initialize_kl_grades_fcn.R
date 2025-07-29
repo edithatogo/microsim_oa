@@ -27,6 +27,11 @@ initialize_kl_grades <- function(am, cycle.coefficents) {
   Prob_KL2 <- cycle.coefficents$p_KL2init
   Prob_KL3 <- cycle.coefficents$p_KL3init
 
+  print("Prob_KL2:")
+  print(Prob_KL2)
+  print("Prob_KL3:")
+  print(Prob_KL3)
+
   # allocate to KL levels based on random number and OA status
   am$kl4 <- ifelse(randkl > (Prob_KL2 + Prob_KL3), am$oa, 0)
   am$kl3 <- ifelse((randkl > Prob_KL2) & (randkl <= (Prob_KL2 + Prob_KL3)), am$oa, 0)

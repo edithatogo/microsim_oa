@@ -30,6 +30,7 @@ TKA_update_fcn <- function(am_curr,
                            pin,
                            TKA_time_trend,
                            OA_cust,
+                           TKR_cust,
                            cycle.coefficents) {
   
   # NOTE: in future the tkadata_melt can be removed, the purpose of the
@@ -74,7 +75,7 @@ TKA_update_fcn <- function(am_curr,
 
   # NOTE: The following section uses OA_cust to customize TKA coefficients.
   # This seems unusual. Flagging for review.
-  cycle.coefficents <- apply_coefficent_customisations(cycle.coefficents, OA_cust, "c9", "c6")
+  cycle.coefficents <- apply_coefficent_customisations(cycle.coefficents, TKR_cust, "c9", "c9")
 
   am_curr$tka_initiation_prob <- cycle.coefficents$c9_cons +
     cycle.coefficents$c9_age * am_curr$age +
@@ -85,7 +86,9 @@ TKA_update_fcn <- function(am_curr,
     cycle.coefficents$c9_tkr * am_curr$tka +
     cycle.coefficents$c9_kl2hr * am_curr$kl2 +
     cycle.coefficents$c9_kl3hr * am_curr$kl3 +
-    cycle.coefficents$c9_kl4hr * am_curr$kl4
+    cycle.coefficents$c9_kl4hr * am_curr$kl4 +
+    cycle.coefficents$c9_pain * am_curr$pain +
+    cycle.coefficents$c9_function * am_curr$function_score
 
   # risk is a 5 year value so divided by 5 to get annual risk
   am_curr$tka_initiation_prob <- am_curr$tka_initiation_prob / 5

@@ -11,9 +11,17 @@ p_load(
   kableExtra, # html tables
   arrow, # for parquet files (parquet takes less space than csv)
   reshape2, # converting data from wide to long
-  gt # for table development and display
+  gt, # for table development and display
+  yaml # for reading yaml files
 )
 options(dplyr.summarise.inform = FALSE)
+
+# SOURCE THE FUNCTIONS
+source(here("R", "config_loader.R"))
+source(here("R", "apply_policy_levers_fcn.R"))
+source(here("R", "calculate_costs_fcn.R"))
+source(here("R", "update_pros_fcn.R"))
+source(here("R", "calculate_revision_risk_fcn.R"))
 
 
 # Graph options
@@ -33,6 +41,14 @@ colors <- c(
   "darkmagenta", "black", "tan4"
 )
 
+
+
+# Load the config files
+simulation_config <- load_config(here("config", "simulation.yaml"))
+model_parameters <- load_config(here("config", "coefficients.yaml"))
+
+# Apply policy levers to the parameters
+model_parameters <- apply_policy_levers(model_parameters, simulation_config$policy_levers)
 
 
 # Load the input file

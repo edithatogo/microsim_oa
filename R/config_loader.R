@@ -11,20 +11,25 @@
 #' @importFrom purrr map reduce
 #' @export
 load_config <- function(config_path = "config") {
-  # Get all .yaml files in the directory
-  yaml_files <- list.files(
-    path = config_path,
-    pattern = "\\.yaml$",
-    full.names = TRUE
-  )
+  if (dir.exists(config_path)) {
+    # Get all .yaml files in the directory
+    yaml_files <- list.files(
+      path = config_path,
+      pattern = "\\.yaml$",
+      full.names = TRUE
+    )
 
-  # Read each YAML file into a list
-  config_list <- purrr::map(yaml_files, yaml::read_yaml)
+    # Read each YAML file into a list
+    config_list <- purrr::map(yaml_files, yaml::read_yaml)
 
-  # Combine all lists into one. If there are duplicate top-level keys,
-  # this will throw an error, which is a good way to enforce uniqueness.
-  # A more sophisticated merge could be done if needed.
-  config <- purrr::reduce(config_list, c)
+    # Combine all lists into one.
+    config <- purrr::reduce(config_list, c)
+  } else if (file.exists(config_path)) {
+    # If it's a file, just read that one file
+    config <- yaml::read_yaml(config_path)
+  } else {
+    stop("Path does not exist: ", config_path)
+  }
 
   # --- Add Validation Here ---
   # (e.g., check for required sections, validate data types)

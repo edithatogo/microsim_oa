@@ -29,7 +29,14 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  age_edges, bmi_edges,
                                  am,
                                  mort_update_counter, lt,
-                                 eq_cust) {
+                                 eq_cust, tka_time_trend) {
+
+  print("Start of simulation_cycle_fcn")
+  print("am_curr rows at start:")
+  print(nrow(am_curr))
+  print("am_new rows at start:")
+  print(nrow(am_new))
+
   # extract relevant equation modification data
   BMI_cust <- eq_cust[["BMI"]]
   TKR_cust <- eq_cust[["TKR"]]
@@ -46,6 +53,12 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # add impact of BMI delta to SF6D
   am_curr$d_sf6d <- am_curr$d_sf6d + (am_curr$d_bmi * cycle.coefficents$c14_bmi)
 
+  print("After BMI mod")
+  print("am_curr rows:")
+  print(nrow(am_curr))
+  print("am_new rows:")
+  print(nrow(am_new))
+
   ############################## update OA incidence
 
   # % OA incidence - based on HILDA analysis
@@ -55,6 +68,12 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # extract data.tables from output list
   am_curr <- OA_update_data[["am_curr"]]
   am_new <- OA_update_data[["am_new"]]
+
+  print("After OA update")
+  print("am_curr rows:")
+  print(nrow(am_curr))
+  print("am_new rows:")
+  print(nrow(am_new))
 
   # note: change in sf6d calculated in the OA_update function
 
@@ -121,13 +140,19 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## update TKA status (TKA, complications, revision, inpatient rehab)
   # % TKA
 
-  TKA_update_data <- TKA_update_fcn(am_curr, am_new, OA_cust, cycle.coefficents)
+  TKA_update_data <- TKA_update_fcn(am_curr, am_new, OA_cust, TKR_cust, cycle.coefficents)
 
   # extract data.tables from output list
   am_curr <- TKA_update_data[["am_curr"]]
   am_new <- TKA_update_data[["am_new"]]
 
   summ_tka_risk <- TKA_update_data[["summ_tka_risk"]]
+
+  print("After TKA update")
+  print("am_curr rows:")
+  print(nrow(am_curr))
+  print("am_new rows:")
+  print(nrow(am_new))
 
   # % TKA complication
 
@@ -184,20 +209,9 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_new$ir <- am_curr$ir
 
   # TKA revision
-  X <- revisions_fcn(cycle.coefficents, am_curr)
-  am_new$revision1 <- X$revision1
-  am_new$revision2 <- X$revision2
-  am_new$revi <- X$revi
-  am_new$cum_haz1 <- X$cum_haz1
-  am_new$cum_haz2 <- X$cum_haz2
-  am_new$rev_haz1 <- X$rev_haz1
-  am_new$rev_haz2 <- X$rev_haz2
-  rm(X)
-
-
-
-
-  am_curr$d_sf6d <- am_curr$d_sf6d + am_curr$revi * cycle.coefficents$c14_rev
+  am_new <- calculate_revision_risk_fcn(am_new, cycle.coefficents$revision_model)
+  
+  am_curr$d_sf6d <- am_curr$d_sf6d + am_new$revi * cycle.coefficents$utilities$c14_rev
 
 
   # % HRQOL progression or prediction (tbc)
@@ -205,6 +219,12 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_new$sf6d <- am_curr$sf6d + am_curr$d_sf6d
 
 
+  ############################## Update PROs for the cycle
+  am_new <- update_pros_fcn(am_new, cycle.coefficents)
+
+
+  ############################## Calculate Costs for the cycle
+  am_new <- calculate_costs_fcn(am_new, cycle.coefficents$costs)
 
 
 
@@ -255,14 +275,18 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_new$qaly <- am_curr$qaly + am_curr$sf6d
 
 
+  print("End of simulation_cycle_fcn")
+  print("am_curr rows at end:")
+  print(nrow(am_curr))
+  print("am_new rows at end:")
+  print(nrow(am_new))
 
   # bundle am_curr and am_new for export
   export_data <- list(
     am_curr = am_curr,
     am_new = am_new,
-    summ_tka_risk = summ_tna_risk
+    summ_tka_risk = summ_tka_risk
   )
 
   return(export_data)
 }
-

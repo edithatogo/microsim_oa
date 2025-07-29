@@ -6,6 +6,7 @@
 # library(ausoa) # Uncomment when running as a full package
 config <- load_config("config")
 source(here("R", "initialize_kl_grades_fcn.R"))
+source(here("R", "simulation_cycle_fcn.R"))
 
 # --- 2. Set Up Simulation Environment ---
 # Extract simulation settings from the config object
@@ -38,9 +39,11 @@ age_edges <- c(min(am$age) - 1, 45, 55, 65, 75, 150)
 # This is a simplified version for demonstration. A full implementation would
 # handle the probabilistic draws here.
 all_coeffs <- unlist(config$coefficients)
-cycle.coefficents_df <- as.data.frame(as.list(all_coeffs[grep("\\.live$", names(all_coeffs))]))
-names(cycle.coefficents_df) <- gsub("\\.live$", "", names(cycle.coefficents_df))
-cycle.coefficents <- as.list(cycle.coefficents_df)
+live_coeffs <- all_coeffs[grep("\\.live$", names(all_coeffs))]
+names(live_coeffs) <- gsub("\\.live$", "", names(live_coeffs))
+names(live_coeffs) <- gsub(".*\\.", "", names(live_coeffs))
+cycle.coefficents <- as.list(live_coeffs)
+cycle.coefficents <- lapply(cycle.coefficents, as.numeric)
 
 
 # --- 5. Prepare Other Inputs ---
@@ -64,8 +67,14 @@ if (run_modes$calibration_mode) {
   print("Calibration mode is off. Not using coefficients modifiers.")
   # Create a placeholder for eq_cust
   eq_cust <- list(
-    BMI = data.frame(proportion_reduction = 1),
-    OA = data.frame(proportion_reduction = 1),
+    BMI = data.frame(
+      covariate_set = c("c1", "c2", "c3", "c4", "c5"),
+      proportion_reduction = c(1, 1, 1, 1, 1)
+    ),
+    OA = data.frame(
+      covariate_set = "cons",
+      proportion_reduction = 1
+    ),
     TKR = data.frame(proportion_reduction = 1)
   )
 }

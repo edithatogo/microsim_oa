@@ -1,28 +1,29 @@
 TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary_TKR_observed_diff) {
   # TKR customisation
-  summary_TKR_observed_diff <-
-    read_csv(here("data", "coefficent_selection", "TKR_correction_factors.csv"),
-      show_col_types = FALSE
-    )
-  # browser()
-  #### setup adjustment factors in dataset and merge in previously calculated scaling factors
-  # apply adjustment to TKA rate
-  am_curr$age_group_tka_adj <- cut(am_curr$age, breaks = c(0, 44, 54, 64, 74, 1000), labels = c("< 45", "45-54", "55-64", "65-74", "75+"))
-  am_curr$sex_tka_adj <- ifelse(am_curr$sex == "[1] Male", "Males", "Females")
-
-
-  am_curr <- am_curr %>% left_join(summary_TKR_observed_diff[, c("year", "sex", "age_group", "scaling_factor_smooth")],
-    by = join_by(
-      year == year,
-      sex_tka_adj == sex,
-      age_group_tka_adj == age_group
-    )
-  )
-  # browser()
-  # where there is no scaling factor (either NA, INF or 0) keep current estimated risk
-  am_curr$scaling_factor_smooth <- ifelse(is.na(am_curr$scaling_factor_smooth), 1, am_curr$scaling_factor_smooth)
-  am_curr$scaling_factor_smooth <- ifelse(is.infinite(am_curr$scaling_factor_smooth), 1, am_curr$scaling_factor_smooth)
-  am_curr$scaling_factor_smooth <- ifelse(am_curr$scaling_factor_smooth == 0, 1, am_curr$scaling_factor_smooth)
+  # summary_TKR_observed_diff <-
+  #   read_csv(here("data", "coefficent_selection", "TKR_correction_factors.csv"),
+  #     show_col_types = FALSE
+  #   )
+  # # browser()
+  # #### setup adjustment factors in dataset and merge in previously calculated scaling factors
+  # # apply adjustment to TKA rate
+  # am_curr$age_group_tka_adj <- cut(am_curr$age, breaks = c(0, 44, 54, 64, 74, 1000), labels = c("< 45", "45-54", "55-64", "65-74", "75+"))
+  # am_curr$sex_tka_adj <- ifelse(am_curr$sex == "[1] Male", "Males", "Females")
+  # 
+  # 
+  # am_curr <- am_curr %>% left_join(summary_TKR_observed_diff[, c("year", "sex", "age_group", "scaling_factor_smooth")],
+  #   by = join_by(
+  #     year == year,
+  #     sex_tka_adj == sex,
+  #     age_group_tka_adj == age_group
+  #   )
+  # )
+  # # browser()
+  # # where there is no scaling factor (either NA, INF or 0) keep current estimated risk
+  am_curr$scaling_factor_smooth <- 1
+  # am_curr$scaling_factor_smooth <- ifelse(is.na(am_curr$scaling_factor_smooth), 1, am_curr$scaling_factor_smooth)
+  # am_curr$scaling_factor_smooth <- ifelse(is.infinite(am_curr$scaling_factor_smooth), 1, am_curr$scaling_factor_smooth)
+  # am_curr$scaling_factor_smooth <- ifelse(am_curr$scaling_factor_smooth == 0, 1, am_curr$scaling_factor_smooth)
 
   ### Calculate probability of TKA and adjust for eligibility
   # calculate the probability of TKA
