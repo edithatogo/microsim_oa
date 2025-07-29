@@ -46,5 +46,10 @@ calculate_costs_fcn <- function(am_new, costs_config) {
   am_new[oa == 1 & dead == 0, cycle_cost_prod := cycle_cost_prod + costs_config$productivity_loss$value]
   am_new[oa == 1 & dead == 0, cycle_cost_informal := cycle_cost_informal + costs_config$informal_care$value]
   
+  # Add comorbidity costs (calculated in the comorbidity update function)
+  if ("comorbidity_cost" %in% names(am_new)) {
+    am_new[dead == 0, cycle_cost_total := cycle_cost_total + comorbidity_cost]
+  }
+  
   return(am_new)
 }

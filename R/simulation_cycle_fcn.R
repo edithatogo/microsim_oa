@@ -29,7 +29,18 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  age_edges, bmi_edges,
                                  am,
                                  mort_update_counter, lt,
-                                 eq_cust, tka_time_trend) {
+                                 eq_cust, tka_time_trend,
+                                 comorbidity_params = NULL,
+                                 intervention_params = NULL) {
+
+  # Source the new comorbidity and intervention functions
+  source(here("R", "update_comorbidities_fcn.R"))
+  source(here("R", "apply_interventions_fcn.R"))
+
+
+  # Apply interventions
+  am_curr <- apply_interventions(am_curr, intervention_params, am_curr$year[1])
+
 
   print("Start of simulation_cycle_fcn")
   print("am_curr rows at start:")
@@ -105,35 +116,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## update comorbidies (cci, mental health)
 
   # % Comorbidities
-
-
-  
-  am_curr$cci <- cycle.coefficents$c10_1 * am_curr$age4554 +
-    cycle.coefficents$c10_2 * am_curr$age4554 +
-    cycle.coefficents$c10_3 * am_curr$age5564 +
-    cycle.coefficents$c10_4 * am_curr$age6574 +
-    cycle.coefficents$c10_5 * am_curr$age75
-
-  am_curr$cci <- (1 - am_curr$dead) * am_curr$cci
-  cci_rand <- runif(nrow(am_curr), 0, 1)
-  am_curr$cci <- ifelse(am_curr$cci > cci_rand, 1, 0)
-  am_new$ccount <- am_curr$cci + am_curr$ccount
-
-  am_curr$d_sf6d <- am_curr$d_sf6d + (am_curr$cci * cycle.coefficents$c14_ccount)
-
-
-
-  # % Mental health condition
-
-
-  am_curr$mhci <- cycle.coefficents$c12_male * am_curr$male +
-    cycle.coefficents$c12_female * am_curr$female
-
-
-  mhci_rand <- runif(nrow(am_curr), 0, 1)
-  am_curr$mhci <- ifelse(am_curr$mhci > mhci_rand, 1, 0)
-  am_new$mhc <- am_curr$mhci + am_curr$mhc
-  am_curr$d_sf6d <- am_curr$d_sf6d + (am_curr$mhci * cycle.coefficents$c14_mhc)
+  am_curr <- update_comorbidities(am_curr, comorbidity_params)
 
 
 

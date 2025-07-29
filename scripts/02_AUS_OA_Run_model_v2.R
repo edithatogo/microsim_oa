@@ -106,7 +106,9 @@ for (i in 2:(num_years + 1)) {
     mort_update_counter = 1, # Note: review usage
     lt = lt,
     eq_cust = eq_cust,
-    tka_time_trend = tka_time_trend
+    tka_time_trend = tka_time_trend,
+    comorbidity_params = comorbidity_parameters,
+    intervention_params = intervention_parameters
   )
 
   am_curr <- simulation_output_data[["am_curr"]]

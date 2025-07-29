@@ -46,6 +46,8 @@ colors <- c(
 # Load the config files
 simulation_config <- load_config(here("config", "simulation.yaml"))
 model_parameters <- load_config(here("config", "coefficients.yaml"))
+comorbidity_parameters <- load_config(here("config", "comorbidities.yaml"))
+intervention_parameters <- load_config(here("config", "interventions.yaml"))
 
 # Apply policy levers to the parameters
 model_parameters <- apply_policy_levers(model_parameters, simulation_config$policy_levers)

@@ -1,0 +1,45 @@
+# config/comorbidities.yaml
+
+# --- Comorbidity Modelling Configuration ---
+
+# Set 'enabled' to true to include comorbidities in the simulation.
+# If false, the entire comorbidity update step will be skipped.
+enabled: false
+
+# Define the parameters for each comorbidity.
+# The annual_incidence_rate is a simplified placeholder. A more complex model
+# would use age and sex-specific rates.
+#
+# The qaly_decrement represents the annual reduction in quality of life (utility)
+# for an individual with the condition.
+#
+# The annual_cost represents the direct annual healthcare cost associated
+# with managing the condition.
+#
+# These values are illustrative and should be replaced with evidence-based
+# parameters for a real analysis.
+conditions:
+  stroke:
+    annual_incidence_rate: 0.005
+    qaly_decrement: 0.15
+    annual_cost: 5000
+  peptic_ulcer:
+    annual_incidence_rate: 0.003
+    qaly_decrement: 0.05
+    annual_cost: 800
+  metabolic_syndrome:
+    annual_incidence_rate: 0.01
+    qaly_decrement: 0.08
+    annual_cost: 1200
+  hypertension:
+    annual_incidence_rate: 0.02
+    qaly_decrement: 0.03
+    annual_cost: 500
+  depression:
+    annual_incidence_rate: 0.015
+    qaly_decrement: 0.10
+    annual_cost: 2000
+  copd:
+    annual_incidence_rate: 0.008
+    qaly_decrement: 0.09
+    annual_cost: 1500

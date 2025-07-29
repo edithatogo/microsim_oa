@@ -1,0 +1,18 @@
+# config/interventions.yaml
+
+# --- Intervention Modelling Configuration ---
+
+# Set 'enabled' to true to include interventions in the simulation.
+# If false, the entire intervention step will be skipped.
+enabled: false
+
+# Define the parameters for each intervention.
+interventions:
+  public_health_campaign_bmi:
+    type: "bmi_reduction"
+    start_year: 2025
+    end_year: 2035
+    parameters:
+      # This is a simple example. A real intervention would have more
+      # complex parameters, such as age/sex-specific effects.
+      reduction_amount: 0.5 # The amount to reduce BMI by each year
