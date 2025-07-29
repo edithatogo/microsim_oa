@@ -6,40 +6,57 @@
 # If false, the entire comorbidity update step will be skipped.
 enabled: false
 
-# Define the parameters for each comorbidity.
-# The annual_incidence_rate is a simplified placeholder. A more complex model
-# would use age and sex-specific rates.
-#
-# The qaly_decrement represents the annual reduction in quality of life (utility)
-# for an individual with the condition.
-#
-# The annual_cost represents the direct annual healthcare cost associated
-# with managing the condition.
-#
-# These values are illustrative and should be replaced with evidence-based
-# parameters for a real analysis.
+# --- Conditions ---
+# Parameters are based on a combination of literature review and modeling assumptions.
+# Incidence rates for the general population are adjusted by prevalence ratios
+# in OA patients where available from Swain et al. (2020).
+# Costs and QALYs are estimates from various Australian sources.
+
 conditions:
   stroke:
-    annual_incidence_rate: 0.005
-    qaly_decrement: 0.15
-    annual_cost: 5000
+    # Incidence: ~210 per 100k -> 0.0021. Relative risk in OA ~2.61.
+    annual_incidence_rate: 0.0055 # (0.0021 * 2.61)
+    # QALY: Lifetime loss of 5-6 QALYs. Assuming 10-year duration post-stroke. Using a conservative annual estimate.
+    qaly_decrement: 0.20
+    # Cost: Lifetime cost ~$350k. Assuming 10-year duration.
+    annual_cost: 35000
+    
   peptic_ulcer:
-    annual_incidence_rate: 0.003
+    # Incidence: ~4.5 per 1k -> 0.0045. Relative risk in OA ~2.36.
+    annual_incidence_rate: 0.0106 # (0.0045 * 2.36)
+    # QALY: Placeholder value.
     qaly_decrement: 0.05
+    # Cost: Placeholder value for annual management.
     annual_cost: 800
+    
   metabolic_syndrome:
-    annual_incidence_rate: 0.01
+    # Incidence: Estimated from prevalence of ~33%. Relative risk in OA ~1.94.
+    annual_incidence_rate: 0.064 # (0.033 * 1.94)
+    # QALY: Placeholder value.
     qaly_decrement: 0.08
+    # Cost: Placeholder value.
     annual_cost: 1200
+    
   hypertension:
-    annual_incidence_rate: 0.02
+    # Incidence: Estimated from prevalence of ~23%. No RR available, assuming 1.5.
+    annual_incidence_rate: 0.0345 # (0.023 * 1.5)
+    # QALY: Placeholder value.
     qaly_decrement: 0.03
-    annual_cost: 500
+    # Cost: Based on AIHW data ($1.2B / 3M patients).
+    annual_cost: 400
+    
   depression:
-    annual_incidence_rate: 0.015
-    qaly_decrement: 0.10
-    annual_cost: 2000
+    # Incidence: Estimated from prevalence of ~9%. No RR available, assuming 1.8.
+    annual_incidence_rate: 0.0162 # (0.009 * 1.8)
+    # QALY: Significant QALY loss reported. Using a conservative annual estimate.
+    qaly_decrement: 0.12
+    # Cost: Based on AIHW data ($11B / 2.1M patients).
+    annual_cost: 5200
+    
   copd:
-    annual_incidence_rate: 0.008
+    # Incidence: Estimated from prevalence of ~2.5%. No RR available, assuming 1.7.
+    annual_incidence_rate: 0.0043 # (0.0025 * 1.7)
+    # QALY: Placeholder value based on DALYs.
     qaly_decrement: 0.09
-    annual_cost: 1500
+    # Cost: Based on AIHW data ($831M / 638k patients).
+    annual_cost: 1300
