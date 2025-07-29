@@ -51,24 +51,18 @@ model_parameters <- load_config(here("config", "coefficients.yaml"))
 model_parameters <- apply_policy_levers(model_parameters, simulation_config$policy_levers)
 
 
-# Load the input file
-if (exists("scenario")) {
-  input_file <-
-    here("input", "scenarios", paste0("ausoa_input_", scenario, ".xlsx"))
-} else {
-  input_file <- here("input", "scenarios", "choose file.txt")
-  print("PLEASE CHOOSE THE INPUT FILE FROM THE MENU...")
-  input_file <- choose.files(input_file)
-  scenario <- gsub(".xlsx$", "", basename(input_file))
-  scenario <- gsub("ausoa_input_", "", scenario)
-}
+# Load the scenario management script
+source(here("scripts", "manage_scenarios.R"))
+
+# Interactively select the scenario
+# scenario_selection <- manage_scenarios_interactive()
+# For non-interactive use, you can set the scenario directly:
+scenario_selection <- get_scenario("public")
+
 
 sim_setup <-
-  read_excel(input_file, sheet = "Simulation inputs") %>%
-  rename(
-    param = `Base population parameters`,
-    spec  = `Value`
-  ) %>%
+  scenario_selection %>%
+  pivot_longer(cols = everything(), names_to = "param", values_to = "spec") %>%
   filter(!is.na(spec))
 
 
