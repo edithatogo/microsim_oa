@@ -84,35 +84,69 @@ coefficients:
   # ... and so on for all other equation families (c2, c3, c4, c5, c7, c8, etc.)
 
   costs:
-    # Costs associated with TKA events
-    tka_primary:
-      total: 22000
-      mbs_item: "49518" # Primary TKR
-      pbs_item: "N/A"
-      out_of_pocket: 2000
-    tka_revision:
-      total: 32000
-      mbs_item: "49524" # Revision of TKR
-      pbs_item: "N/A"
-      out_of_pocket: 3000
-    inpatient_rehab:
-      total: 6000
-      mbs_item: "N/A"
-      pbs_item: "N/A"
-      out_of_pocket: 500
+    # Costs are broken down by component and perspective.
+    # Perspectives can be:
+    # - 'healthcare_system': Costs borne by the government/insurers.
+    # - 'patient': Out-of-pocket costs for the individual.
+    # - 'societal': Broader costs like productivity loss.
     
-    # Annual costs
-    oa_annual_management:
-      total: 1200
-      mbs_item: "23" # GP consult
-      pbs_item: "Various" # e.g., analgesics
-      out_of_pocket: 200
+    tka_primary:
+      hospital_stay:
+        value: 15000
+        perspective: healthcare_system
+      surgeon_anaesthetist:
+        value: 4000
+        perspective: healthcare_system
+      prosthesis:
+        value: 3000
+        perspective: healthcare_system
+      patient_gap:
+        value: 2000
+        perspective: patient
 
-    # Productivity and other costs (annual estimates)
+    tka_revision:
+      hospital_stay:
+        value: 22000
+        perspective: healthcare_system
+      surgeon_anaesthetist:
+        value: 6000
+        perspective: healthcare_system
+      prosthesis:
+        value: 4000
+        perspective: healthcare_system
+      patient_gap:
+        value: 3000
+        perspective: patient
+
+    inpatient_rehab:
+      rehab_facility:
+        value: 5500
+        perspective: healthcare_system
+      patient_gap:
+        value: 500
+        perspective: patient
+    
+    oa_annual_management:
+      gp_visits:
+        value: 300
+        perspective: healthcare_system
+      specialist_visits:
+        value: 400
+        perspective: healthcare_system
+      medications:
+        value: 300
+        perspective: healthcare_system
+      patient_oop: # Other out-of-pocket (e.g., physio)
+        value: 200
+        perspective: patient
+
     productivity_loss:
-      value: 2500 # Placeholder for productivity loss cost
+      value: 2500
+      perspective: societal
+      
     informal_care:
-      value: 1800 # Placeholder for informal care cost
+      value: 1800
+      perspective: societal
 
   # --- Discounting ---
   # Applied to costs and outcomes
@@ -120,20 +154,24 @@ coefficients:
     value: 0.05
 
   utilities:
-    c14_kl2:
-      live: -0.05
-    c14_kl3:
-      live: -0.1
-    c14_kl4:
-      live: -0.15
-    c14_rev:
-      live: -0.2
-    c14_bmi:
-      live: -0.005
-    c14_ccount:
-      live: -0.02
-    c14_mhc:
-      live: -0.03
+    # Utility decrements for different health states.
+    # These values are subtracted from the baseline utility (SF-6D).
+    kl_grades:
+      kl2: 0.05
+      kl3: 0.10
+      kl4: 0.15
+    
+    revision: 0.20
+    
+    bmi_decrement: -0.005 # Per unit increase in BMI
+    
+    comorbidities:
+      stroke: 0.15
+      peptic_ulcer: 0.05
+      metabolic_syndrome: 0.08
+      hypertension: 0.03
+      depression: 0.10
+      copd: 0.09
 
   initial_kl_grades:
     p_KL2init:

@@ -2,17 +2,44 @@
 
 # --- Intervention Modelling Configuration ---
 
-# Set 'enabled' to true to include interventions in the simulation.
-# If false, the entire intervention step will be skipped.
 enabled: false
 
-# Define the parameters for each intervention.
 interventions:
+  # --- Intervention 1: Public Health Campaign for BMI Reduction ---
   public_health_campaign_bmi:
-    type: "bmi_reduction"
-    start_year: 2025
-    end_year: 2035
+    type: "bmi_modification"
+    start_year: 2028
+    end_year: 2038
+    
+    # Target population defines who the intervention applies to.
+    # An empty field means it applies to everyone.
+    # Conditions are combined with AND.
+    target_population:
+      min_age: 45
+      max_age: 65
+      # sex: "[1] Male" # Example: can also target by sex
+      # year12: 0 # Example: can also target by SES (0 = low, 1 = high)
+      
     parameters:
-      # This is a simple example. A real intervention would have more
-      # complex parameters, such as age/sex-specific effects.
-      reduction_amount: 0.5 # The amount to reduce BMI by each year
+      # This intervention reduces BMI by a certain amount.
+      # A negative value would represent an increase.
+      bmi_change: -0.5
+      # Uptake rate represents the proportion of the target population
+      # that is affected by the intervention each year.
+      uptake_rate: 0.10 # 10% of the target pop is affected
+
+  # --- Intervention 2: New Advanced OA Drug ---
+  new_oa_drug:
+    type: "qaly_and_cost_modification"
+    start_year: 2030
+    end_year: 2040
+    
+    target_population:
+      # This drug is for patients with moderate to severe OA
+      min_kl_grade: 3 # Targets KL grades 3 and 4
+      
+    parameters:
+      # This intervention provides a direct QALY improvement but also has a cost.
+      qaly_gain: 0.05 # Annual improvement in health utility
+      annual_cost: 2500 # Annual cost of the drug per person
+      uptake_rate: 0.50 # 50% of eligible patients use the drug

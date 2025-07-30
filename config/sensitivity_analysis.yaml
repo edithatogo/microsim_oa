@@ -1,0 +1,20 @@
+# config/sensitivity_analysis.yaml
+
+# --- One-Way Sensitivity Analysis Configuration ---
+
+# Set 'enabled' to true to run the sensitivity analysis.
+enabled: false
+
+# --- Analysis Definition ---
+
+# Specify the parameter to vary using a dot-separated path.
+# This path corresponds to the structure of the coefficients.yaml file.
+# Example: "costs.tka_primary.hospital_stay.value"
+parameter_path: "costs.tka_primary.hospital_stay.value"
+
+# Specify the values to test for the selected parameter.
+# This can be a list of specific values or a sequence.
+variations:
+  - 12000 # Low value
+  - 15000 # Base value (from coefficients.yaml)
+  - 18000 # High value

@@ -36,6 +36,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # Source the new comorbidity and intervention functions
   source(here("R", "update_comorbidities_fcn.R"))
   source(here("R", "apply_interventions_fcn.R"))
+  source(here("R", "calculate_qaly_fcn.R"))
 
 
   # Apply interventions
@@ -198,7 +199,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
 
   # % HRQOL progression or prediction (tbc)
-
+  am_curr <- calculate_qaly(am_curr, cycle.coefficents$utilities)
   am_new$sf6d <- am_curr$sf6d + am_curr$d_sf6d
 
 

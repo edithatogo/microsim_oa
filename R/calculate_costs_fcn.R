@@ -1,55 +1,91 @@
 #' Calculate Costs for a Simulation Cycle
 #'
 #' This function calculates various costs for each individual in the attribute
-#' matrix based on events that occurred in the current cycle (e.g., TKA,
-#' revision) and ongoing states (e.g., having OA).
+#' matrix based on events that occurred in the current cycle and ongoing states.
+#' It uses a detailed, component-based cost configuration.
 #'
 #' @param am_new A data.table representing the attribute matrix with the
 #'   latest events for the current cycle.
-#' @param costs_config A list containing the cost parameters from the model
-#'   configuration file.
+#' @param costs_config A list containing the detailed cost parameters from the
+#'   model configuration file.
 #'
-#' @return The `am_new` data.table with new columns for the costs incurred
-#'   during the cycle (e.g., `cycle_cost_total`, `cycle_cost_oop`).
+#' @return The `am_new` data.table with new columns for costs incurred
+#'   during the cycle, broken down by perspective.
 #' @export
 calculate_costs_fcn <- function(am_new, costs_config) {
   
-  # Initialize cycle costs to 0
-  am_new[, cycle_cost_total := 0]
-  am_new[, cycle_cost_oop := 0]
-  am_new[, cycle_cost_prod := 0]
-  am_new[, cycle_cost_informal := 0]
-  
-  # --- Event-Based Costs ---
-  
-  # Primary TKA cost
-  # Note: `tka` is 1 if a TKA happened in this cycle. `tka1` is the state of ever having a TKA.
-  # We assume `revi` (revision) is mutually exclusive with a new primary TKA in the same cycle.
-  am_new[tka == 1 & revi == 0, cycle_cost_total := cycle_cost_total + costs_config$tka_primary$total]
-  am_new[tka == 1 & revi == 0, cycle_cost_oop := cycle_cost_oop + costs_config$tka_primary$out_of_pocket]
-  
-  # Revision TKA cost
-  am_new[revi == 1, cycle_cost_total := cycle_cost_total + costs_config$tka_revision$total]
-  am_new[revi == 1, cycle_cost_oop := cycle_cost_oop + costs_config$tka_revision$out_of_pocket]
-  
-  # Inpatient rehab cost (assume it happens after any TKA)
-  am_new[tka == 1, cycle_cost_total := cycle_cost_total + costs_config$inpatient_rehab$total]
-  am_new[tka == 1, cycle_cost_oop := cycle_cost_oop + costs_config$inpatient_rehab$out_of_pocket]
-  
-  # --- State-Based (Annual) Costs ---
-  
-  # Annual management cost for everyone with OA who is alive
-  am_new[oa == 1 & dead == 0, cycle_cost_total := cycle_cost_total + costs_config$oa_annual_management$total]
-  am_new[oa == 1 & dead == 0, cycle_cost_oop := cycle_cost_oop + costs_config$oa_annual_management$out_of_pocket]
-  
-  # Productivity and informal care costs for everyone with OA who is alive
-  am_new[oa == 1 & dead == 0, cycle_cost_prod := cycle_cost_prod + costs_config$productivity_loss$value]
-  am_new[oa == 1 & dead == 0, cycle_cost_informal := cycle_cost_informal + costs_config$informal_care$value]
-  
-  # Add comorbidity costs (calculated in the comorbidity update function)
-  if ("comorbidity_cost" %in% names(am_new)) {
-    am_new[dead == 0, cycle_cost_total := cycle_cost_total + comorbidity_cost]
+  # --- Helper Function to Sum Costs by Perspective ---
+  get_cost_sum <- function(cost_event_config, perspective_filter) {
+    
+    total_cost <- 0
+    
+    # Loop through each component of the cost event (e.g., hospital, surgeon)
+    for (component in names(cost_event_config)) {
+      
+      # Check if the component's perspective matches the filter
+      if (cost_event_config[[component]]$perspective %in% perspective_filter) {
+        total_cost <- total_cost + cost_event_config[[component]]$value
+      }
+    }
+    return(total_cost)
   }
+  
+  
+  # --- Initialize Cycle Cost Columns ---
+  am_new[, cycle_cost_healthcare := 0]
+  am_new[, cycle_cost_patient := 0]
+  am_new[, cycle_cost_societal := 0]
+  
+  
+  # --- Calculate Costs for Each Event and State ---
+  
+  # 1. Primary TKA Cost
+  healthcare_tka_cost <- get_cost_sum(costs_config$tka_primary, "healthcare_system")
+  patient_tka_cost <- get_cost_sum(costs_config$tka_primary, "patient")
+  
+  am_new[tka == 1 & revi == 0, cycle_cost_healthcare := cycle_cost_healthcare + healthcare_tka_cost]
+  am_new[tka == 1 & revi == 0, cycle_cost_patient := cycle_cost_patient + patient_tka_cost]
+  
+  # 2. Revision TKA Cost
+  healthcare_revision_cost <- get_cost_sum(costs_config$tka_revision, "healthcare_system")
+  patient_revision_cost <- get_cost_sum(costs_config$tka_revision, "patient")
+  
+  am_new[revi == 1, cycle_cost_healthcare := cycle_cost_healthcare + healthcare_revision_cost]
+  am_new[revi == 1, cycle_cost_patient := cycle_cost_patient + patient_revision_cost]
+  
+  # 3. Inpatient Rehab Cost
+  healthcare_rehab_cost <- get_cost_sum(costs_config$inpatient_rehab, "healthcare_system")
+  patient_rehab_cost <- get_cost_sum(costs_config$inpatient_rehab, "patient")
+  
+  am_new[tka == 1, cycle_cost_healthcare := cycle_cost_healthcare + healthcare_rehab_cost]
+  am_new[tka == 1, cycle_cost_patient := cycle_cost_patient + patient_rehab_cost]
+  
+  # 4. Annual OA Management Cost
+  healthcare_oa_cost <- get_cost_sum(costs_config$oa_annual_management, "healthcare_system")
+  patient_oa_cost <- get_cost_sum(costs_config$oa_annual_management, "patient")
+  
+  am_new[oa == 1 & dead == 0, cycle_cost_healthcare := cycle_cost_healthcare + healthcare_oa_cost]
+  am_new[oa == 1 & dead == 0, cycle_cost_patient := cycle_cost_patient + patient_oa_cost]
+  
+  # 5. Societal Costs (Productivity and Informal Care)
+  prod_cost <- get_cost_sum(costs_config$productivity_loss, "societal")
+  informal_care_cost <- get_cost_sum(costs_config$informal_care, "societal")
+  
+  am_new[oa == 1 & dead == 0, cycle_cost_societal := cycle_cost_societal + prod_cost + informal_care_cost]
+  
+  # 6. Comorbidity Costs
+  # These are added directly to the healthcare cost perspective for simplicity.
+  if ("comorbidity_cost" %in% names(am_new)) {
+    am_new[dead == 0, cycle_cost_healthcare := cycle_cost_healthcare + comorbidity_cost]
+  }
+  
+  # 7. Intervention Costs
+  if ("intervention_cost" %in% names(am_new)) {
+    am_new[dead == 0, cycle_cost_healthcare := cycle_cost_healthcare + intervention_cost]
+  }
+
+  # --- Calculate Total Cost ---
+  am_new[, cycle_cost_total := cycle_cost_healthcare + cycle_cost_patient + cycle_cost_societal]
   
   return(am_new)
 }
