@@ -1,0 +1,44 @@
+---
+title: "Custom AUS-OA Model Report"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+params:
+  selected_variables: NA
+  plot_list: NA
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r plot_generation, include=FALSE}
+# This chunk generates the plots but doesn't display them here.
+# The plots are displayed in the individual sections below.
+```
+
+# Introduction
+
+This report presents a custom selection of results from the AUS-OA microsimulation model.
+
+---
+
+```{r generate_plots, results='asis'}
+for (var in params$selected_variables) {
+  cat("## Variable: ", var, "\n")
+  
+  plot_object <- params$plot_list[[var]]
+  
+  if (!is.null(plot_object)) {
+    # Print the plot
+    print(plot_object)
+  } else {
+    cat("No plot available for this variable.\n")
+  }
+  
+  cat("\n---\n") # Add a separator
+}
+```

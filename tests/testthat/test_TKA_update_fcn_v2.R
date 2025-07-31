@@ -1,7 +1,7 @@
 library(testthat)
 
 source(here::here("R", "TKA_update_fcn_v2.R"))
-source(here::here("R", "apply_coefficent_customisations_fcn.R"))
+source(here::here("R", "apply_coefficient_customisations_fcn.R"))
 
 test_that("TKA_update_fcn calculates TKA initiation correctly", {
   # 1. Set up mock data
@@ -49,7 +49,7 @@ test_that("TKA_update_fcn calculates TKA initiation correctly", {
   )
   
   # 2. Call the function
-  result <- TKA_update_fcn(am_curr, am_new, TKA_time_trend, TKR_cust, cycle.coefficents)
+  result <- TKA_update_fcn(am_curr, am_new, NULL, TKA_time_trend, NULL, TKR_cust, cycle.coefficents)
 
   # 3. Assert expectations
   expect_true(sum(result$am_new$tka) >= 0)

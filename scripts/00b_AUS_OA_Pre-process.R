@@ -1,29 +1,16 @@
 # PRE-PROCESSING
+source(here::here("scripts", "00a_AUS_OA_Setup.R"))
 
 ## Synthetic dataset
-simpop_file <-
-  sim_setup$spec[
-    sim_setup$param == "Synthetic population if not generating a new one"
-  ] %>%
-  as.character()
+simpop_file <- get_param_value("Synthetic population if not generating a new one")
 simpop_file <- here("input", "population", simpop_file)
 
-run_sim_pop <-
-  sim_setup$spec[sim_setup$param == "Generate new base population?"] %>%
-  as.logical()
+run_sim_pop <- as.logical(get_param_value("Generate new base population?"))
 
 if (startyear == 2013 && (run_sim_pop == TRUE || !file.exists(simpop_file))) {
-  pop_weight <-
-    sim_setup$spec[sim_setup$param == "Population scale"] %>%
-    as.numeric()
-
-  scale_hilda <-
-    sim_setup$spec[sim_setup$param == "Population adjuster"] %>%
-    as.numeric()
-
-  input_data <-
-    sim_setup$spec[sim_setup$param == "Input data for base population"] %>%
-    as.character()
+  pop_weight <- as.numeric(get_param_value("Population scale"))
+  scale_hilda <- as.numeric(get_param_value("Population adjuster"))
+  input_data <- get_param_value("Input data for base population")
 
   input_data <-
     here("input", "population", input_data)

@@ -5,16 +5,17 @@
 
 # --- 0. Define a function to run the simulation ---
 # This makes it easier to call from other scripts.
-run_simulation <- function(custom_coeffs = NULL) {
+run_simulation <- function(simulation_config, model_coefficients, comorbidity_params, intervention_params, custom_coeffs = NULL) {
   
-  # --- 1. Load Configuration and Packages ---
-  config <- load_config("config")
+  # --- 1. Load Packages ---
   source(here("R", "initialize_kl_grades_fcn.R"))
   source(here("R", "simulation_cycle_fcn.R"))
+  source(here("R", "bmi_mod_fcn.R"))
+  source(here("R", "apply_coefficient_customisations_fcn.R"))
   
   # --- 2. Set Up Simulation Environment ---
-  sim_params <- config$simulation
-  run_modes <- config$run_modes
+  sim_params <- simulation_config$simulation
+  run_modes <- simulation_config$run_modes
   
   if (run_modes$calibration_mode) {
     print("Using supplied coefficients for calibration mode, probabilistic mode off")
@@ -30,52 +31,91 @@ run_simulation <- function(custom_coeffs = NULL) {
   am_file <- file.path("input", "population", paste0("am_", start_year, ".parquet"))
   am <- as.data.frame(arrow::read_parquet(am_file))
   
+  # Create the 'male' binary indicator column from the 'sex' column
+  am$male <- ifelse(am$sex == "[1] Male", 1, 0)
+  am$female <- 1 - am$male
+  
+  # Initialize the 'dead' column
+  am$dead <- 0
+  
+  # Initialize columns that may be missing from the initial data
+  if (!"tka1" %in% names(am)) am$tka1 <- 0
+  if (!"tka2" %in% names(am)) am$tka2 <- 0
+  if (!"kl2" %in% names(am)) am$kl2 <- 0
+  if (!"kl3" %in% names(am)) am$kl3 <- 0
+  if (!"kl4" %in% names(am)) am$kl4 <- 0
+  if (!"pain" %in% names(am)) am$pain <- 0
+  if (!"function_score" %in% names(am)) am$function_score <- 0
+  if (!"agetka1" %in% names(am)) am$agetka1 <- 0
+  if (!"agetka2" %in% names(am)) am$agetka2 <- 0
+  if (!"tka" %in% names(am)) am$tka <- 0
+  if (!"oa" %in% names(am)) am$oa <- 0
+  if (!"drugoa" %in% names(am)) am$drugoa <- 0
+  if (!"qaly" %in% names(am)) am$qaly <- 0
+  
   bmi_edges <- c(0, 25, 30, 35, 40, 100)
   age_edges <- c(min(am$age) - 1, 45, 55, 65, 75, 150)
   
   # --- 4. Prepare Coefficients ---
   if (!is.null(custom_coeffs)) {
     # Use the custom coefficients passed to the function
-    model_coefficients <- custom_coeffs
+    model_coefficients_to_use <- custom_coeffs
   } else {
     # Load the base coefficients from the file
-    model_coefficients <- config$coefficients
+    model_coefficients_to_use <- model_coefficients
   }
   
-  all_coeffs <- unlist(model_coefficients)
-  live_coeffs <- all_coeffs[grep("\\.live$|\\.value$", names(all_coeffs))]
-  names(live_coeffs) <- gsub("\\.live$|\\.value$", "", names(live_coeffs))
-  names(live_coeffs) <- gsub(".*\\.", "", names(live_coeffs))
-  cycle.coefficents <- as.list(live_coeffs)
-  cycle.coefficents <- lapply(cycle.coefficents, as.numeric)
+  # Helper function to recursively extract 'live' or 'value'
+  extract_live_values <- function(x) {
+    if (is.list(x)) {
+      if ("live" %in% names(x)) {
+        return(x$live)
+      } else if ("value" %in% names(x)) {
+        return(x$value)
+      } else {
+        return(lapply(x, extract_live_values))
+      }
+    } else {
+      return(x)
+    }
+  }
+
+  # The entire config is nested under a 'coefficients' key.
+  # We extract the live/value parameters first.
+  cycle.coefficents <- extract_live_values(model_coefficients_to_use$coefficients)
   
-  # Also pass the full structured costs config
-  cycle.coefficents$costs <- model_coefficients$costs
-  cycle.coefficents$utilities <- model_coefficients$utilities
+  # Then, we re-attach the full, structured cost and utility lists, as they are
+  # needed in their original form by some functions.
+  cycle.coefficents$costs <- model_coefficients_to_use$coefficients$costs
+  cycle.coefficents$utilities <- model_coefficients_to_use$coefficients$utilities
   
   # --- 5. Prepare Other Inputs ---
-  input_file <- config$paths$input_file
+  input_file <- simulation_config$paths$input_file
   lt <- read_excel(input_file,
-                   sheet = config$life_tables$sheet,
-                   range = config$life_tables$range
+                   sheet = simulation_config$life_tables$sheet,
+                   range = simulation_config$life_tables$range
   )
   tka_time_trend <- read_excel(input_file,
-                               sheet = config$tka_utilisation$sheet,
-                               range = config$tka_utilisation$range
+                               sheet = simulation_config$tka_utilisation$sheet,
+                               range = simulation_config$tka_utilisation$range
   )
   
   if (run_modes$calibration_mode) {
-    eq_cust <- config$calibration
+    eq_cust <- simulation_config$calibration
   } else {
     eq_cust <- list(
       BMI = data.frame(covariate_set = c("c1", "c2", "c3", "c4", "c5"), proportion_reduction = c(1, 1, 1, 1, 1)),
       OA = data.frame(covariate_set = "cons", proportion_reduction = 1),
-      TKR = data.frame(proportion_reduction = 1)
+      TKR = data.frame(
+        covariate_set = c("c9_cons", "c9_age", "c9_age2", "c9_drugoa", "c9_ccount", "c9_mhc", "c9_tkr", "c9_kl2hr", "c9_kl3hr", "c9_kl4hr", "c9_pain", "c9_function"),
+        proportion_reduction = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+      )
     )
   }
   
   # --- 6. Initialize KL Grades ---
-  am <- initialize_kl_grades(am, cycle.coefficents)
+  am$oa <- as.numeric(am$oa)
+  am <- initialize_kl_grades(am, cycle.coefficents$utilities, cycle.coefficents$initial_kl_grades)
   
   # --- 7. Run Simulation Loop ---
   am_all <- am
@@ -90,6 +130,7 @@ run_simulation <- function(custom_coeffs = NULL) {
     am_curr$d_bmi <- 0
     am_new$year <- am_curr$year + 1
     
+    print(paste("Calling simulation_cycle_fcn for year", am_new$year[1]))
     simulation_output_data <- simulation_cycle_fcn(
       am_curr = am_curr,
       cycle.coefficents = cycle.coefficents,
@@ -101,9 +142,10 @@ run_simulation <- function(custom_coeffs = NULL) {
       lt = lt,
       eq_cust = eq_cust,
       tka_time_trend = tka_time_trend,
-      comorbidity_params = config$comorbidities,
-      intervention_params = config$interventions
+      comorbidity_params = comorbidity_params,
+      intervention_params = intervention_params
     )
+    print(paste("Returned from simulation_cycle_fcn for year", am_new$year[1]))
     
     am_curr <- simulation_output_data[["am_curr"]]
     am_new <- simulation_output_data[["am_new"]]
@@ -134,5 +176,11 @@ run_simulation <- function(custom_coeffs = NULL) {
 # This part only runs if the script is sourced directly, not from another script
 # that calls run_simulation() with parameters.
 if (sys.nframe() == 0) {
-  am_all <- run_simulation()
+  # Load configs if running standalone
+  simulation_config <- load_config("config/simulation.yaml")
+  model_parameters <- load_config("config/coefficients.yaml")
+  comorbidity_parameters <- load_config("config/comorbidities.yaml")
+  intervention_parameters <- load_config("config/interventions.yaml")
+  
+  am_all <- run_simulation(simulation_config, model_parameters, comorbidity_parameters, intervention_parameters)
 }

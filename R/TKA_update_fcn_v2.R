@@ -33,62 +33,26 @@ TKA_update_fcn <- function(am_curr,
                            TKR_cust,
                            cycle.coefficents) {
   
-  # NOTE: in future the tkadata_melt can be removed, the purpose of the
-  # data is basically being taken over by the TKA_time_trend data
-  # kept in at the moment for debugging purposes
-
   # setup categorical variables
   am_curr$age_group_tka_adj <- cut(am_curr$age, breaks = c(0, 44, 54, 64, 74, 1000), labels = c("< 45", "45-54", "55-64", "65-74", "75+"))
   am_curr$sex_tka_adj <- ifelse(am_curr$sex == "[1] Male", "Males", "Females")
 
-  # find proportion in the synthetic population with OA, will be used to adjust the
-  # overall rate of TKA (ie including those without OA) to represent the risk
-  # of those with OA. Ie the risk is going to be upscaled from representing
-  # the overall population to the risk for the OA population based on this
-  # proportion
-
-
-  # # get current year data
-  # tkadata_current <- tkadata_melt %>%
-  #   filter(Year == am_curr$year[1]) %>%
-  #   mutate(TKR_annual_pop_risk = value/100000)
-  #
-  #
-  # tkadata_current$sex_tka_adj <- grepl("female",tkadata_current$variable)
-  # tkadata_current$sex_tka_adj <- ifelse(tkadata_current$sex_tka_adj == TRUE, "Females", "Males")
-  #
-  # tkadata_current$age_group_tka_adj <- ifelse(grepl("4554",tkadata_current$variable),"45-54",
-  #                                             ifelse(grepl("5564",tkadata_current$variable),"55-64",
-  #                                                    ifelse(grepl("6574",tkadata_current$variable),"65-74",
-  #                                                           ifelse(grepl("75",tkadata_current$variable),"75+",
-  #                                                                  "<45"))))
-  #
-  # am_curr <-left_join(am_curr,
-  #                     tkadata_current[,c("sex_tka_adj", "age_group_tka_adj","TKR_annual_pop_risk")],
-  #                     by = dplyr::join_by(sex_tka_adj == sex_tka_adj,
-  #                                         age_group_tka_adj == age_group_tka_adj))
-  #
-  #
-  # # for those <45 0 annual risk
-  # am_curr$TKR_annual_pop_risk[which(is.na(am_curr$TKR_annual_pop_risk))] <- 0
-
-
   # NOTE: The following section uses OA_cust to customize TKA coefficients.
   # This seems unusual. Flagging for review.
-  cycle.coefficents <- apply_coefficent_customisations(cycle.coefficents, TKR_cust, "c9", "c9")
+  cycle.coefficents$c9 <- apply_coefficient_customisations(cycle.coefficents$c9, TKR_cust, "c9", "c9")
 
-  am_curr$tka_initiation_prob <- cycle.coefficents$c9_cons +
-    cycle.coefficents$c9_age * am_curr$age +
-    cycle.coefficents$c9_age2 * (am_curr$age^2) +
-    cycle.coefficents$c9_drugoa * am_curr$drugoa +
-    cycle.coefficents$c9_ccount * am_curr$ccount +
-    cycle.coefficents$c9_mhc * am_curr$mhc +
-    cycle.coefficents$c9_tkr * am_curr$tka +
-    cycle.coefficents$c9_kl2hr * am_curr$kl2 +
-    cycle.coefficents$c9_kl3hr * am_curr$kl3 +
-    cycle.coefficents$c9_kl4hr * am_curr$kl4 +
-    cycle.coefficents$c9_pain * am_curr$pain +
-    cycle.coefficents$c9_function * am_curr$function_score
+  am_curr$tka_initiation_prob <- cycle.coefficents$c9$c9_cons +
+    cycle.coefficents$c9$c9_age * am_curr$age +
+    cycle.coefficents$c9$c9_age2 * (am_curr$age^2) +
+    cycle.coefficents$c9$c9_drugoa * am_curr$drugoa +
+    cycle.coefficents$c9$c9_ccount * am_curr$ccount +
+    cycle.coefficents$c9$c9_mhc * am_curr$mhc +
+    cycle.coefficents$c9$c9_tkr * am_curr$tka1 +
+    cycle.coefficents$c9$c9_kl2hr * am_curr$kl2 +
+    cycle.coefficents$c9$c9_kl3hr * am_curr$kl3 +
+    cycle.coefficents$c9$c9_kl4hr * am_curr$kl4 +
+    cycle.coefficents$c9$c9_pain * am_curr$pain +
+    cycle.coefficents$c9$c9_function * am_curr$function_score
 
   # risk is a 5 year value so divided by 5 to get annual risk
   am_curr$tka_initiation_prob <- am_curr$tka_initiation_prob / 5
@@ -101,20 +65,24 @@ TKA_update_fcn <- function(am_curr,
   am_curr$tka_initiation_prob <- (1 - am_curr$dead) * am_curr$tka_initiation_prob # only alive have TKA
   am_curr$tka_initiation_prob <- (1 - am_curr$tka2) * am_curr$tka_initiation_prob
 
-  # apply secular scaling, difference values for gender*age groups so 8 groups in total
+  # apply secular scaling
   am_curr$current_scaling_factor <- 1
-  # females
-  am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age4554 == 1)] <- TKA_time_trend$female4554[which(TKA_time_trend$Year == am_curr$year[1])]
-  am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age5564 == 1)] <- TKA_time_trend$female5564[which(TKA_time_trend$Year == am_curr$year[1])]
-  am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age6574 == 1)] <- TKA_time_trend$female6574[which(TKA_time_trend$Year == am_curr$year[1])]
-  am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age75 == 1)] <- TKA_time_trend$female75[which(TKA_time_trend$Year == am_curr$year[1])]
-  # males
-  am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age4554 == 1)] <- TKA_time_trend$male4554[which(TKA_time_trend$Year == am_curr$year[1])]
-  am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age5564 == 1)] <- TKA_time_trend$male5564[which(TKA_time_trend$Year == am_curr$year[1])]
-  am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age6574 == 1)] <- TKA_time_trend$male6574[which(TKA_time_trend$Year == am_curr$year[1])]
-  am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age75 == 1)] <- TKA_time_trend$male75[which(TKA_time_trend$Year == am_curr$year[1])]
-
-  # adjust annual risk to reflect secular trend
+  current_year <- am_curr$year[1]
+  year_index <- which(TKA_time_trend$Year == current_year)
+  
+  if (length(year_index) > 0) {
+    # Females
+    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age4554 == 1)] <- TKA_time_trend$female4554[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age5564 == 1)] <- TKA_time_trend$female5564[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age6574 == 1)] <- TKA_time_trend$female6574[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age75 == 1)]   <- TKA_time_trend$female75[year_index]
+    # Males
+    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age4554 == 1)] <- TKA_time_trend$male4554[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age5564 == 1)] <- TKA_time_trend$male5564[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age6574 == 1)] <- TKA_time_trend$male6574[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age75 == 1)]   <- TKA_time_trend$male75[year_index]
+  }
+  
   am_curr$tka_initiation_prob <- am_curr$tka_initiation_prob * am_curr$current_scaling_factor
 
   # determine events based on TKA probability
@@ -122,7 +90,7 @@ TKA_update_fcn <- function(am_curr,
   am_curr$tka_initiation_prob <- ifelse(am_curr$tka_initiation_prob > tka_initiation_rand, 1, 0)
 
   # records is a TKA happened in the cycle
-  am_new$tka <- am_curr$tka_initiation_prob
+  am_new$tka <- pmax(am_curr$tka, am_curr$tka_initiation_prob, na.rm = TRUE)
   # if no prior TKA and a record is a TKA, then tka1 = 1
   am_new$tka1 <- am_curr$tka1 + (am_curr$tka_initiation_prob * (1 - am_curr$tka1))
   # if a tka is recorded and there is a prior tka (ie am_curr$tka1 == 1), then record tka2
@@ -143,4 +111,3 @@ TKA_update_fcn <- function(am_curr,
 
   return(export_data)
 }
-

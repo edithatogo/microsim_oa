@@ -7,7 +7,8 @@
 #' @param group_vars A character vector of variable names to group by.
 #' @return A data.frame with summary statistics (percentage and frequency) for
 #'   each binary variable and group combination.
-#' @importFrom dplyr select group_by summarise ungroup mutate across all_of ends_with
+#' @importFrom dplyr select group_by summarise ungroup mutate across all_of ends_with starts_with where
+#' @importFrom magrittr %>%
 #' @export
 f_get_percent_N_from_binary <- function(df, group_vars) {
   # Select the required columns and filter values in (0, 1)
@@ -85,6 +86,10 @@ f_get_means_freq_sum <- function(df, group_vars) {
 #' @importFrom forcats fct_recode
 #' @export
 BMI_summary_data <- function(am_all) {
+  
+  # Declare variables to avoid R CMD check notes
+  dead <- age <- bmi <- year <- age_cat <- sex <- overweight_obese <- NULL
+  
   # remove all individuals who are dead in the cycle
   am_all <- am_all[which(am_all$dead == 0), ]
 
@@ -110,10 +115,10 @@ BMI_summary_data <- function(am_all) {
   BMI_by_sex_and_year <- BMI_by_sex_and_year[which(BMI_by_sex_and_year$age_cat != "(25,35]"), ]
 
   BMI_by_sex_and_year$age_cat <- fct_recode(BMI_by_sex_and_year$age_cat,
-    "35–44" = "(35,45]",
-    "45–54" = "(45,55]",
-    "55–64" = "(55,65]",
-    "65–74" = "(65,75]",
+    "35-44" = "(35,45]",
+    "45-54" = "(45,55]",
+    "55-64" = "(55,65]",
+    "65-74" = "(65,75]",
     "75 years and over" = "(75,1e+03]"
   )
 
@@ -145,9 +150,13 @@ BMI_summary_data <- function(am_all) {
 BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
                              BMI_by_sex_and_year,
                              current.mod.value) {
+  
+  # Declare variables to avoid R CMD check notes
+  year <- prop_overweight_obese <- age_cat <- lower_CI <- upper_CI <- sex <- NULL
+  
   # remove the lower age-brackets from the comparison data
-  percent_overweight_and_obesity_by_sex_joint <- percent_overweight_and_obesity_by_sex_joint[which(percent_overweight_and_obesity_by_sex_joint$age_cat != "18–24"), ]
-  percent_overweight_and_obesity_by_sex_joint <- percent_overweight_and_obesity_by_sex_joint[which(percent_overweight_and_obesity_by_sex_joint$age_cat != "25–34"), ]
+  percent_overweight_and_obesity_by_sex_joint <- percent_overweight_and_obesity_by_sex_joint[which(percent_overweight_and_obesity_by_sex_joint$age_cat != "18-24"), ]
+  percent_overweight_and_obesity_by_sex_joint <- percent_overweight_and_obesity_by_sex_joint[which(percent_overweight_and_obesity_by_sex_joint$age_cat != "25-34"), ]
   percent_overweight_and_obesity_by_sex_joint$age_cat <- as.factor(percent_overweight_and_obesity_by_sex_joint$age_cat)
 
   # remove any age brackets not represented in the BMI data
@@ -202,6 +211,10 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
 BMI_summary_RMSE <- function(percent_overweight_and_obesity_by_sex_joint,
                              BMI_by_sex_and_year,
                              current.mod.value) {
+  
+  # Declare variables to avoid R CMD check notes
+  year <- prop_overweight_obese <- age_cat <- sex <- observed <- simulated <- diff_simulated_observed <- diff_simulated_observed_2 <- NULL
+  
   # gather data to assess % agreement
   cycle.assessment.data <- BMI_by_sex_and_year[which(BMI_by_sex_and_year$year == 2015 |
     BMI_by_sex_and_year$year == 2018 |
@@ -261,6 +274,10 @@ BMI_summary_RMSE <- function(percent_overweight_and_obesity_by_sex_joint,
 #' @importFrom stringr str_replace
 #' @export
 OA_summary_fcn <- function(am_all) {
+  
+  # Declare variables to avoid R CMD check notes
+  dead <- age <- year <- sex <- oa <- age_group <- percent <- NULL
+  
   Z <-
     am_all %>%
     filter(dead == 0 & age > 34) %>%

@@ -56,25 +56,27 @@ model_parameters <- apply_policy_levers(model_parameters, simulation_config$poli
 # Load the scenario management script
 source(here("scripts", "manage_scenarios.R"))
 
-# Interactively select the scenario
-# scenario_selection <- manage_scenarios_interactive()
-# For non-interactive use, you can set the scenario directly:
-scenario_selection <- get_scenario("public")
+# For non-interactive use, the script now reads all parameters directly
+scenario_selection <- get_all_scenarios()
 
 
-sim_setup <-
-  scenario_selection %>%
-  pivot_longer(cols = everything(), names_to = "param", values_to = "spec") %>%
-  filter(!is.na(spec))
+# Create a clean, reliable key-value data frame of parameters
+params <- scenario_selection %>%
+  rename(key = `Base population parameters`, value = `Value`) %>%
+  select(key, value) %>%
+  filter(!is.na(key)) %>%
+  # Take the first value for each key to handle duplicates
+  group_by(key) %>%
+  summarise(value = first(value))
 
+# A helper function to safely extract parameters from the new 'params' object
+get_param_value <- function(param_name) {
+  val <- params$value[params$key == param_name]
+  if (length(val) == 0) return(NA)
+  return(val)
+}
 
-probabilistic <-
-  sim_setup$spec[sim_setup$param == "Probabilistic"] %>% as.logical()
-calibration_mode <-
-  sim_setup$spec[sim_setup$param == "Calibration mode"] %>% as.logical()
-
-parallel <-
-  sim_setup$spec[sim_setup$param == "Parallelize"] %>% as.logical()
-
-startyear <-
-  sim_setup$spec[sim_setup$param == "Simulation start year"] %>% as.integer()
+probabilistic <- as.logical(get_param_value("Probabilistic"))
+calibration_mode <- as.logical(get_param_value("Calibration mode"))
+parallel <- as.logical(get_param_value("Parallelize"))
+startyear <- as.integer(get_param_value("Simulation start year"))

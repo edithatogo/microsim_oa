@@ -1,0 +1,18 @@
+url: https://github.com/aus-oa/aus_oa_public/
+template:
+  bootstrap: 5
+
+destination: docs
+
+navbar:
+  type: default
+  left:
+    - icon: fa-home fa-lg
+      href: index.html
+    - text: "Reference"
+      href: reference/index.html
+    - text: "Articles"
+      href: articles/index.html
+  right:
+    - icon: fa-github
+      href: https://github.com/aus-oa/aus_oa_public/

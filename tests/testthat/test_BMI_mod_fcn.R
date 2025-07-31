@@ -1,8 +1,8 @@
 library(testthat)
 
-source(here::here("R", "BMI_mod_fcn.R"))
+source(here::here("R", "bmi_mod_fcn.R"))
 
-test_that("BMI_mod_fcn calculates d_bmi correctly", {
+test_that("bmi_mod_fcn calculates d_bmi correctly", {
   # 1. Set up mock data
   am_curr <- data.frame(
     sex = c("[1] Male", "[1] Male", "[2] Female", "[2] Female", "[2] Female"),
@@ -12,12 +12,12 @@ test_that("BMI_mod_fcn calculates d_bmi correctly", {
     d_bmi = c(0, 0, 0, 0, 0)
   )
 
-  cycle.coefficents <- data.frame(
-    c1_cons = 0.1, c1_year12 = 0.01, c1_age = 0.001, c1_bmi = -0.002,
-    c2_cons = 0.2, c2_year12 = 0.02, c2_age = -0.002, c2_bmi = -0.004,
-    c3_cons = 0.05, c3_age = 0.0015, c3_bmi_low = -0.001, c3_bmi_high = -0.003,
-    c4_cons = 0.15, c4_age = -0.001, c4_bmi_low = -0.002, c4_bmi_high = -0.005,
-    c5_cons = 0.25, c5_age = -0.0025, c5_bmi_low = -0.003, c5_bmi_high = -0.006
+  cycle.coefficents <- list(
+    c1 = list(c1_cons = 0.1, c1_year12 = 0.01, c1_age = 0.001, c1_bmi = -0.002),
+    c2 = list(c2_cons = 0.2, c2_year12 = 0.02, c2_age = -0.002, c2_bmi = -0.004),
+    c3 = list(c3_cons = 0.05, c3_age = 0.0015, c3_bmi_low = -0.001, c3_bmi_high = -0.003),
+    c4 = list(c4_cons = 0.15, c4_age = -0.001, c4_bmi_low = -0.002, c4_bmi_high = -0.005),
+    c5 = list(c5_cons = 0.25, c5_age = -0.0025, c5_bmi_low = -0.003, c5_bmi_high = -0.006)
   )
 
   BMI_cust <- data.frame(
@@ -26,7 +26,7 @@ test_that("BMI_mod_fcn calculates d_bmi correctly", {
   )
 
   # 2. Call the function
-  result <- BMI_mod_fcn(am_curr, cycle.coefficents, BMI_cust)
+  result <- bmi_mod_fcn(am_curr, cycle.coefficents, BMI_cust)
 
   # 3. Define expected output
   expected_d_bmi <- c(

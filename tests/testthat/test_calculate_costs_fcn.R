@@ -9,16 +9,33 @@ test_that("calculate_costs_fcn calculates costs correctly", {
     tka = c(1, 0, 1, 0),
     revi = c(0, 0, 1, 0),
     oa = c(1, 1, 1, 0),
-    dead = c(0, 0, 0, 0)
+    dead = c(0, 0, 0, 0),
+    ir = c(1, 0, 1, 0)
   )
   
   costs_config <- list(
-    tka_primary = list(total = 20000, out_of_pocket = 2000),
-    tka_revision = list(total = 30000, out_of_pocket = 3000),
-    inpatient_rehab = list(total = 5000, out_of_pocket = 500),
-    oa_annual_management = list(total = 1000, out_of_pocket = 200),
-    productivity_loss = list(value = 2500),
-    informal_care = list(value = 1800)
+    tka_primary = list(
+      hospital_stay = list(value = 18000, perspective = "healthcare_system"),
+      patient_gap = list(value = 2000, perspective = "patient")
+    ),
+    tka_revision = list(
+      hospital_stay = list(value = 27000, perspective = "healthcare_system"),
+      patient_gap = list(value = 3000, perspective = "patient")
+    ),
+    inpatient_rehab = list(
+      rehab_facility = list(value = 4500, perspective = "healthcare_system"),
+      patient_gap = list(value = 500, perspective = "patient")
+    ),
+    oa_annual_management = list(
+      gp_visits = list(value = 800, perspective = "healthcare_system"),
+      patient_oop = list(value = 200, perspective = "patient")
+    ),
+    productivity_loss = list(
+      loss = list(value = 2500, perspective = "societal")
+    ),
+    informal_care = list(
+      care = list(value = 1800, perspective = "societal")
+    )
   )
   
   # 2. Call function
@@ -26,18 +43,26 @@ test_that("calculate_costs_fcn calculates costs correctly", {
   
   # 3. Assertions
   # Person 1: Primary TKA + Rehab + OA management
-  expect_equal(result$cycle_cost_total[1], 20000 + 5000 + 1000)
-  expect_equal(result$cycle_cost_oop[1], 2000 + 500 + 200)
-  expect_equal(result$cycle_cost_prod[1], 2500)
+  expect_equal(result$cycle_cost_healthcare[1], 18000 + 4500 + 800)
+  expect_equal(result$cycle_cost_patient[1], 2000 + 500 + 200)
+  expect_equal(result$cycle_cost_societal[1], 2500 + 1800)
+  expect_equal(result$cycle_cost_total[1], 23300 + 2700 + 4300)
   
   # Person 2: OA management only
-  expect_equal(result$cycle_cost_total[2], 1000)
+  expect_equal(result$cycle_cost_healthcare[2], 800)
+  expect_equal(result$cycle_cost_patient[2], 200)
+  expect_equal(result$cycle_cost_societal[2], 2500 + 1800)
+  expect_equal(result$cycle_cost_total[2], 800 + 200 + 4300)
   
   # Person 3: Revision TKA + Rehab + OA management
-  # Note: The function assumes a primary TKA event (`tka`=1) also happens with a revision, which might need review.
-  # Based on current logic: Revision + Primary TKA + Rehab + OA Management
-  expect_equal(result$cycle_cost_total[3], 30000 + 5000 + 1000)
+  expect_equal(result$cycle_cost_healthcare[3], 27000 + 4500 + 800)
+  expect_equal(result$cycle_cost_patient[3], 3000 + 500 + 200)
+  expect_equal(result$cycle_cost_societal[3], 2500 + 1800)
+  expect_equal(result$cycle_cost_total[3], 32300 + 3700 + 4300)
   
   # Person 4: No OA, no events
   expect_equal(result$cycle_cost_total[4], 0)
+  expect_equal(result$cycle_cost_healthcare[4], 0)
+  expect_equal(result$cycle_cost_patient[4], 0)
+  expect_equal(result$cycle_cost_societal[4], 0)
 })

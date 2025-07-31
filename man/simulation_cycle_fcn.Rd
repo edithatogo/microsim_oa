@@ -41,10 +41,6 @@ Note: The usage of this parameter seems unusual and might need review.}
 
 \item{eq_cust}{A list of data.frames containing customisation factors for
 the model equations (BMI, TKR, OA).}
-
-\item{TKA_time_trend}{A value representing the time trend adjustment for TKA.}
-
-\item{pin}{A data.frame containing parameter inputs, such as utility values.}
 }
 \value{
 A list containing three elements:

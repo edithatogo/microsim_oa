@@ -1,7 +1,7 @@
 library(testthat)
 
 source(here::here("R", "OA_update_fcn.R"))
-source(here::here("R", "apply_coefficent_customisations_fcn.R"))
+source(here::here("R", "apply_coefficient_customisations_fcn.R"))
 
 test_that("OA_update_fcn calculates OA progression correctly", {
   # 1. Set up mock data

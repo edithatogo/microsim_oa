@@ -4,7 +4,7 @@
 
 # Set 'enabled' to true to include comorbidities in the simulation.
 # If false, the entire comorbidity update step will be skipped.
-enabled: false
+enabled: true
 
 # --- Conditions ---
 # Parameters are based on a combination of literature review and modeling assumptions.

@@ -16,8 +16,14 @@
 #'   simulation run.
 #' @importFrom dplyr filter mutate group_by summarise across full_join case_when any_of
 #' @importFrom tidyr pivot_longer
+#' @importFrom rlang .data
+#' @importFrom magrittr %>%
 #' @export
 stats_per_simulation <- function(sim_storage, sim_number, group_vars) {
+  
+  # Declare variables to avoid R CMD check notes
+  dead <- age <- bmi <- NULL
+  
   Z <- sim_storage[[sim_number]] %>%
     filter(dead == 0) %>%
     filter(age >= 45) %>%

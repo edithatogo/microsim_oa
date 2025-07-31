@@ -25,6 +25,46 @@ coefficients:
       distribution: normal
       std_error: 0.002
 
+  c2: # BMI progression, males >= 50
+    c2_cons:
+      live: 0.1
+    c2_year12:
+      live: -0.05
+    c2_age:
+      live: 0.01
+    c2_bmi:
+      live: 0.02
+
+  c3: # BMI progression, females < 50
+    c3_cons:
+      live: 0.1
+    c3_age:
+      live: 0.01
+    c3_bmi_low:
+      live: 0.02
+    c3_bmi_high:
+      live: 0.03
+
+  c4: # BMI progression, females >= 50, year12 == 1
+    c4_cons:
+      live: 0.1
+    c4_age:
+      live: 0.01
+    c4_bmi_low:
+      live: 0.02
+    c4_bmi_high:
+      live: 0.03
+
+  c5: # BMI progression, females >= 50, year12 == 0
+    c5_cons:
+      live: 0.1
+    c5_age:
+      live: 0.01
+    c5_bmi_low:
+      live: 0.02
+    c5_bmi_high:
+      live: 0.03
+
   c6: # OA initiation
     c6_cons:
       live: -5.0
@@ -38,6 +78,78 @@ coefficients:
       live: 0.5
       distribution: normal
       std_error: 0.05
+    c6_age2m:
+      live: 0.5
+    c6_age3m:
+      live: 0.5
+    c6_age4m:
+      live: 0.5
+    c6_age5m:
+      live: 0.5
+    c6_age1f:
+      live: 0.5
+    c6_age2f:
+      live: 0.5
+    c6_age3f:
+      live: 0.5
+    c6_age4f:
+      live: 0.5
+    c6_age5f:
+      live: 0.5
+    c6_bmi0:
+      live: 0.1
+    c6_bmi1:
+      live: 0.1
+    c6_bmi2:
+      live: 0.1
+    c6_bmi3:
+      live: 0.1
+    c6_bmi4:
+      live: 0.1
+
+  c7: # OA progression KL2 to 3
+    c7_cons:
+      live: -5.0
+    c7_sex:
+      live: 0.1
+    c7_age3:
+      live: 0.1
+    c7_age4:
+      live: 0.1
+    c7_age5:
+      live: 0.1
+    c7_bmi0:
+      live: 0.1
+    c7_bmi1:
+      live: 0.1
+    c7_bmi2:
+      live: 0.1
+    c7_bmi3:
+      live: 0.1
+    c7_bmi4:
+      live: 0.1
+
+  c8: # OA progression KL3 to 4
+    c8_cons:
+      live: -5.0
+    c8_sex:
+      live: 0.1
+    c8_age3:
+      live: 0.1
+    c8_age4:
+      live: 0.1
+    c8_age5:
+      live: 0.1
+    c8_bmi0:
+      live: 0.1
+    c8_bmi1:
+      live: 0.1
+    c8_bmi2:
+      live: 0.1
+    c8_bmi3:
+      live: 0.1
+    c8_bmi4:
+      live: 0.1
 
   c9: # TKA Initiation
     c9_cons:
@@ -68,6 +180,10 @@ coefficients:
       live: 0.01 # Higher function score (worse function) increases probability
       distribution: normal
       std_error: 0.005
+
+  c14: # SF6D progression
+    c14_bmi:
+      live: -0.005
 
   revision_model:
     linear_predictor:
@@ -148,6 +264,17 @@ coefficients:
       value: 1800
       perspective: societal
 
+    tka_complication:
+      additional_hospital_stay:
+        value: 7000
+        perspective: healthcare_system
+      specialist_follow_up:
+        value: 1000
+        perspective: healthcare_system
+      additional_medications:
+        value: 500
+        perspective: patient
+
   # --- Discounting ---
   # Applied to costs and outcomes
   discount_rate:
@@ -172,6 +299,8 @@ coefficients:
       hypertension: 0.03
       depression: 0.10
       copd: 0.09
+
+    tka_complication: 0.10
 
   initial_kl_grades:
     p_KL2init:

@@ -69,6 +69,11 @@ update_comorbidities <- function(attribute_matrix, comorbidity_params) {
     if (length(has_condition_indices) > 0) {
       # Add the annual cost for those with the condition
       attribute_matrix[has_condition_indices, "comorbidity_cost"] <- attribute_matrix[has_condition_indices, "comorbidity_cost"] + params$annual_cost
+      
+      # Apply the QALY decrement
+      if ("d_sf6d" %in% names(attribute_matrix) && "qaly_decrement" %in% names(params)) {
+        attribute_matrix[has_condition_indices, "d_sf6d"] <- attribute_matrix[has_condition_indices, "d_sf6d"] - params$qaly_decrement
+      }
     }
   }
   

@@ -6,81 +6,90 @@
 #'
 #' @param am_curr A data.table representing the attribute matrix for the current
 #'   cycle.
-#' @param cycle.coefficents A list containing the regression coefficients.
-#' @param BMI_cust A data.frame containing calibration factors.
+#' @param cycle_coefficients A list containing the regression coefficients.
+#' @param bmi_customisations A data.frame containing calibration factors.
 #'
-#' @return The updated attribute matrix (am_curr) with a new 'd_bmi' column.
+#' @return The updated attribute matrix (a copy) with a new 'd_bmi' column.
+#' @importFrom data.table := .SD .N .I as.data.table
 #' @export
-library(data.table)
+bmi_mod_fcn <- function(am_curr, cycle_coefficients, bmi_customisations) {
+  # Ensure am_curr is a data.table and create a copy to avoid side effects
+  dt <- data.table::copy(as.data.table(am_curr))
 
-BMI_mod_fcn <- function(am_curr, cycle.coefficents, BMI_cust) {
-  
-  # Ensure am_curr is a data.table
-  if (!is.data.table(am_curr)) {
-    setDT(am_curr)
-  }
-  
   # --- Pre-calculate BMI components ---
-  am_curr[, BMI_under30 := ifelse(bmi <= 30, bmi, 30)]
-  am_curr[, BMI_over30 := ifelse(bmi > 30, bmi - 30, 0)]
-  
+  dt[, bmi_under30 := ifelse(bmi <= 30, bmi, 30)]
+  dt[, bmi_over30 := ifelse(bmi > 30, bmi - 30, 0)]
+
   # --- Vectorized BMI Progression Calculation ---
-  
-  # Initialize d_bmi
-  am_curr[, d_bmi := 0.0]
-  
-  # Create logical indices for each population segment
-  is_male_under50 <- am_curr$sex == "[1] Male" & am_curr$age < 50
-  is_male_over50 <- am_curr$sex == "[1] Male" & am_curr$age >= 50
-  is_female_under50 <- am_curr$sex == "[2] Female" & am_curr$age < 50
-  is_female_over50_highSES <- am_curr$sex == "[2] Female" & am_curr$age >= 50 & am_curr$year12 == 1
-  is_female_over50_lowSES <- am_curr$sex == "[2] Female" & am_curr$age >= 50 & am_curr$year12 == 0
-  
-  # Get calibration factors once
-  calib_c1 <- as.numeric(BMI_cust$proportion_reduction[BMI_cust$covariate_set == "c1"])
-  calib_c2 <- as.numeric(BMI_cust$proportion_reduction[BMI_cust$covariate_set == "c2"])
-  calib_c3 <- as.numeric(BMI_cust$proportion_reduction[BMI_cust$covariate_set == "c3"])
-  calib_c4 <- as.numeric(BMI_cust$proportion_reduction[BMI_cust$covariate_set == "c4"])
-  calib_c5 <- as.numeric(BMI_cust$proportion_reduction[BMI_cust$covariate_set == "c5"])
-  
-  # Apply calculations to each segment using the logical indices
-  am_curr[is_male_under50, d_bmi := (
-    cycle.coefficents$c1_cons +
-      cycle.coefficents$c1_year12 * year12 +
-      cycle.coefficents$c1_age * age +
-      cycle.coefficents$c1_bmi * bmi
-  ) * calib_c1]
-  
-  am_curr[is_male_over50, d_bmi := (
-    cycle.coefficents$c2_cons +
-      cycle.coefficents$c2_year12 * year12 +
-      cycle.coefficents$c2_age * age +
-      cycle.coefficents$c2_bmi * bmi
-  ) * calib_c2]
-  
-  am_curr[is_female_under50, d_bmi := (
-    cycle.coefficents$c3_cons +
-      cycle.coefficents$c3_age * age +
-      cycle.coefficents$c3_bmi_low * BMI_under30 +
-      cycle.coefficents$c3_bmi_high * BMI_over30
-  ) * calib_c3]
-  
-  am_curr[is_female_over50_highSES, d_bmi := (
-    cycle.coefficents$c4_cons +
-      cycle.coefficents$c4_age * age +
-      cycle.coefficents$c4_bmi_low * BMI_under30 +
-      cycle.coefficents$c4_bmi_high * BMI_over30
-  ) * calib_c4]
-  
-  am_curr[is_female_over50_lowSES, d_bmi := (
-    cycle.coefficents$c5_cons +
-      cycle.coefficents$c5_age * age +
-      cycle.coefficents$c5_bmi_low * BMI_under30 +
-      cycle.coefficents$c5_bmi_high * BMI_over30
-  ) * calib_c5]
-  
+
+  # Get calibration factors once, ensuring they are numeric and default to 1
+  calib_c1 <-
+    as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c1"])
+  if (length(calib_c1) == 0) {
+    calib_c1 <- 1.0
+  }
+  calib_c2 <-
+    as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c2"])
+  if (length(calib_c2) == 0) {
+    calib_c2 <- 1.0
+  }
+  calib_c3 <-
+    as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c3"])
+  if (length(calib_c3) == 0) {
+    calib_c3 <- 1.0
+  }
+  calib_c4 <-
+    as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c4"])
+  if (length(calib_c4) == 0) {
+    calib_c4 <- 1.0
+  }
+  calib_c5 <-
+    as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c5"])
+  if (length(calib_c5) == 0) {
+    calib_c5 <- 1.0
+  }
+
+  # Initialize d_bmi column
+  dt[, d_bmi := 0.0]
+
+  # Apply calculations to each segment using data.table's syntax
+  dt[sex == "[1] Male" & age < 50, d_bmi := (
+    cycle_coefficients$c1$c1_cons +
+      cycle_coefficients$c1$c1_year12 * .SD$year12 +
+      cycle_coefficients$c1$c1_age * .SD$age +
+      cycle_coefficients$c1$c1_bmi * .SD$bmi
+  ) * calib_c1, .SDcols = c("year12", "age", "bmi")]
+
+  dt[sex == "[1] Male" & age >= 50, d_bmi := (
+    cycle_coefficients$c2$c2_cons +
+      cycle_coefficients$c2$c2_year12 * .SD$year12 +
+      cycle_coefficients$c2$c2_age * .SD$age +
+      cycle_coefficients$c2$c2_bmi * .SD$bmi
+  ) * calib_c2, .SDcols = c("year12", "age", "bmi")]
+
+  dt[sex == "[2] Female" & age < 50, d_bmi := (
+    cycle_coefficients$c3$c3_cons +
+      cycle_coefficients$c3$c3_age * .SD$age +
+      cycle_coefficients$c3$c3_bmi_low * .SD$bmi_under30 +
+      cycle_coefficients$c3$c3_bmi_high * .SD$bmi_over30
+  ) * calib_c3, .SDcols = c("age", "bmi_under30", "bmi_over30")]
+
+  dt[sex == "[2] Female" & age >= 50 & year12 == 1, d_bmi := (
+    cycle_coefficients$c4$c4_cons +
+      cycle_coefficients$c4$c4_age * .SD$age +
+      cycle_coefficients$c4$c4_bmi_low * .SD$bmi_under30 +
+      cycle_coefficients$c4$c4_bmi_high * .SD$bmi_over30
+  ) * calib_c4, .SDcols = c("age", "bmi_under30", "bmi_over30")]
+
+  dt[sex == "[2] Female" & age >= 50 & year12 == 0, d_bmi := (
+    cycle_coefficients$c5$c5_cons +
+      cycle_coefficients$c5$c5_age * .SD$age +
+      cycle_coefficients$c5$c5_bmi_low * .SD$bmi_under30 +
+      cycle_coefficients$c5$c5_bmi_high * .SD$bmi_over30
+  ) * calib_c5, .SDcols = c("age", "bmi_under30", "bmi_over30")]
+
   # --- Clean up temporary columns ---
-  am_curr[, `:=`(BMI_under30 = NULL, BMI_over30 = NULL)]
-  
-  return(am_curr)
+  dt[, `:=`(bmi_under30 = NULL, bmi_over30 = NULL)]
+
+  dt
 }

@@ -1,3 +1,22 @@
+#' Update Total Knee Arthroplasty (TKA) Status
+#'
+#' This function models the probability of receiving a TKA for one simulation
+#' cycle.
+#'
+#' @param am_curr A data.table representing the attribute matrix for the current
+#'   cycle.
+#' @param am_new A data.table representing the attribute matrix for the next
+#'   cycle.
+#' @param cycle.coefficents A list or data.frame of model coefficients.
+#' @param TKR_cust A data.frame with customisation factors for TKA coefficients.
+#' @param summary_TKR_observed_diff A data.frame containing the difference
+#'   between observed and expected TKA rates.
+#'
+#' @return A list containing the updated attribute matrices and a summary of TKA
+#'   risk.
+#' @importFrom dplyr group_by summarise left_join n
+#' @importFrom stats runif
+#' @export
 TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary_TKR_observed_diff) {
   # TKR customisation
   # summary_TKR_observed_diff <-

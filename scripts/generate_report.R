@@ -122,33 +122,18 @@ generate_report <- function(model_stats,
   
   # --- Generate R Markdown Report ---
   
-  temp_rmd_path <- file.path(tempdir(), "custom_report.Rmd")
-  
-  # Rmd Header
-  rmd_content <- "
----
-title: 'Custom AUS-OA Model Report'
-output: html_document
----
-
-"
-  
-  # Loop through selected variables and add plots
-  for (var in selected_variables) {
-    rmd_content <- paste0(rmd_content, "## Variable: ", var, "\n\n")
-    rmd_content <- paste0(rmd_content, "```{r ", var, "_plot, echo=FALSE}\n")
-    rmd_content <- paste0(rmd_content, "print(plot_list[['", var, "']])\n")
-    rmd_content <- paste0(rmd_content, "```\n\n")
-  }
-  
-  writeLines(rmd_content, temp_rmd_path)
+  template_path <- here("templates", "custom_report_template.Rmd")
   
   # Render the Rmd file
   render(
-    temp_rmd_path,
+    template_path,
     output_format = paste0(output_format, "_document"),
     output_dir = output_dir,
     output_file = "custom_report",
+    params = list(
+      plot_list = plot_list,
+      selected_variables = selected_variables
+    ),
     envir = new.env(parent = globalenv()) # Pass plot_list to the rendering environment
   )
   

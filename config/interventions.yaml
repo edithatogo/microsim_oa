@@ -2,7 +2,7 @@
 
 # --- Intervention Modelling Configuration ---
 
-enabled: false
+enabled: true
 
 interventions:
   # --- Intervention 1: Public Health Campaign for BMI Reduction ---
@@ -43,3 +43,19 @@ interventions:
       qaly_gain: 0.05 # Annual improvement in health utility
       annual_cost: 2500 # Annual cost of the drug per person
       uptake_rate: 0.50 # 50% of eligible patients use the drug
+
+  # --- Intervention 3: Improved Surgical Technique for TKA ---
+  improved_tka_technique:
+    type: "tka_risk_modification"
+    start_year: 2025
+    end_year: 2045
+    
+    target_population:
+      # This intervention affects anyone receiving a TKA
+      min_kl_grade: 2 # TKA can happen from KL grade 2 onwards
+      
+    parameters:
+      # This intervention reduces the probability of needing a TKA by a relative amount.
+      # A value of 0.8 means a 20% reduction in risk.
+      tka_risk_multiplier: 0.80
+      uptake_rate: 0.75 # 75% of surgeons adopt the new technique

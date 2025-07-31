@@ -7,10 +7,10 @@
 OA_update(am_curr, pin)
 }
 \arguments{
-\item{am_curr}{A data.frame representing the attribute matrix for the current
+\item{am_curr}{A data.table representing the attribute matrix for the current
 cycle. It contains the state of the population before the update.}
 
-\item{am_new}{A data.frame representing the attribute matrix for the next
+\item{am_new}{A data.table representing the attribute matrix for the next
 cycle. This is where the updated OA status will be stored.}
 
 \item{cycle.coefficents}{A list or data.frame of model coefficients for the
@@ -20,10 +20,10 @@ utility decrements.}
 \item{OA_cust}{A data.frame with customisation factors for OA coefficients.}
 }
 \value{
-A list containing two data.frames:
+A list containing two data.tables:
 \item{am_curr}{The input \code{am_curr} with intermediate calculations and an
 updated \code{sf6d_change} column.}
-\item{am_new}{The \code{am_new} data.frame with updated OA status (\code{oa}, \code{kl2},
+\item{am_new}{The \code{am_new} data.table with updated OA status (\code{oa}, \code{kl2},
 \code{kl3}, \code{kl4}, \code{kl_score}).}
 }
 \description{

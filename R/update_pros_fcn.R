@@ -11,6 +11,9 @@
 #' @export
 update_pros_fcn <- function(am_new, cycle.coefficents) {
   
+  # Declare variables to avoid R CMD check notes
+  oa <- dead <- pain <- function_score <- tka <- NULL
+  
   # --- State-Based Progression ---
   # For those with OA, assume a slight worsening of pain and function each year.
   am_new[oa == 1 & dead == 0, pain := pain + 1]

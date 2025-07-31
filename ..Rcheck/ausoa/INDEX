@@ -1,0 +1,43 @@
+BMI_mod_fcn             Update BMI for one cycle (Optimized with
+                        data.table)
+BMI_summary_RMSE        Calculate RMSE for BMI Summary
+BMI_summary_data        Summarise BMI Data
+BMI_summary_plot        Plot BMI Summary Data for Validation
+OA_summary_fcn          Summarise Osteoarthritis (OA) Data
+OA_update               Update Osteoarthritis (OA) Status
+TKA_revisions           Calculate TKA Revision Risk (Batch Processing
+                        Version)
+TKA_update_fcn          Update Total Knee Arthroplasty (TKA) Status
+apply_bmi_modification
+                        Apply a BMI Modification Intervention
+apply_coefficent_customisations
+                        Apply customisations to model coefficients
+apply_interventions     Apply Interventions to the Population
+apply_policy_levers     Apply Policy Levers to Model Parameters
+apply_qaly_cost_modification
+                        Apply a QALY and Cost Modification Intervention
+apply_tka_risk_modification
+                        Apply a TKA Risk Modification Intervention
+calculate_costs_fcn     Calculate Costs for a Simulation Cycle
+calculate_qaly          Calculate Quality-Adjusted Life Years (QALYs)
+calculate_revision_risk_fcn
+                        Calculate TKA Revision Risk (Refactored)
+f_get_means_freq_sum    Get Mean, Frequency, and Sum of Numeric
+                        Variables
+f_get_percent_N_from_binary
+                        Get Percentages and Frequencies of Binary
+                        Variables
+f_plot_distribution     Plot Distribution by Age and Sex for a Given
+                        Year
+f_plot_trend_age_sex    Plot Time Series Trend by Age and Sex
+f_plot_trend_overall    Plot Overall Time Series Trend
+get_params              Get Parameters for a Specific Analysis Type
+get_target_indices      Get Indices of the Target Population for an
+                        Intervention
+initialize_kl_grades    Initialize KL Grades
+load_config             Load YAML Configuration Files
+simulation_cycle_fcn    Run a Single Microsimulation Cycle
+stats_per_simulation    Calculate Statistics for a Single Simulation
+                        Run
+update_comorbidities    Update Comorbidities and their Impact
+update_pros_fcn         Update Patient-Reported Outcomes (PROs)
