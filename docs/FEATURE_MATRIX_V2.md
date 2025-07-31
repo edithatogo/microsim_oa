@@ -33,4 +33,4 @@ This version of the feature matrix includes both functional and technical featur
 | **Dependency Management**                    |                  |                 |
 | - `renv` for Reproducible Environments       |        ❌        |       ✅        |
 | **Performance**                              |                  |                 |
-| - Parallel Processing                        |        ❌        |       ❌        |
+| - Parallel Processing                        |        ❌        |       ✅        |

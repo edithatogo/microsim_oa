@@ -40,7 +40,7 @@ This project has evolved significantly from its original version. Here's a summa
 | **Dependency Management**                    |                  |                 |
 | - `renv` for Reproducible Environments       |        ❌        |       ✅        |
 | **Performance**                              |                  |                 |
-| - Parallel Processing                        |        ❌        |       ❌        |
+| - Parallel Processing                        |        ❌        |       ✅        |
 
 ## Getting Started
 
