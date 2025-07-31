@@ -2,7 +2,11 @@
 
 # This script runs the test suite for the AUS-OA model.
 
-# It uses the testthat package to run the tests.
+# Aggressive approach: source all R files directly to bypass loading issues.
+r_files <- list.files("R", pattern = "\\.R$", full.names = TRUE)
+for (file in r_files) {
+  source(file)
+}
 
 library(testthat)
 

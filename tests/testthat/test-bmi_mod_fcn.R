@@ -2,8 +2,8 @@
 
 library(testthat)
 
-# Load the function to be tested
-source(here::here("scripts", "functions", "BMI_mod_fcn.R"))
+# Load all package functions
+devtools::load_all()
 
 test_that("BMI modification function calculates correctly", {
 
@@ -31,7 +31,7 @@ test_that("BMI modification function calculates correctly", {
   )
 
   # Run the function
-  result <- BMI_mod_fcn(am_curr, cycle.coefficents, BMI_cust)
+  result <- bmi_mod_fcn(am_curr, cycle.coefficents, BMI_cust)
 
   # Define the expected result
   expected_d_bmi <- 0.1 + (0.05 * 1) + (0.01 * 40) + (0.02 * 28)

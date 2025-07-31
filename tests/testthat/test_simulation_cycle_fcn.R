@@ -2,15 +2,8 @@ library(testthat)
 library(dplyr)
 library(data.table)
 
-# Source the functions to be tested
-source(here::here("R", "simulation_cycle_fcn.R"))
-source(here::here("R", "bmi_mod_fcn.R"))
-source(here::here("R", "OA_update_fcn.R"))
-source(here::here("R", "TKA_update_fcn_v2.R"))
-source(here::here("R", "calculate_revision_risk_fcn.R"))
-source(here::here("R", "apply_coefficient_customisations_fcn.R"))
-source(here::here("R", "calculate_costs_fcn.R"))
-source(here::here("R", "update_pros_fcn.R"))
+# Load all package functions
+devtools::load_all()
 
 
 test_that("simulation_cycle_fcn runs and updates key variables", {

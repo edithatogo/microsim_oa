@@ -1,6 +1,7 @@
 library(testthat)
 
-source(here::here("R", "bmi_mod_fcn.R"))
+# Load all package functions
+devtools::load_all()
 
 test_that("bmi_mod_fcn calculates d_bmi correctly", {
   # 1. Set up mock data

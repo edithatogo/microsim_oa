@@ -1,16 +1,17 @@
 library(testthat)
 library(data.table)
 
-source(here::here("R", "calculate_costs_fcn.R"))
+devtools::load_all()
 
 test_that("calculate_costs_fcn calculates costs correctly", {
   # 1. Mock data
   am_new <- data.table(
-    tka = c(1, 0, 1, 0),
-    revi = c(0, 0, 1, 0),
-    oa = c(1, 1, 1, 0),
-    dead = c(0, 0, 0, 0),
-    ir = c(1, 0, 1, 0)
+    tka = c(1, 0, 1, 0, 1),
+    revi = c(0, 0, 1, 0, 0),
+    oa = c(1, 1, 1, 0, 1),
+    dead = c(0, 0, 0, 0, 0),
+    ir = c(1, 0, 1, 0, 0),
+    comp = c(0, 0, 0, 0, 1) # Added 'comp' column
   )
   
   costs_config <- list(
@@ -35,6 +36,10 @@ test_that("calculate_costs_fcn calculates costs correctly", {
     ),
     informal_care = list(
       care = list(value = 1800, perspective = "societal")
+    ),
+    tka_complication = list( # Added for the 'comp' case
+      treatment = list(value = 5000, perspective = "healthcare_system"),
+      patient_oop = list(value = 500, perspective = "patient")
     )
   )
   
@@ -65,4 +70,10 @@ test_that("calculate_costs_fcn calculates costs correctly", {
   expect_equal(result$cycle_cost_healthcare[4], 0)
   expect_equal(result$cycle_cost_patient[4], 0)
   expect_equal(result$cycle_cost_societal[4], 0)
+  
+  # Person 5: Primary TKA + Complication + OA management
+  expect_equal(result$cycle_cost_healthcare[5], 18000 + 800 + 5000)
+  expect_equal(result$cycle_cost_patient[5], 2000 + 200 + 500)
+  expect_equal(result$cycle_cost_societal[5], 2500 + 1800)
+  expect_equal(result$cycle_cost_total[5], 23800 + 2700 + 4300)
 })

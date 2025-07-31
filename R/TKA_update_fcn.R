@@ -18,6 +18,9 @@
 #' @importFrom stats runif
 #' @export
 TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary_TKR_observed_diff) {
+  if (nrow(am_curr) == 0) {
+    return(list(am_curr = am_curr, am_new = am_new, summ_tka_risk = data.frame()))
+  }
   # TKR customisation
   # summary_TKR_observed_diff <-
   #   read_csv(here("data", "coefficent_selection", "TKR_correction_factors.csv"),
@@ -111,18 +114,28 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
   tkai_rand <- runif(nrow(am_curr), 0, 1)
   am_curr$tkai <- ifelse(am_curr$tkai > tkai_rand, 1, 0)
 
-  # summary of annual risk, after adjustment
-  summ_tka_risk_count <- am_curr %>%
-    group_by(age_cat, sex) %>%
-    summarise(
-      tka_count = sum(tkai),
-      count_tka_risk_greater_than_0 = sum(kl_score > 0),
-      mean_tka_risk_greater_with_TKA = mean(tkai_backup[which(tkai == 1)]),
-      sum_kl_greater_1 = sum(tkai_backup > 0),
-      sum_pop = n()
-    )
+  if (nrow(am_curr) > 0 && "tkai" %in% names(am_curr) && sum(am_curr$tkai) > 0) {
+    # summary of annual risk, after adjustment
+    summ_tka_risk_count <- am_curr %>%
+      group_by(age_cat, sex) %>%
+      summarise(
+        tka_count = sum(tkai),
+        count_tka_risk_greater_than_0 = sum(kl_score > 0),
+        mean_tka_risk_greater_with_TKA = mean(tkai_backup[which(tkai == 1)]),
+        sum_kl_greater_1 = sum(tkai_backup > 0),
+        sum_pop = n()
+      )
 
-  comparison <- merge(comparison, summ_tka_risk_count, by = c("age_cat", "sex"))
+    if (exists("comparison")) {
+      comparison <- merge(comparison, summ_tka_risk_count, by = c("age_cat", "sex"))
+    } else {
+      comparison <- summ_tka_risk_count
+    }
+  }
+  
+  if (!exists("comparison")) {
+    comparison <- data.frame()
+  }
 
   comparison$year <- min(am_curr$year)
 

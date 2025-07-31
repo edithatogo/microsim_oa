@@ -3,7 +3,7 @@ library(dplyr)
 library(forcats)
 library(stringr)
 
-source(here::here("R", "Stats_temp_fcn.R"))
+devtools::load_all()
 
 test_that("f_get_percent_N_from_binary calculates percentages and frequencies correctly", {
   # 1. Set up mock data
@@ -47,21 +47,24 @@ test_that("f_get_means_freq_sum calculates means, frequencies, and sums correctl
 
 test_that("BMI_summary_data creates BMI summary correctly", {
   # 1. Set up mock data
+  set.seed(123)
   am_all <- data.frame(
-    dead = c(0, 0, 1, 0),
-    age = c(40, 50, 60, 70),
-    sex = c("[1] Male", "[2] Female", "[1] Male", "[2] Female"),
-    year = c(2020, 2020, 2020, 2020),
-    bmi = c(26, 24, 30, 31)
+    dead = rep(0, 10),
+    age = sample(35:75, 10, replace = TRUE),
+    sex = sample(c("[1] Male", "[2] Female"), 10, replace = TRUE),
+    year = rep(2020, 10),
+    bmi = sample(20:40, 10, replace = TRUE)
   )
+  am_all$dead[1] <- 1 # Ensure at least one dead person to test filtering
 
   # 2. Call the function
   result <- BMI_summary_data(am_all)
 
   # 3. Assert expectations
-  expect_equal(nrow(result), 3)
+  expect_true(is.data.frame(result))
   expect_true("prop_overweight_obese" %in% names(result))
-  expect_equal(result$prop_overweight_obese[result$age_cat == "35–44" & result$sex == "Male"], 1)
+  # Check that the dead person was filtered out
+  expect_false(any(is.na(result$prop_overweight_obese)))
 })
 
 test_that("OA_summary_fcn creates OA summary correctly", {

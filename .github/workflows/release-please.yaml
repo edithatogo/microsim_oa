@@ -1,0 +1,36 @@
+# This workflow uses release-please to automatically open a PR for a new release.
+#
+# When you merge a pull request with a conventional commit message (e.g., "feat: ...", "fix: ..."),
+# this workflow will run. If a release is needed, it will open a new pull request
+# that bumps the version in the DESCRIPTION file and updates the CHANGELOG.md.
+#
+# When you merge *that* pull request, release-please will automatically create
+# a GitHub release and tag.
+#
+# This automates the entire release process.
+
+name: Create Release
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          # This tells release-please this is an R package.
+          # It will automatically find and update the version in the DESCRIPTION file.
+          release-type: R
+
+          # The package name is used to name the release tag, e.g., "ausoa-v1.2.3"
+          package-name: ausoa
+
+          # This tells release-please to update the main changelog file.
+          changelog-path: CHANGELOG.md
+
+          # The GITHUB_TOKEN is required to create Pull Requests and Releases.
+          token: ${{ secrets.GITHUB_TOKEN }}

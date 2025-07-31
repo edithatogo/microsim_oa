@@ -27,6 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Scan for secrets with TruffleHog
+        uses: trufflehog/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.r-version }}
@@ -35,6 +43,11 @@ jobs:
       - uses: r-lib/actions/setup-renv@v2
         with:
           cache-version: 1
+
+      - name: Check style
+        run: |
+          styler::style_pkg(dry = "fail")
+        shell: Rscript {0}
 
       - name: Lint package
         run: |
@@ -51,3 +64,14 @@ jobs:
         run: |
           covr::codecov()
         shell: Rscript {0}
+
+  conventional-commits:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v5
+        with:
+          configFile: '.commitlintrc.js'

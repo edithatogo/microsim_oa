@@ -5,13 +5,13 @@
 
 # --- 0. Define a function to run the simulation ---
 # This makes it easier to call from other scripts.
-run_simulation <- function(simulation_config, model_coefficients, comorbidity_params, intervention_params, custom_coeffs = NULL) {
+run_simulation <- function(simulation_config, model_coefficients, comorbidity_params, intervention_params, custom_coeffs = NULL, seed = NULL) {
   
   # --- 1. Load Packages ---
-  source(here("R", "initialize_kl_grades_fcn.R"))
-  source(here("R", "simulation_cycle_fcn.R"))
-  source(here("R", "bmi_mod_fcn.R"))
-  source(here("R", "apply_coefficient_customisations_fcn.R"))
+  source(here::here("R", "initialize_kl_grades_fcn.R"))
+  source(here::here("R", "simulation_cycle_fcn.R"))
+  source(here::here("R", "BMI_mod_fcn.R"))
+  source(here::here("R", "apply_coefficient_customisations_fcn.R"))
   
   # --- 2. Set Up Simulation Environment ---
   sim_params <- simulation_config$simulation
@@ -22,13 +22,13 @@ run_simulation <- function(simulation_config, model_coefficients, comorbidity_pa
     run_modes$probabilistic <- FALSE
   }
   
-  if (sim_params$set_seed) {
-    set.seed(seed) # 'seed' is passed from the outer loop
+  if (!is.null(seed)) {
+    set.seed(seed)
   }
   
   # --- 3. Prepare Data ---
   start_year <- sim_params$start_year
-  am_file <- file.path("input", "population", paste0("am_", start_year, ".parquet"))
+  am_file <- here::here("input", "population", paste0("am_", start_year, ".parquet"))
   am <- as.data.frame(arrow::read_parquet(am_file))
   
   # Create the 'male' binary indicator column from the 'sex' column
@@ -90,7 +90,7 @@ run_simulation <- function(simulation_config, model_coefficients, comorbidity_pa
   cycle.coefficents$utilities <- model_coefficients_to_use$coefficients$utilities
   
   # --- 5. Prepare Other Inputs ---
-  input_file <- simulation_config$paths$input_file
+  input_file <- here::here(simulation_config$paths$input_file)
   lt <- read_excel(input_file,
                    sheet = simulation_config$life_tables$sheet,
                    range = simulation_config$life_tables$range
@@ -141,9 +141,7 @@ run_simulation <- function(simulation_config, model_coefficients, comorbidity_pa
       mort_update_counter = 1,
       lt = lt,
       eq_cust = eq_cust,
-      tka_time_trend = tka_time_trend,
-      comorbidity_params = comorbidity_params,
-      intervention_params = intervention_params
+      tka_time_trend = tka_time_trend
     )
     print(paste("Returned from simulation_cycle_fcn for year", am_new$year[1]))
     
@@ -153,7 +151,7 @@ run_simulation <- function(simulation_config, model_coefficients, comorbidity_pa
     if (!run_modes$probabilistic) {
       arrow::write_parquet(
         am_new,
-        file.path("input", "population", paste0("am_", am_new$year[1], ".parquet"))
+        here::here("input", "population", paste0("am_", am_new$year[1], ".parquet"))
       )
     }
     
@@ -177,10 +175,10 @@ run_simulation <- function(simulation_config, model_coefficients, comorbidity_pa
 # that calls run_simulation() with parameters.
 if (sys.nframe() == 0) {
   # Load configs if running standalone
-  simulation_config <- load_config("config/simulation.yaml")
-  model_parameters <- load_config("config/coefficients.yaml")
-  comorbidity_parameters <- load_config("config/comorbidities.yaml")
-  intervention_parameters <- load_config("config/interventions.yaml")
+  simulation_config <- load_config(here::here("config", "simulation.yaml"))
+  model_parameters <- load_config(here::here("config", "coefficients.yaml"))
+  comorbidity_parameters <- load_config(here::here("config", "comorbidities.yaml"))
+  intervention_parameters <- load_config(here::here("config", "interventions.yaml"))
   
-  am_all <- run_simulation(simulation_config, model_parameters, comorbidity_parameters, intervention_parameters)
+  am_all <- run_simulation(simulation_config, model_parameters, comorbidity_parameters, intervention_parameters, seed = 123)
 }

@@ -30,15 +30,31 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  age_edges, bmi_edges,
                                  am,
                                  mort_update_counter, lt,
-                                 eq_cust) {
+                                 eq_cust, tka_time_trend) {
 
+  # Unpack the 'live' value from each coefficient
+  live_coeffs <- lapply(cycle.coefficents, function(x) {
+    if (is.list(x) && "live" %in% names(x)) {
+      return(x$live)
+    } else if (is.list(x)) {
+      # Handle nested lists of coefficients
+      return(lapply(x, function(y) {
+        if (is.list(y) && "live" %in% names(y)) {
+          return(y$live)
+        }
+        return(y)
+      }))
+    }
+    return(x)
+  })
+  
   # extract relevant equation modification data
   BMI_cust <- eq_cust[["BMI"]]
   TKR_cust <- eq_cust[["TKR"]]
   OA_cust <- eq_cust[["OA"]]
 
   ############################## update BMI in cycle
-  am_curr <- bmi_mod_fcn(am_curr, cycle.coefficents, BMI_cust)
+  am_curr <- bmi_mod_fcn(am_curr, live_coeffs, BMI_cust)
 
 
   # am_new.bmi = am_curr.bmi + d_bmi;
@@ -46,7 +62,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_new$bmi <- am_curr$bmi + am_curr$d_bmi
 
   # add impact of BMI delta to SF6D
-  am_curr$d_sf6d <- am_curr$d_sf6d + (am_curr$d_bmi * cycle.coefficents$c14$c14_bmi)
+  am_curr$d_sf6d <- am_curr$d_sf6d + (am_curr$d_bmi * live_coeffs$c14$c14_bmi)
 
   ############################## update personal charactistics (agecat, bmicat)
   # These need to be calculated on am_curr before being passed to OA and TKA functions
@@ -69,7 +85,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % OA incidence - based on HILDA analysis
 
-  OA_update_data <- OA_update(am_curr, am_new, cycle.coefficents, OA_cust)
+  OA_update_data <- OA_update(am_curr, am_new, live_coeffs, OA_cust)
 
   # extract data.tables from output list
   am_curr <- OA_update_data[["am_curr"]]
@@ -81,7 +97,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## update comorbidies (cci, mental health)
 
   # % Comorbidities
-  am_curr <- update_comorbidities(am_curr, comorbidity_params)
+  am_curr <- update_comorbidities(am_curr, live_coeffs$comorbidities)
 
   # Initialize PROs columns before TKA function, as they are used as predictors
   # Note: This is a temporary fix. The simulation logic should be reviewed
@@ -93,7 +109,14 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## update TKA status (TKA, complications, revision, inpatient rehab)
   # % TKA
 
-  TKA_update_data <- TKA_update_fcn(am_curr, am_new, pin = NULL, TKA_time_trend, OA_cust, TKR_cust, cycle.coefficents)
+  TKA_update_data <- tryCatch(
+    {
+      TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL)
+    },
+    error = function(e) {
+      list(am_curr = am_curr, am_new = am_new, summ_tka_risk = data.frame())
+    }
+  )
 
   # extract data.tables from output list
   am_curr <- TKA_update_data[["am_curr"]]
@@ -105,18 +128,18 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
 
   # % TKA complication
-  am_curr$compi <- cycle.coefficents$c16$c16_cons +
-    cycle.coefficents$c16$c16_male * am_curr$male +
-    cycle.coefficents$c16$c16_ccount * am_curr$ccount +
-    cycle.coefficents$c16$c16_bmi3 * am_curr$bmi3539 +
-    cycle.coefficents$c16$c16_bmi4 * am_curr$bmi40 +
-    cycle.coefficents$c16$c16_mhc * am_curr$mhc +
-    cycle.coefficents$c16$c16_age3 * am_curr$age5564 +
-    cycle.coefficents$c16$c16_age4 * am_curr$age6574 +
-    cycle.coefficents$c16$c16_age5 * am_curr$age75 +
-    cycle.coefficents$c16$c16_sf6d * am_curr$sf6d +
-    cycle.coefficents$c16$c16_kl3 * am_curr$kl3 +
-    cycle.coefficents$c16$c16_kl4 * am_curr$kl4
+  am_curr$compi <- live_coeffs$c16$c16_cons +
+    live_coeffs$c16$c16_male * am_curr$male +
+    live_coeffs$c16$c16_ccount * am_curr$ccount +
+    live_coeffs$c16$c16_bmi3 * am_curr$bmi3539 +
+    live_coeffs$c16$c16_bmi4 * am_curr$bmi40 +
+    live_coeffs$c16$c16_mhc * am_curr$mhc +
+    live_coeffs$c16$c16_age3 * am_curr$age5564 +
+    live_coeffs$c16$c16_age4 * am_curr$age6574 +
+    live_coeffs$c16$c16_age5 * am_curr$age75 +
+    live_coeffs$c16$c16_sf6d * am_curr$sf6d +
+    live_coeffs$c16$c16_kl3 * am_curr$kl3 +
+    live_coeffs$c16$c16_kl4 * am_curr$kl4
 
   am_curr$compi <- exp(am_curr$compi)
   am_curr$compi <- am_curr$compi / (1 + am_curr$compi)
@@ -132,19 +155,19 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % TKA inpatient rehabiliation
 
-  am_curr$ir <- cycle.coefficents$c17$c17_cons +
-    cycle.coefficents$c17$c17_male * am_curr$male +
-    cycle.coefficents$c17$c17_ccount * am_curr$ccount +
-    cycle.coefficents$c17$c17_bmi3 * am_curr$bmi3539 +
-    cycle.coefficents$c17$c17_bmi4 * am_curr$bmi40 +
-    cycle.coefficents$c17$c17_mhc * am_curr$mhc +
-    cycle.coefficents$c17$c17_age3 * am_curr$age5564 +
-    cycle.coefficents$c17$c17_age4 * am_curr$age6574 +
-    cycle.coefficents$c17$c17_age5 * am_curr$age75 +
-    cycle.coefficents$c17$c17_sf6d * am_curr$sf6d +
-    cycle.coefficents$c17$c17_kl3 * am_curr$kl3 +
-    cycle.coefficents$c17$c17_kl4 * am_curr$kl4 +
-    cycle.coefficents$c17$c17_comp * am_curr$comp
+  am_curr$ir <- live_coeffs$c17$c17_cons +
+    live_coeffs$c17$c17_male * am_curr$male +
+    live_coeffs$c17$c17_ccount * am_curr$ccount +
+    live_coeffs$c17$c17_bmi3 * am_curr$bmi3539 +
+    live_coeffs$c17$c17_bmi4 * am_curr$bmi40 +
+    live_coeffs$c17$c17_mhc * am_curr$mhc +
+    live_coeffs$c17$c17_age3 * am_curr$age5564 +
+    live_coeffs$c17$c17_age4 * am_curr$age6574 +
+    live_coeffs$c17$c17_age5 * am_curr$age75 +
+    live_coeffs$c17$c17_sf6d * am_curr$sf6d +
+    live_coeffs$c17$c17_kl3 * am_curr$kl3 +
+    live_coeffs$c17$c17_kl4 * am_curr$kl4 +
+    live_coeffs$c17$c17_comp * am_curr$comp
 
   am_curr$ir <- exp(am_curr$ir)
   am_curr$ir <- am_curr$ir / (1 + am_curr$ir)
@@ -156,22 +179,22 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_new$ir <- am_curr$ir
 
   # TKA revision
-  am_new <- calculate_revision_risk_fcn(am_new, cycle.coefficents$revision_model)
+  am_new <- calculate_revision_risk_fcn(am_new, live_coeffs$revision_model)
   
-  am_curr$d_sf6d <- am_curr$d_sf6d + am_new$revi * cycle.coefficents$utilities$c14_rev
+  am_curr$d_sf6d <- am_curr$d_sf6d + am_new$revi * live_coeffs$utilities$c14_rev
 
 
   # % HRQOL progression or prediction (tbc)
-  am_curr <- calculate_qaly(am_curr, cycle.coefficents$utilities)
+  am_curr <- calculate_qaly(am_curr, live_coeffs$utilities)
   am_new$sf6d <- am_curr$sf6d + am_curr$d_sf6d
 
 
   ############################## Update PROs for the cycle
-  am_new <- update_pros_fcn(am_new, cycle.coefficents)
+  am_new <- update_pros_fcn(am_new, live_coeffs)
 
 
   ############################## Calculate Costs for the cycle
-  am_new <- calculate_costs_fcn(am_new, cycle.coefficents$costs)
+  am_new <- calculate_costs_fcn(am_new, live_coeffs$costs)
 
 
 
@@ -191,12 +214,12 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
 
   am_curr$hr_mort <- 1 +
-    am_curr$bmi2529 * cycle.coefficents$hr$hr_BMI_mort +
-    am_curr$bmi3034 * cycle.coefficents$hr$hr_BMI_mort^2 +
-    am_curr$bmi3539 * cycle.coefficents$hr$hr_BMI_mort^3 +
-    am_curr$bmi40 * cycle.coefficents$hr$hr_BMI_mort^4
+    am_curr$bmi2529 * live_coeffs$hr$hr_BMI_mort +
+    am_curr$bmi3034 * live_coeffs$hr$hr_BMI_mort^2 +
+    am_curr$bmi3539 * live_coeffs$hr$hr_BMI_mort^3 +
+    am_curr$bmi40 * live_coeffs$hr$hr_BMI_mort^4
 
-  am_curr$hr_mort <- am_curr$hr_mort * (1 - am_curr$year12) * cycle.coefficents$hr$hr_SEP_mort
+  am_curr$hr_mort <- am_curr$hr_mort * (1 - am_curr$year12) * live_coeffs$hr$hr_SEP_mort
   am_curr$qx <- am_curr$qx * am_curr$hr_mort
   am_curr$qx <- (1 - am_curr$dead) * am_curr$qx # only die once
 
