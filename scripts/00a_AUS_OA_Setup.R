@@ -11,17 +11,9 @@ p_load(
   kableExtra, # html tables
   arrow, # for parquet files (parquet takes less space than csv)
   reshape2, # converting data from wide to long
-  gt, # for table development and display
-  yaml # for reading yaml files
+  gt # for table development and display
 )
 options(dplyr.summarise.inform = FALSE)
-
-# SOURCE THE FUNCTIONS
-source(here("R", "config_loader.R"))
-source(here("R", "apply_policy_levers_fcn.R"))
-source(here("R", "calculate_costs_fcn.R"))
-source(here("R", "update_pros_fcn.R"))
-source(here("R", "calculate_revision_risk_fcn.R"))
 
 
 # Graph options
@@ -43,40 +35,10 @@ colors <- c(
 
 
 
-# Load the config files
-simulation_config <- load_config(here("config", "simulation.yaml"))
-model_parameters <- load_config(here("config", "coefficients.yaml"))
-comorbidity_parameters <- load_config(here("config", "comorbidities.yaml"))
-intervention_parameters <- load_config(here("config", "interventions.yaml"))
+# Load the input file
+sim_setup <- yaml::read_yaml(here("config", "simulation_setup.yml"))
 
-# Apply policy levers to the parameters
-model_parameters <- apply_policy_levers(model_parameters, simulation_config$policy_levers)
-
-
-# Load the scenario management script
-source(here("scripts", "manage_scenarios.R"))
-
-# For non-interactive use, the script now reads all parameters directly
-scenario_selection <- get_all_scenarios()
-
-
-# Create a clean, reliable key-value data frame of parameters
-params <- scenario_selection %>%
-  rename(key = `Base population parameters`, value = `Value`) %>%
-  select(key, value) %>%
-  filter(!is.na(key)) %>%
-  # Take the first value for each key to handle duplicates
-  group_by(key) %>%
-  summarise(value = first(value))
-
-# A helper function to safely extract parameters from the new 'params' object
-get_param_value <- function(param_name) {
-  val <- params$value[params$key == param_name]
-  if (length(val) == 0) return(NA)
-  return(val)
-}
-
-probabilistic <- as.logical(get_param_value("Probabilistic"))
-calibration_mode <- as.logical(get_param_value("Calibration mode"))
-parallel <- as.logical(get_param_value("Parallelize"))
-startyear <- as.integer(get_param_value("Simulation start year"))
+probabilistic <- sim_setup$probabilistic
+calibration_mode <- sim_setup$calibration_mode
+parallel <- sim_setup$parallelize
+startyear <- sim_setup$simulation_start_year

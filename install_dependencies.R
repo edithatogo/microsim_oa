@@ -1,18 +1,24 @@
 # install_dependencies.R
-# This script installs all necessary R packages for the AUS-OA model.
 
-options(repos = c(CRAN = "https://cloud.r-project.org"))
+# This script installs all the necessary packages for the AUS-OA model.
 
-required_packages <- c("here", "readxl", "dplyr", "tibble", "arrow", "readr", "rmarkdown", "testthat", "pacman")
+# It uses the pacman package to manage packages. If pacman is not installed,
+# it will be installed first.
 
-for (pkg in required_packages) {
-  if (!require(pkg, character.only = TRUE)) {
-    install.packages(pkg, dependencies = TRUE)
-  }
-}
+if (!require("pacman")) install.packages("pacman")
 
-# Load p_load from pacman
-library(pacman)
-
-# Ensure all required packages are loaded using p_load
-p_load(here, readxl, dplyr, tibble, arrow, readr, rmarkdown, testthat)
+pacman::p_load(
+  here,
+  rmarkdown,
+  quarto,
+  readxl,
+  tidyverse,
+  logr,
+  kableExtra,
+  arrow,
+  reshape2,
+  gt,
+  testthat, # for testing
+  yaml, # for reading yaml files
+  readr # for reading csv files
+)
