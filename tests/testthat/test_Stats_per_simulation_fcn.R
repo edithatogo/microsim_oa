@@ -20,7 +20,7 @@ test_that("stats_per_simulation calculates statistics correctly", {
   # 2. Call the function
   # Test with one grouping variable
   result1 <- stats_per_simulation(sim_storage, 1, "sex")
-  
+
   # Test with two grouping variables
   result2 <- stats_per_simulation(sim_storage, 1, c("sex", "age_group"))
 
@@ -29,15 +29,15 @@ test_that("stats_per_simulation calculates statistics correctly", {
 
   # 3. Assert expectations
   numeric_cols <- sum(sapply(sim_storage[[1]], is.numeric))
-  
+
   # Test 1
   expect_equal(nrow(result1), 2 * (numeric_cols + 2))
   expect_true(all(c("sex", "variable", "N", "Mean", "Sum", "sim_number") %in% names(result1)))
-  
+
   # Test 2
   expect_equal(nrow(result2), 3 * (numeric_cols + 2))
   expect_true(all(c("sex", "age_group", "variable", "N", "Mean", "Sum", "sim_number") %in% names(result2)))
-  
+
   # Check a specific value
   male_oa_n <- result1$N[result1$sex == "Male" & result1$variable == "oa"]
   expect_equal(male_oa_n, 3)

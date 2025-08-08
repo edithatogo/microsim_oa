@@ -318,7 +318,9 @@ complications <- merge(complications[, 2:6], tka[, 2:6], by = c("year", "sex", "
 
 complications$comp_value <- complications$comp_mean / complications$tka_mean
 
-complications$comp_value_SEM <- sqrt(complications$comp_mean * (complications$tka_mean - complications$comp_mean) / complications$tka_mean^3)
+complications$comp_value_SEM <- sqrt(complications$comp_mean *
+                                      (complications$tka_mean - complications$comp_mean) /
+                                      complications$tka_mean^3)
 
 complications$upper_CI <- complications$comp_value + 1.96 * complications$comp_value_SEM
 complications$lower_CI <- complications$comp_value - 1.96 * complications$comp_value_SEM

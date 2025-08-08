@@ -131,4 +131,3 @@ f_plot_distribution <- function(data, variable, yearv) {
     facet_wrap(~ .data$year, ncol = 2) +
     theme(legend.position = "top")
 }
-

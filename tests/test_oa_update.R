@@ -1,6 +1,4 @@
 library(data.table)
-source("R/OA_update_fcn.R")
-source("R/apply_coefficient_customisations_fcn.R")
 
 # Create dummy data
 am_curr <- data.table(

@@ -7,7 +7,8 @@
 calculate_revision_risk_fcn(am_curr, rev_coeffs)
 }
 \arguments{
-\item{am_curr}{A data.table representing the attribute matrix for the current cycle.}
+\item{am_curr}{A data.table representing the attribute matrix for the current
+cycle.}
 
 \item{rev_coeffs}{A list of coefficients for the revision model.}
 }

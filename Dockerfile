@@ -30,4 +30,3 @@ COPY . .
 
 # Default command to run when the container starts
 CMD ["R"]
-

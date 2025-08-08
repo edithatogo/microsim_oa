@@ -17,6 +17,6 @@ f_plot_distribution(data, variable, yearv)
 A ggplot object.
 }
 \description{
-Generates a bar chart showing the distribution of a variable across age groups
-and by sex for a specific year.
+Generates a bar chart showing the distribution of a variable across age
+groups and by sex for a specific year.
 }

@@ -29,7 +29,7 @@ test_that("TKA_update_fcn calculates TKA initiation correctly", {
     pain = c(60, 80, 90, 20, 70),
     function_score = c(50, 70, 80, 10, 60)
   )
-  
+
   am_new <- am_curr
 
   cycle.coefficents <- list(
@@ -39,15 +39,15 @@ test_that("TKA_update_fcn calculates TKA initiation correctly", {
       c9_pain = 0.02, c9_function = 0.01
     )
   )
-  
+
   TKR_cust <- data.frame()
-  
+
   TKA_time_trend <- data.frame(
     Year = 2020,
     female4554 = 1, female5564 = 1, female6574 = 1, female75 = 1,
     male4554 = 1, male5564 = 1, male6574 = 1, male75 = 1
   )
-  
+
   # 2. Call the function
   result <- TKA_update_fcn(am_curr, am_new, NULL, TKA_time_trend, NULL, TKR_cust, cycle.coefficents)
 
@@ -55,12 +55,12 @@ test_that("TKA_update_fcn calculates TKA initiation correctly", {
   expect_true(sum(result$am_new$tka) >= 0)
   expect_true(sum(result$am_new$tka1) >= sum(am_curr$tka1))
   expect_true(sum(result$am_new$tka2) >= sum(am_curr$tka2))
-  
+
   # Person 4 has no OA, so should have 0 probability
   expect_equal(result$am_curr$tka_initiation_prob[4], 0)
   # Person 5 is dead, so should have 0 probability
   expect_equal(result$am_curr$tka_initiation_prob[5], 0)
-  
+
   # Check that tka_initiation_prob is numeric
   expect_true(is.numeric(result$am_curr$tka_initiation_prob))
 })

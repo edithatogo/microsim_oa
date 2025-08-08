@@ -1,0 +1,7 @@
+cff-version: 1.2.0
+message: "If you use AUS-OA in your work, please cite it using the following metadata."
+title: "AUS-OA"
+authors:
+  - name: "AUS-OA Team"
+version: "1.0"
+date-released: "2024-09-05"

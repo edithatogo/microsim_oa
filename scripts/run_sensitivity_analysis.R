@@ -55,29 +55,29 @@ if (!dir.exists(output_dir)) {
 results_summary <- list()
 
 for (i in seq_along(variations)) {
-  
+
   variation_value <- variations[[i]]
   cat(paste("\n--- Running Sensitivity Analysis for", param_path, "=", variation_value, "---\n"))
-  
+
   # --- Modify the Model Coefficients using the robust helper function ---
   model_coeffs_modified <- set_nested_value(model_coeffs_base, path_parts, variation_value)
-  
+
   # --- Run the Full Simulation ---
   # The run_simulation function from 02_AUS_OA_Run_model_v2.R accepts the
   # modified coefficients object.
   simulation_results <- run_simulation(custom_coeffs = model_coeffs_modified)
-  
+
   # --- Summarize and Store Results ---
   # A more detailed analysis would save more granular results.
   total_cost <- sum(simulation_results$cycle_cost_total, na.rm = TRUE)
-  
+
   summary_row <- data.frame(
     parameter = param_path,
     value = variation_value,
     total_cost = total_cost
   )
   results_summary[[i]] <- summary_row
-  
+
   cat(paste("Run", i, "complete. Total cost:", format(total_cost, scientific = FALSE, big.mark = ","), "\n"))
 }
 

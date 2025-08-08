@@ -3,7 +3,7 @@ library(dplyr)
 library(forcats)
 library(stringr)
 
-devtools::load_all()
+
 
 test_that("f_get_percent_N_from_binary calculates percentages and frequencies correctly", {
   # 1. Set up mock data

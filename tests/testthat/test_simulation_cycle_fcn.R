@@ -2,8 +2,6 @@ library(testthat)
 library(dplyr)
 library(data.table)
 
-# Load all package functions
-devtools::load_all()
 
 
 test_that("simulation_cycle_fcn runs and updates key variables", {
@@ -41,6 +39,7 @@ test_that("simulation_cycle_fcn runs and updates key variables", {
     mhc = c(1, 0),
     comp = c(0, 0),
     ir = c(1, 1),
+    public = c(1, 0),
     public = c(1, 0)
   )
   am_new <- am_curr
@@ -119,28 +118,28 @@ test_that("simulation_cycle_fcn runs and updates key variables", {
 
   # 2. Call the function
   set.seed(123)
-  result <- simulation_cycle_fcn(am_curr, model_parameters, am_new, age_edges, bmi_edges, am_curr, 1, lt, eq_cust, TKA_time_trend)
+  result <- simulation_cycle_fcn(am_curr, model_parameters, am_new, age_edges, bmi_edges, am_curr, 1, lt, eq_cust)
 
   # 3. Assert expectations
   expect_true(is.list(result))
   expect_true("am_new" %in% names(result))
-  
+
   res_new <- result$am_new
-  
+
   # Age should increase by 1 for the living
   expect_equal(res_new$age[res_new$dead == 0], am_curr$age[am_curr$dead == 0] + 1)
-  
+
   # QALYs should be updated
   expect_true(all(res_new$qaly > am_curr$qaly))
-  
+
   # Costs should be calculated
   expect_true("cycle_cost_total" %in% names(res_new))
   expect_true(all(res_new$cycle_cost_total > 0))
-  
+
   # PROs should be updated
   expect_true(is.numeric(res_new$pain))
   expect_true(is.numeric(res_new$function_score))
-  
+
   # Revisions should be updated
   expect_true(is.numeric(res_new$revi))
 })

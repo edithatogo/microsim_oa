@@ -8,7 +8,7 @@
 #' @param initial_kl_grades A list of initial KL grade probabilities.
 #' @return A data.frame with the attribute matrix updated with KL grades.
 initialize_kl_grades <- function(am, utilities, initial_kl_grades) {
-  
+
   # % add KL levels
   am$kl0 <- ifelse(am$oa == 1, 1, 0)
 
@@ -34,7 +34,8 @@ initialize_kl_grades <- function(am, utilities, initial_kl_grades) {
 
   # allocate to KL levels based on random number and OA status
   am$kl4[randkl > (Prob_KL2 + Prob_KL3)] <- am$oa[randkl > (Prob_KL2 + Prob_KL3)]
-  am$kl3[(randkl > Prob_KL2) & (randkl <= (Prob_KL2 + Prob_KL3))] <- am$oa[(randkl > Prob_KL2) & (randkl <= (Prob_KL2 + Prob_KL3))]
+  am$kl3[(randkl > Prob_KL2) & (randkl <= (Prob_KL2 + Prob_KL3))] <-
+    am$oa[(randkl > Prob_KL2) & (randkl <= (Prob_KL2 + Prob_KL3))]
   am$kl2[randkl <= Prob_KL2] <- am$oa[randkl <= Prob_KL2]
 
   # set impcat of KL levels on SF6D

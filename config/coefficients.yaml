@@ -181,6 +181,32 @@ coefficients:
       distribution: normal
       std_error: 0.005
 
+  c16: # TKA complication
+    c16_cons:
+      live: -5.0
+    c16_male:
+      live: 0.1
+    c16_ccount:
+      live: 0.1
+    c16_bmi3:
+      live: 0.1
+    c16_bmi4:
+      live: 0.1
+    c16_mhc:
+      live: 0.1
+    c16_age3:
+      live: 0.1
+    c16_age4:
+      live: 0.1
+    c16_age5:
+      live: 0.1
+    c16_sf6d:
+      live: 0.1
+    c16_kl3:
+      live: 0.1
+    c16_kl4:
+      live: 0.1
+
   c14: # SF6D progression
     c14_bmi:
       live: -0.005
@@ -205,7 +231,7 @@ coefficients:
     # - 'healthcare_system': Costs borne by the government/insurers.
     # - 'patient': Out-of-pocket costs for the individual.
     # - 'societal': Broader costs like productivity loss.
-    
+
     tka_primary:
       hospital_stay:
         value: 15000
@@ -241,7 +267,7 @@ coefficients:
       patient_gap:
         value: 500
         perspective: patient
-    
+
     oa_annual_management:
       gp_visits:
         value: 300
@@ -259,7 +285,7 @@ coefficients:
     productivity_loss:
       value: 2500
       perspective: societal
-      
+
     informal_care:
       value: 1800
       perspective: societal
@@ -287,11 +313,11 @@ coefficients:
       kl2: 0.05
       kl3: 0.10
       kl4: 0.15
-    
+
     revision: 0.20
-    
+
     bmi_decrement: -0.005 # Per unit increase in BMI
-    
+
     comorbidities:
       stroke: 0.15
       peptic_ulcer: 0.05

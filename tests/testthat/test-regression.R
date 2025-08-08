@@ -1,14 +1,12 @@
 library(testthat)
 
+
+
 test_that("Simulation produces consistent outputs", {
   # This test runs a short, deterministic simulation and compares its output
   # to a "golden" snapshot. This prevents unintended changes to model results.
 
-  # Ensure that functions are loaded. devtools should be a development dependency.
-  if (!requireNamespace("devtools", quietly = TRUE)) {
-    skip("devtools not available, skipping regression test.")
-  }
-  devtools::load_all()
+
 
   # Set a seed for reproducibility of stochastic processes
   set.seed(123)
@@ -37,6 +35,7 @@ test_that("Simulation produces consistent outputs", {
   n_test_pop <- 50
   n_test_cycles <- 2
   am_test_input <- am_initial[1:n_test_pop, ]
+  am_test_input[, public := 0]
 
   # Robustly ensure all columns that should be numeric are converted.
   # This prevents "non-numeric argument" errors in downstream functions.
@@ -47,7 +46,7 @@ test_that("Simulation produces consistent outputs", {
     "age75", "male", "female", "bmi024", "bmi2529", "bmi3034", "bmi3539",
     "bmi40", "ccount", "mhc", "comp", "ir", "public", "sf6d", "d_sf6d"
   )
-  
+
   for (col in cols_to_convert) {
     if (col %in% names(am_test_input)) {
       # Handle potential factors by converting to character first
@@ -68,7 +67,7 @@ test_that("Simulation produces consistent outputs", {
   am_new <- am_test_input
   age_edges <- params$simulation_setup$age_edges
   bmi_edges <- params$simulation_setup$bmi_edges
-  
+
   # Create a dummy life table for the test
   lt <- data.frame(
     male_sep1_bmi0 = rep(0.001, 101),
@@ -82,7 +81,7 @@ test_that("Simulation produces consistent outputs", {
     TKR = data.frame(),
     OA = data.frame(covariate_set = "c6", proportion_reduction = 1)
   )
-  
+
   # Create a dummy TKA time trend table
   tka_time_trend <- data.frame(Year = 2023, female4554 = 1, male4554 = 1)
 
@@ -103,7 +102,7 @@ test_that("Simulation produces consistent outputs", {
       eq_cust = eq_cust,
       tka_time_trend = tka_time_trend
     )
-    am_final_state <- results_list$am_new
+    am_final_state <- results_list$am_curr
   }
 
   # --- 3. VERIFICATION ---
@@ -121,7 +120,7 @@ test_that("Simulation produces consistent outputs", {
   # If the output changes, the test will fail. To update the snapshot,
   # run testthat::snapshot_review() or delete the snapshot file and re-run.
   expect_snapshot_file(output_file_for_snapshot, name = "regression-summary.rds")
-  
+
   # The tempfile will be cleaned up automatically, but good practice to be explicit
   unlink(output_file_for_snapshot, force = TRUE)
 })

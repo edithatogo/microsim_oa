@@ -4,7 +4,7 @@
 \alias{OA_update}
 \title{Update Osteoarthritis (OA) Status}
 \usage{
-OA_update(am_curr, pin)
+OA_update(am_curr, am_new, cycle.coefficents, OA_cust)
 }
 \arguments{
 \item{am_curr}{A data.table representing the attribute matrix for the current

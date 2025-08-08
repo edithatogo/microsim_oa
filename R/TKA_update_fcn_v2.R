@@ -32,9 +32,11 @@ TKA_update_fcn <- function(am_curr,
                            OA_cust,
                            TKR_cust,
                            cycle.coefficents) {
-  
+
   # setup categorical variables
-  am_curr$age_group_tka_adj <- cut(am_curr$age, breaks = c(0, 44, 54, 64, 74, 1000), labels = c("< 45", "45-54", "55-64", "65-74", "75+"))
+  am_curr$age_group_tka_adj <- cut(am_curr$age,
+                                 breaks = c(0, 44, 54, 64, 74, 1000),
+                                 labels = c("< 45", "45-54", "55-64", "65-74", "75+"))
   am_curr$sex_tka_adj <- ifelse(am_curr$sex == "[1] Male", "Males", "Females")
 
   # NOTE: The following section uses OA_cust to customize TKA coefficients.
@@ -69,20 +71,28 @@ TKA_update_fcn <- function(am_curr,
   am_curr$current_scaling_factor <- 1
   current_year <- am_curr$year[1]
   year_index <- which(TKA_time_trend$Year == current_year)
-  
+
   if (length(year_index) > 0) {
     # Females
-    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age4554 == 1)] <- TKA_time_trend$female4554[year_index]
-    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age5564 == 1)] <- TKA_time_trend$female5564[year_index]
-    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age6574 == 1)] <- TKA_time_trend$female6574[year_index]
-    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age75 == 1)]   <- TKA_time_trend$female75[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age4554 == 1)] <-
+      TKA_time_trend$female4554[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age5564 == 1)] <-
+      TKA_time_trend$female5564[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age6574 == 1)] <-
+      TKA_time_trend$female6574[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[2] Female" & am_curr$age75 == 1)]   <-
+      TKA_time_trend$female75[year_index]
     # Males
-    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age4554 == 1)] <- TKA_time_trend$male4554[year_index]
-    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age5564 == 1)] <- TKA_time_trend$male5564[year_index]
-    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age6574 == 1)] <- TKA_time_trend$male6574[year_index]
-    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age75 == 1)]   <- TKA_time_trend$male75[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age4554 == 1)] <-
+      TKA_time_trend$male4554[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age5564 == 1)] <-
+      TKA_time_trend$male5564[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age6574 == 1)] <-
+      TKA_time_trend$male6574[year_index]
+    am_curr$current_scaling_factor[which(am_curr$sex == "[1] Male" & am_curr$age75 == 1)]   <-
+      TKA_time_trend$male75[year_index]
   }
-  
+
   am_curr$tka_initiation_prob <- am_curr$tka_initiation_prob * am_curr$current_scaling_factor
 
   # determine events based on TKA probability

@@ -86,10 +86,10 @@ f_get_means_freq_sum <- function(df, group_vars) {
 #' @importFrom forcats fct_recode
 #' @export
 BMI_summary_data <- function(am_all) {
-  
+
   # Declare variables to avoid R CMD check notes
   dead <- age <- bmi <- year <- age_cat <- sex <- overweight_obese <- NULL
-  
+
   # remove all individuals who are dead in the cycle
   am_all <- am_all[which(am_all$dead == 0), ]
 
@@ -150,17 +150,24 @@ BMI_summary_data <- function(am_all) {
 BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
                              BMI_by_sex_and_year,
                              current.mod.value) {
-  
+
   # Declare variables to avoid R CMD check notes
   year <- prop_overweight_obese <- age_cat <- lower_CI <- upper_CI <- sex <- NULL
-  
+
   # remove the lower age-brackets from the comparison data
-  percent_overweight_and_obesity_by_sex_joint <- percent_overweight_and_obesity_by_sex_joint[which(percent_overweight_and_obesity_by_sex_joint$age_cat != "18-24"), ]
-  percent_overweight_and_obesity_by_sex_joint <- percent_overweight_and_obesity_by_sex_joint[which(percent_overweight_and_obesity_by_sex_joint$age_cat != "25-34"), ]
-  percent_overweight_and_obesity_by_sex_joint$age_cat <- as.factor(percent_overweight_and_obesity_by_sex_joint$age_cat)
+  percent_overweight_and_obesity_by_sex_joint <-
+    percent_overweight_and_obesity_by_sex_joint[which(
+      percent_overweight_and_obesity_by_sex_joint$age_cat != "18-24"), ]
+  percent_overweight_and_obesity_by_sex_joint <-
+    percent_overweight_and_obesity_by_sex_joint[which(
+      percent_overweight_and_obesity_by_sex_joint$age_cat != "25-34"), ]
+  percent_overweight_and_obesity_by_sex_joint$age_cat <-
+    as.factor(percent_overweight_and_obesity_by_sex_joint$age_cat)
 
   # remove any age brackets not represented in the BMI data
-  percent_overweight_and_obesity_by_sex_joint <- percent_overweight_and_obesity_by_sex_joint[which(percent_overweight_and_obesity_by_sex_joint$age_cat %in% BMI_by_sex_and_year$age_cat), ]
+  percent_overweight_and_obesity_by_sex_joint <-
+    percent_overweight_and_obesity_by_sex_joint[which(
+      percent_overweight_and_obesity_by_sex_joint$age_cat %in% BMI_by_sex_and_year$age_cat), ]
 
   percent_overweight_and_obesity_by_sex_joint$source <- "Observed"
   names(percent_overweight_and_obesity_by_sex_joint)[2] <- "prop_overweight_obese"
@@ -179,7 +186,8 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
   #                                    ordered = TRUE,
   #                                    levels = year_seq)
   #
-  p <- ggplot(cycle.plotting.data[which(cycle.plotting.data$source == "Observed"), ], aes(x = year, y = prop_overweight_obese, color = age_cat))
+  p <- ggplot(cycle.plotting.data[which(cycle.plotting.data$source == "Observed"), ],
+              aes(x = year, y = prop_overweight_obese, color = age_cat))
 
   print(p + geom_point() +
     geom_errorbar(aes(ymin = lower_CI, ymax = upper_CI, color = age_cat, width = 0.2), alpha = 0.5) +
@@ -211,10 +219,11 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
 BMI_summary_RMSE <- function(percent_overweight_and_obesity_by_sex_joint,
                              BMI_by_sex_and_year,
                              current.mod.value) {
-  
+
   # Declare variables to avoid R CMD check notes
-  year <- prop_overweight_obese <- age_cat <- sex <- observed <- simulated <- diff_simulated_observed <- diff_simulated_observed_2 <- NULL
-  
+  year <- prop_overweight_obese <- age_cat <- sex <- observed <- simulated <-
+    diff_simulated_observed <- diff_simulated_observed_2 <- NULL
+
   # gather data to assess % agreement
   cycle.assessment.data <- BMI_by_sex_and_year[which(BMI_by_sex_and_year$year == 2015 |
     BMI_by_sex_and_year$year == 2018 |
@@ -274,10 +283,10 @@ BMI_summary_RMSE <- function(percent_overweight_and_obesity_by_sex_joint,
 #' @importFrom stringr str_replace
 #' @export
 OA_summary_fcn <- function(am_all) {
-  
+
   # Declare variables to avoid R CMD check notes
   dead <- age <- year <- sex <- oa <- age_group <- percent <- NULL
-  
+
   Z <-
     am_all %>%
     filter(dead == 0 & age > 34) %>%

@@ -10,7 +10,7 @@ interventions:
     type: "bmi_modification"
     start_year: 2028
     end_year: 2038
-    
+
     # Target population defines who the intervention applies to.
     # An empty field means it applies to everyone.
     # Conditions are combined with AND.
@@ -19,7 +19,7 @@ interventions:
       max_age: 65
       # sex: "[1] Male" # Example: can also target by sex
       # year12: 0 # Example: can also target by SES (0 = low, 1 = high)
-      
+
     parameters:
       # This intervention reduces BMI by a certain amount.
       # A negative value would represent an increase.
@@ -33,11 +33,11 @@ interventions:
     type: "qaly_and_cost_modification"
     start_year: 2030
     end_year: 2040
-    
+
     target_population:
       # This drug is for patients with moderate to severe OA
       min_kl_grade: 3 # Targets KL grades 3 and 4
-      
+
     parameters:
       # This intervention provides a direct QALY improvement but also has a cost.
       qaly_gain: 0.05 # Annual improvement in health utility
@@ -49,11 +49,11 @@ interventions:
     type: "tka_risk_modification"
     start_year: 2025
     end_year: 2045
-    
+
     target_population:
       # This intervention affects anyone receiving a TKA
       min_kl_grade: 2 # TKA can happen from KL grade 2 onwards
-      
+
     parameters:
       # This intervention reduces the probability of needing a TKA by a relative amount.
       # A value of 0.8 means a 20% reduction in risk.

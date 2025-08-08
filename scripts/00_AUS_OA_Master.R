@@ -1,6 +1,8 @@
 # AUS-OA MASTER FILE
 # This file runs the entire AUS-OA model
 rm(list = ls())
+library(ausoa)
+library(data.table)
 # 1. SETUP THE MODEL
 # This script loads required packages, specifies graph options, and prompts the
 # user to select the input files.

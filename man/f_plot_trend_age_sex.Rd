@@ -22,9 +22,11 @@ f_plot_trend_age_sex(
 
 \item{y_var}{A character string naming the y-axis variable.}
 
-\item{color_var}{A character string naming the variable for color (e.g., "sex").}
+\item{color_var}{A character string naming the variable for color
+(e.g., "sex").}
 
-\item{age_group_var}{A character string naming the faceting variable (e.g., "age_group").}
+\item{age_group_var}{A character string naming the faceting variable
+(e.g., "age_group").}
 
 \item{colors}{A vector of color values to use for the plot.}
 

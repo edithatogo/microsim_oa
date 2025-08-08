@@ -7,9 +7,11 @@
 apply_policy_levers(params, policy_levers)
 }
 \arguments{
-\item{params}{A list containing all model parameters (e.g., the output of \code{load_config}).}
+\item{params}{A list containing all model parameters (e.g., the output of
+\code{load_config}).}
 
-\item{policy_levers}{A list of policy lever objects from the simulation configuration.}
+\item{policy_levers}{A list of policy lever objects from the simulation
+configuration.}
 }
 \value{
 The modified list of parameters.

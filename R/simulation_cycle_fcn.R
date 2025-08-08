@@ -25,12 +25,14 @@
 #'   \item{am_new}{The fully updated `am_new` data.frame for the next cycle.}
 #'   \item{summ_tka_risk}{A summary data.frame of TKA risk calculations.}
 #' @importFrom stats runif
+#' @import data.table
 #' @export
 simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  age_edges, bmi_edges,
                                  am,
                                  mort_update_counter, lt,
-                                 eq_cust, tka_time_trend) {
+                                 eq_cust,
+                                 tka_time_trend) {
 
   # Unpack the 'live' value from each coefficient
   live_coeffs <- lapply(cycle.coefficents, function(x) {
@@ -47,7 +49,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
     }
     return(x)
   })
-  
+
   # extract relevant equation modification data
   BMI_cust <- eq_cust[["BMI"]]
   TKR_cust <- eq_cust[["TKR"]]
@@ -62,11 +64,14 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_new$bmi <- am_curr$bmi + am_curr$d_bmi
 
   # add impact of BMI delta to SF6D
+  if (!"d_bmi" %in% names(am_curr)) {
+    am_curr$d_bmi <- 0
+  }
   am_curr$d_sf6d <- am_curr$d_sf6d + (am_curr$d_bmi * live_coeffs$c14$c14_bmi)
 
   ############################## update personal charactistics (agecat, bmicat)
   # These need to be calculated on am_curr before being passed to OA and TKA functions
-  
+
   am_curr$age_cat <- cut(am_curr$age, breaks = age_edges, include.lowest = TRUE)
   am_curr$age044 <- ifelse(am_curr$age_cat == levels(am_curr$age_cat)[1], 1, 0)
   am_curr$age4554 <- ifelse(am_curr$age_cat == levels(am_curr$age_cat)[2], 1, 0)
@@ -111,7 +116,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   TKA_update_data <- tryCatch(
     {
-      TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL)
+      TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL, tka_time_trend)
     },
     error = function(e) {
       list(am_curr = am_curr, am_new = am_new, summ_tka_risk = data.frame())
@@ -128,7 +133,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
 
   # % TKA complication
-  am_curr$compi <- live_coeffs$c16$c16_cons +
+  compi_prob <- live_coeffs$c16$c16_cons +
     live_coeffs$c16$c16_male * am_curr$male +
     live_coeffs$c16$c16_ccount * am_curr$ccount +
     live_coeffs$c16$c16_bmi3 * am_curr$bmi3539 +
@@ -141,13 +146,13 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
     live_coeffs$c16$c16_kl3 * am_curr$kl3 +
     live_coeffs$c16$c16_kl4 * am_curr$kl4
 
-  am_curr$compi <- exp(am_curr$compi)
-  am_curr$compi <- am_curr$compi / (1 + am_curr$compi)
-  am_curr$compi <- am_curr$compi * am_new$tka # % only have complication if have TKA
-  am_curr$compi <- (1 - am_curr$dead) * am_curr$compi # ; % only alive have complication
+  compi_prob <- exp(compi_prob)
+  compi_prob <- compi_prob / (1 + compi_prob)
+  compi_prob <- compi_prob * am_new$tka # % only have complication if have TKA
+  compi_prob <- (1 - am_curr$dead) * compi_prob # ; % only alive have complication
 
   compi_rand <- runif(nrow(am_curr), 0, 1)
-  am_curr$compi <- ifelse(am_curr$compi > compi_rand, 1, 0)
+  am_curr$compi <- ifelse(compi_prob > compi_rand, 1, 0)
 
 
   am_new$comp <- am_curr$compi
@@ -155,7 +160,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % TKA inpatient rehabiliation
 
-  am_curr$ir <- live_coeffs$c17$c17_cons +
+  ir_prob <- live_coeffs$c17$c17_cons +
     live_coeffs$c17$c17_male * am_curr$male +
     live_coeffs$c17$c17_ccount * am_curr$ccount +
     live_coeffs$c17$c17_bmi3 * am_curr$bmi3539 +
@@ -169,22 +174,29 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
     live_coeffs$c17$c17_kl4 * am_curr$kl4 +
     live_coeffs$c17$c17_comp * am_curr$comp
 
-  am_curr$ir <- exp(am_curr$ir)
-  am_curr$ir <- am_curr$ir / (1 + am_curr$ir)
-  am_curr$ir <- am_curr$ir * am_new$tka # ; % only have rehab if have TKA
-  am_curr$ir <- (1 - am_curr$dead) * am_curr$ir # ; % only alive have rehab
+  ir_prob <- exp(ir_prob)
+  ir_prob <- ir_prob / (1 + ir_prob)
+  ir_prob <- ir_prob * am_new$tka # ; % only have rehab if have TKA
+  ir_prob <- (1 - am_curr$dead) * ir_prob # ; % only alive have rehab
 
   ir_rand <- runif(nrow(am_curr), 0, 1)
-  am_curr$ir <- ifelse(am_curr$ir > ir_rand, 1, 0)
+  am_curr$ir <- ifelse(ir_prob > ir_rand, 1, 0)
   am_new$ir <- am_curr$ir
 
   # TKA revision
+  if (!"public" %in% names(am_new)) am_new$public <- 0
+  if (!"rev1" %in% names(am_new)) am_new$rev1 <- 0
+  if (!"agetka1" %in% names(am_new)) am_new$agetka1 <- 0
   am_new <- calculate_revision_risk_fcn(am_new, live_coeffs$revision_model)
-  
-  am_curr$d_sf6d <- am_curr$d_sf6d + am_new$revi * live_coeffs$utilities$c14_rev
+
+  revi_util <- am_new$revi * live_coeffs$utilities$revision
+  if (length(revi_util) > 0) {
+    am_curr$d_sf6d <- am_curr$d_sf6d + revi_util
+  }
 
 
   # % HRQOL progression or prediction (tbc)
+  saveRDS(am_curr, "debug_am_curr.rds")
   am_curr <- calculate_qaly(am_curr, live_coeffs$utilities)
   am_new$sf6d <- am_curr$sf6d + am_curr$d_sf6d
 
@@ -206,8 +218,10 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
 
   for (mort_update_counter in 1:nrow(am)) {
-    am_curr$qx[mort_update_counter] <- lt$male_sep1_bmi0[am_curr$age[mort_update_counter]] * am_curr$male[mort_update_counter] +
-      lt$female_sep1_bmi0[am_curr$age[mort_update_counter]] * (1 - am_curr$male[mort_update_counter])
+    am_curr$qx[mort_update_counter] <-
+      lt$male_sep1_bmi0[am_curr$age[mort_update_counter]] * am_curr$male[mort_update_counter] +
+      lt$female_sep1_bmi0[am_curr$age[mort_update_counter]] *
+      (1 - am_curr$male[mort_update_counter])
   }
 
   # % Adjust mortality rate for BMI/SEP and implement

@@ -21,7 +21,8 @@ options(dplyr.summarise.inform = FALSE) # turn off dplyr summarise info
 #-------------------------------------------------------------------------------
 ## BMI DATA (Code from Josh)
 ### data for 2014-15
-### https://www.abs.gov.au/ausstats/subscriber.nsf/log?openagent&4364055001do008_20142015.xls&4364.0.55.001&Data%20Cubes&4B20A1660EBE0012CA257F150009F9F3&0&2014-15&08.12.2015&Previous
+### https://www.abs.gov.au/ausstats/subscriber.nsf/log?openagent&4364055001do008_20142015.xls
+### &4364.0.55.001&Data%20Cubes&4B20A1660EBE0012CA257F150009F9F3&0&2014-15&08.12.2015&Previous
 bmi_2015 <- read_excel("supporting_data/raw_data/Obesity_2014_2015.xls",
   sheet = "Table_8_1"
 )
@@ -71,7 +72,8 @@ bmi_2015$mean <- bmi_2015$mean * 100
 
 
 ### data for 2017-18
-### https://www.aihw.gov.au/getmedia/410bb660-bf9c-4ad0-a67e-0ce29e4e95eb/aihw-phe-251-overweight-obesity-data-tables.xlsx.aspx
+### https://www.aihw.gov.au/getmedia/410bb660-bf9c-4ad0-a67e-0ce29e4e95eb/
+### aihw-phe-251-overweight-obesity-data-tables.xlsx.aspx
 ### access and organise 2020 BMI data
 bmi_2018 <- read_excel("supporting_data/raw_data/aihw-phe-251-overweight-and-obesity-2020-data-tables.xlsx",
   sheet = "Table S2", n_max = 12
@@ -128,8 +130,9 @@ bmi_2018$upper_CI <- as.numeric(bmi_2018$upper_CI)
 
 
 ### load validation to match
-bmi_2022 <- read_excel("supporting_data/raw_data/Proportion of adults who were overweight or obese by age and sex, 2022.xlsx",
-  n_max = 8
+bmi_2022 <- read_excel(
+    "supporting_data/raw_data/Proportion of adults who were overweight or obese by age and sex, 2022.xlsx",
+    n_max = 8
 )
 
 bmi_2022_male <- bmi_2022[2:8, 1:4]

@@ -18,4 +18,3 @@ am$year <- 2013
 write_parquet(am, output_file)
 
 cat("Successfully created", output_file, "\n")
-

@@ -40,7 +40,9 @@ if (length(missing_cols) > 0) {
 }
 
 # --- 5. Check for missing coefficients ---
-required_coeffs <- c("c9_cons", "c9_age", "c9_age2", "c9_drugoa", "c9_ccount", "c9_mhc", "c9_tkr", "c9_kl2hr", "c9_kl3hr", "c9_kl4hr", "c9_pain", "c9_function")
+required_coeffs <- c("c9_cons", "c9_age", "c9_age2", "c9_drugoa", "c9_ccount",
+                     "c9_mhc", "c9_tkr", "c9_kl2hr", "c9_kl3hr", "c9_kl4hr",
+                     "c9_pain", "c9_function")
 missing_coeffs <- setdiff(required_coeffs, names(cycle.coefficents$c9))
 if (length(missing_coeffs) > 0) {
     print("Missing coefficients in c9:")

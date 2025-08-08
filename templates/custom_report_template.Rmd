@@ -29,16 +29,16 @@ This report presents a custom selection of results from the AUS-OA microsimulati
 ```{r generate_plots, results='asis'}
 for (var in params$selected_variables) {
   cat("## Variable: ", var, "\n")
-  
+
   plot_object <- params$plot_list[[var]]
-  
+
   if (!is.null(plot_object)) {
     # Print the plot
     print(plot_object)
   } else {
     cat("No plot available for this variable.\n")
   }
-  
+
   cat("\n---\n") # Add a separator
 }
 ```

@@ -1,10 +1,10 @@
 library(testthat)
 
-devtools::load_all()
+
 
 test_that("OA_update_fcn calculates sf6d_change correctly", {
   # This is a deterministic test focusing only on the sf6d_change calculation.
-  
+
   # 1. Set up mock data that guarantees a change
   am_curr <- data.frame(
     sf6d_change = 0,
@@ -12,7 +12,7 @@ test_that("OA_update_fcn calculates sf6d_change correctly", {
     oa_progression_prob = 0,
     oa_progression_kl3_kl4_prob = 0
   )
-  
+
   cycle.coefficents <- list(
     utilities = list(kl_grades = list(kl2 = -0.1, kl3 = -0.2, kl4 = -0.3))
   )

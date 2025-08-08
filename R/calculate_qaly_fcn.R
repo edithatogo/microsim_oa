@@ -14,10 +14,7 @@
 calculate_qaly <- function(attribute_matrix, utility_params) {
   # --- Initialize d_sf6d ---
   # This column represents the change in utility for the current cycle.
-  if (!"d_sf6d" %in% names(attribute_matrix)) {
-    attribute_matrix$d_sf6d <- 0
-  }
-  attribute_matrix$d_sf6d <- 0
+  attribute_matrix$d_sf6d <- rep(0, nrow(attribute_matrix))
 
 
   # --- 1. Decrement from KL Grade ---
@@ -38,8 +35,10 @@ calculate_qaly <- function(attribute_matrix, utility_params) {
 
   # --- 2. Decrement from BMI ---
   # This is a linear decrement based on BMI value.
-  attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d +
-    (attribute_matrix$d_bmi * utility_params$c14$c14_bmi)
+  if ("d_bmi" %in% names(attribute_matrix)) {
+    attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d +
+      (attribute_matrix$d_bmi * utility_params$c14$c14_bmi)
+  }
 
 
   # --- 3. Decrement from TKA Revision ---

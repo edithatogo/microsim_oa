@@ -13,7 +13,7 @@ test_that("apply_policy_levers works correctly with 2 levels of nesting", {
       c1_cons = 0.1
     )
   )
-  
+
   policy_levers <- list(
     list(
       name = "Weight Loss Program",
@@ -24,10 +24,10 @@ test_that("apply_policy_levers works correctly with 2 levels of nesting", {
       )
     )
   )
-  
+
   # 2. Call function
   modified_params <- apply_policy_levers(params, policy_levers)
-  
+
   # 3. Assertions
   expect_equal(modified_params$c1$c1_cons, 0.05)
   expect_equal(modified_params$costs$oa_annual_management$total, 900)
@@ -43,7 +43,7 @@ test_that("apply_policy_levers works correctly with 3 levels of nesting", {
       )
     )
   )
-  
+
   policy_levers <- list(
     list(
       name = "Cost increase",
@@ -53,10 +53,10 @@ test_that("apply_policy_levers works correctly with 3 levels of nesting", {
       )
     )
   )
-  
+
   # 2. Call function
   modified_params <- apply_policy_levers(params, policy_levers)
-  
+
   # 3. Assertions
   expect_equal(modified_params$costs$tka$primary, 22000)
 })
@@ -64,9 +64,9 @@ test_that("apply_policy_levers works correctly with 3 levels of nesting", {
 test_that("apply_policy_levers handles 'No Intervention' correctly", {
   params <- list(costs = list(tka_primary = list(total = 20000)))
   policy_levers <- list(list(name = "No Intervention", enabled = TRUE, effects = list()))
-  
+
   modified_params <- apply_policy_levers(params, policy_levers)
-  
+
   expect_equal(modified_params, params)
 })
 
@@ -81,8 +81,8 @@ test_that("apply_policy_levers handles new parameter creation", {
       )
     )
   )
-  
+
   modified_params <- apply_policy_levers(params, policy_levers)
-  
+
   expect_equal(modified_params$costs$new_drug_cost, 150)
 })

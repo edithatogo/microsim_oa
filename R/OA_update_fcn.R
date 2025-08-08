@@ -138,7 +138,8 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
     am_curr$oa_progression_kl3_kl4_prob # only have an progression probability if not dead
   am_curr$oa_progression_kl3_kl4_prob <- am_curr$oa_progression_kl3_kl4_prob /
     (1 + am_curr$oa_progression_kl3_kl4_prob) # logistic
-  am_curr$oa_progression_kl3_kl4_prob <- (1 + am_curr$oa_progression_kl3_kl4_prob)^0.25 - 1 # OAI analysis is over 4 years
+  am_curr$oa_progression_kl3_kl4_prob <-
+    (1 + am_curr$oa_progression_kl3_kl4_prob)^0.25 - 1 # OAI analysis is over 4 years
 
 
   oa_progression_kl3_kl4_rand <- runif(nrow(am_curr), 0, 1)

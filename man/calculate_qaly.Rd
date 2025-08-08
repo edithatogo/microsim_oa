@@ -18,5 +18,6 @@ the total utility decrement for the cycle.
 }
 \description{
 This function calculates the health utility (SF-6D) for each individual
-based on their current health state, including KL grade, BMI, and comorbidities.
+based on their current health state, including KL grade, BMI, and
+comorbidities.
 }

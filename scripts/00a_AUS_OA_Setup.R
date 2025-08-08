@@ -38,7 +38,7 @@ colors <- c(
 # Load the input file
 sim_setup <- yaml::read_yaml(here("config", "simulation_setup.yml"))
 
-probabilistic <- sim_setup$probabilistic
-calibration_mode <- sim_setup$calibration_mode
-parallel <- sim_setup$parallelize
-startyear <- sim_setup$simulation_start_year
+probabilistic <- sim_setup$simulation_parameters$probabilistic
+calibration_mode <- sim_setup$simulation_parameters$calibration_mode
+parallel <- sim_setup$simulation_parameters$parallelize
+startyear <- sim_setup$simulation_parameters$simulation_start_year

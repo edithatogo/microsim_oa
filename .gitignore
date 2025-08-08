@@ -7,3 +7,19 @@
 # Ignore built documentation outputs
 Readme.html
 *.html
+
+# Build artifacts
+..Rcheck/
+ausoa.Rcheck/
+*.tar.gz
+
+# Data files
+am_curr_before_oa.rds
+tests/testthat/debug_am_curr.rds
+
+# Output directories
+debug/
+output/
+
+# Notebook outputs
+*.nb.html

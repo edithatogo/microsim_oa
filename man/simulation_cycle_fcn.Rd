@@ -14,7 +14,7 @@ simulation_cycle_fcn(
   mort_update_counter,
   lt,
   eq_cust,
-  summary_TKR_observed_diff
+  tka_time_trend
 )
 }
 \arguments{

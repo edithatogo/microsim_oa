@@ -18,7 +18,7 @@
 #' @importFrom stats runif
 #' @export
 TKA_revisions <- function(am_all, cycle.coefficents) {
-  
+
   # Declare variables to avoid R CMD check notes
   age <- cr_age <- cr_age53 <- cr_age63 <- cr_age69 <- cr_age74 <- cr_age83 <- NULL
   female <- cr_female <- ASA2 <- cr_asa2 <- ASA3 <- cr_asa3 <- ASA4_5 <- cr_asa4_5 <- NULL
@@ -30,7 +30,7 @@ TKA_revisions <- function(am_all, cycle.coefficents) {
   cr_gamma_6 <- cr_gamma_7 <- cr_gamma_8 <- blcv <- agetka1 <- blcv1 <- agetka2 <- NULL
   blcv2 <- log_cum_haz1 <- log_cum_haz2 <- revision_haz_1 <- revision_haz_2 <- NULL
   id <- year <- r1 <- r2 <- phi <- . <- v0 <- v1 <- v2 <- v3 <- v4 <- v5 <- v6 <- v7 <- NULL
-  
+
   ## There are two parts to the revision model...
   ## Linear predictor
   f_linear_pred <-
@@ -161,4 +161,3 @@ TKA_revisions <- function(am_all, cycle.coefficents) {
   am_all <- Z
   return(am_all)
 }
-
