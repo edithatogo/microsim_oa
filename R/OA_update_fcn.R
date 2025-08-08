@@ -22,10 +22,10 @@
 #' @export
 #'
 OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
-  
+
   am_curr$sf6d_change <- 0
   turn.out.inloop.summary <- FALSE
-  
+
   # Customize OA age coefficients
   cycle.coefficents <- apply_coefficient_customisations(cycle.coefficents, OA_cust, "c6", "c6")
 
@@ -48,8 +48,10 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
     cycle.coefficents$c6_bmi3 * am_curr$bmi3539 +
     cycle.coefficents$c6_bmi4 * am_curr$bmi40)
 
-  am_curr$oa_initiation_prob <- (1 - am_curr$oa) * am_curr$oa_initiation_prob # only have an initialisation probability if don't already have OA
-  am_curr$oa_initiation_prob <- (1 - am_curr$dead) * am_curr$oa_initiation_prob # only have an initialisation probability if not dead
+  am_curr$oa_initiation_prob <- (1 - am_curr$oa) *
+    am_curr$oa_initiation_prob # only have an initialisation probability if don't already have OA
+  am_curr$oa_initiation_prob <- (1 - am_curr$dead) *
+    am_curr$oa_initiation_prob # only have an initialisation probability if not dead
   am_curr$oa_initiation_prob <- am_curr$oa_initiation_prob / (1 + am_curr$oa_initiation_prob) # logistic
   am_curr$oa_initiation_prob <- (1 + am_curr$oa_initiation_prob)^0.25 - 1
 
@@ -70,12 +72,13 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
     summary_risk.overall <- merge(summary_risk, summary_events, by = c("sex", "age_cat"))
     print(summary_risk.overall)
   }
-  
+
   am_new <- am_curr
   am_new$oa <- am_curr$oa_initiation_prob + am_curr$oa
   am_new$kl2 <- am_curr$oa_initiation_prob + am_curr$kl2
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_initiation_prob * cycle.coefficents$utilities$kl_grades$kl2)
+  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_initiation_prob *
+                                                  cycle.coefficents$utilities$kl_grades$kl2)
 
   # update medication status, if newly OA test if the also get meds,
   # should only happen when a person is newly OA
@@ -83,7 +86,9 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
 
   med_rand <- runif(nrow(am_curr), 0, 1)
 
-  am_curr$drugoa[which(am_curr$oa_initiation_prob == 1)] <- as.numeric(0.56 > med_rand[which(am_curr$oa_initiation_prob == 1)])
+  am_curr$drugoa[which(am_curr$oa_initiation_prob == 1)] <- as.numeric(
+    0.56 > med_rand[which(am_curr$oa_initiation_prob == 1)]
+    )
 
   # OA progression from KL2 to KL3
   am_curr$oa_progression_prob <- exp(cycle.coefficents$c7_cons +
@@ -98,16 +103,19 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
     cycle.coefficents$c7_bmi4 * am_curr$bmi40)
 
 
-  am_curr$oa_progression_prob <- am_curr$kl2 * am_curr$oa_progression_prob # only have a progression probability if already have KL2
-  am_curr$oa_progression_prob <- (1 - am_curr$dead) * am_curr$oa_progression_prob # only have an progression probability if not dead
+  am_curr$oa_progression_prob <- am_curr$kl2 *
+    am_curr$oa_progression_prob # only have a progression probability if already have KL2
+  am_curr$oa_progression_prob <- (1 - am_curr$dead) *
+    am_curr$oa_progression_prob # only have an progression probability if not dead
   am_curr$oa_progression_prob <- am_curr$oa_progression_prob / (1 + am_curr$oa_progression_prob) # logistic
-  am_curr$oa_progression_prob <- (1 + am_curr$oa_progression_prob)^0.25 - 1 # OAI analysis is over 4 years - need to reduce to annual
+  am_curr$oa_progression_prob <- (1 + am_curr$oa_progression_prob)^0.25 - 1 # OAI analysis is over 4 years
 
 
   oa_progression_rand <- runif(nrow(am_curr), 0, 1)
   am_curr$oa_progression_prob <- as.numeric(am_curr$oa_progression_prob > oa_progression_rand)
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_prob * cycle.coefficents$utilities$kl_grades$kl3)
+  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_prob *
+                                                  cycle.coefficents$utilities$kl_grades$kl3)
 
   am_new$kl3 <- am_curr$oa_progression_prob + am_curr$kl3
   am_new$kl2 <- am_curr$kl2 - am_curr$oa_progression_prob
@@ -124,15 +132,21 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
     cycle.coefficents$c8_bmi3 * am_curr$bmi3539 +
     cycle.coefficents$c8_bmi4 * am_curr$bmi40)
 
-  am_curr$oa_progression_kl3_kl4_prob <- am_curr$kl3 * am_curr$oa_progression_kl3_kl4_prob # only have a progression probability if already have KL3
-  am_curr$oa_progression_kl3_kl4_prob <- (1 - am_curr$dead) * am_curr$oa_progression_kl3_kl4_prob # only have an progression probability if not dead
-  am_curr$oa_progression_kl3_kl4_prob <- am_curr$oa_progression_kl3_kl4_prob / (1 + am_curr$oa_progression_kl3_kl4_prob) # logistic
-  am_curr$oa_progression_kl3_kl4_prob <- (1 + am_curr$oa_progression_kl3_kl4_prob)^0.25 - 1 # OAI analysis is over 4 years - need to reduce to annual
+  am_curr$oa_progression_kl3_kl4_prob <- am_curr$kl3 *
+    am_curr$oa_progression_kl3_kl4_prob # only have a progression probability if already have KL3
+  am_curr$oa_progression_kl3_kl4_prob <- (1 - am_curr$dead) *
+    am_curr$oa_progression_kl3_kl4_prob # only have an progression probability if not dead
+  am_curr$oa_progression_kl3_kl4_prob <- am_curr$oa_progression_kl3_kl4_prob /
+    (1 + am_curr$oa_progression_kl3_kl4_prob) # logistic
+  am_curr$oa_progression_kl3_kl4_prob <- (1 + am_curr$oa_progression_kl3_kl4_prob)^0.25 - 1 # OAI analysis is over 4 years
+
 
   oa_progression_kl3_kl4_rand <- runif(nrow(am_curr), 0, 1)
-  am_curr$oa_progression_kl3_kl4_prob <- as.numeric(am_curr$oa_progression_kl3_kl4_prob > oa_progression_kl3_kl4_rand)
+  am_curr$oa_progression_kl3_kl4_prob <- as.numeric(am_curr$oa_progression_kl3_kl4_prob >
+                                                      oa_progression_kl3_kl4_rand)
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_kl3_kl4_prob * cycle.coefficents$utilities$kl_grades$kl4)
+  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_kl3_kl4_prob *
+                                                  cycle.coefficents$utilities$kl_grades$kl4)
 
   am_new$kl4 <- am_curr$oa_progression_kl3_kl4_prob + am_curr$kl4
   am_new$kl3 <- am_curr$kl3 - am_curr$oa_progression_kl3_kl4_prob
