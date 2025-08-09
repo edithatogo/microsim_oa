@@ -11,8 +11,15 @@
 #'
 #' @return The `am_new` data.table with new columns for costs incurred
 #'   during the cycle, broken down by perspective.
+#' @import data.table
 #' @export
 calculate_costs_fcn <- function(am_new, costs_config) {
+
+  # Appease R CMD check
+  cycle_cost_healthcare <- cycle_cost_patient <- cycle_cost_societal <- NULL
+  tka <- revi <- ir <- oa <- dead <- comp <- comorbidity_cost <- NULL
+  intervention_cost <- cycle_cost_total <- NULL
+
   # --- Helper Function to Sum Costs by Perspective ---
   get_cost_sum <- function(cost_event_config, perspective_filter) {
     total_cost <- 0
@@ -38,51 +45,51 @@ calculate_costs_fcn <- function(am_new, costs_config) {
 
   # 1. Primary TKA Cost
   healthcare_tka_cost <-
-    get_cost_sum(costs_config$tka_primary, "healthcare_system")
-  patient_tka_cost <- get_cost_sum(costs_config$tka_primary, "patient")
+    get_cost_sum(costs_config$costs$tka_primary, "healthcare_system")
+  patient_tka_cost <- get_cost_sum(costs_config$costs$tka_primary, "patient")
 
   am_new[tka == 1 & revi == 0, cycle_cost_healthcare := cycle_cost_healthcare + healthcare_tka_cost]
   am_new[tka == 1 & revi == 0, cycle_cost_patient := cycle_cost_patient + patient_tka_cost]
 
   # 2. Revision TKA Cost
   healthcare_revision_cost <-
-    get_cost_sum(costs_config$tka_revision, "healthcare_system")
+    get_cost_sum(costs_config$costs$tka_revision, "healthcare_system")
   patient_revision_cost <-
-    get_cost_sum(costs_config$tka_revision, "patient")
+    get_cost_sum(costs_config$costs$tka_revision, "patient")
 
   am_new[revi == 1, cycle_cost_healthcare := cycle_cost_healthcare + healthcare_revision_cost]
   am_new[revi == 1, cycle_cost_patient := cycle_cost_patient + patient_revision_cost]
 
   # 3. Inpatient Rehab Cost
   healthcare_rehab_cost <-
-    get_cost_sum(costs_config$inpatient_rehab, "healthcare_system")
+    get_cost_sum(costs_config$costs$inpatient_rehab, "healthcare_system")
   patient_rehab_cost <-
-    get_cost_sum(costs_config$inpatient_rehab, "patient")
+    get_cost_sum(costs_config$costs$inpatient_rehab, "patient")
 
   am_new[ir == 1, cycle_cost_healthcare := cycle_cost_healthcare + healthcare_rehab_cost]
   am_new[ir == 1, cycle_cost_patient := cycle_cost_patient + patient_rehab_cost]
 
   # 4. Annual OA Management Cost
   healthcare_oa_cost <-
-    get_cost_sum(costs_config$oa_annual_management, "healthcare_system")
+    get_cost_sum(costs_config$costs$oa_annual_management, "healthcare_system")
   patient_oa_cost <-
-    get_cost_sum(costs_config$oa_annual_management, "patient")
+    get_cost_sum(costs_config$costs$oa_annual_management, "patient")
 
   am_new[oa == 1 & dead == 0, cycle_cost_healthcare := cycle_cost_healthcare + healthcare_oa_cost]
   am_new[oa == 1 & dead == 0, cycle_cost_patient := cycle_cost_patient + patient_oa_cost]
 
   # 5. Societal Costs (Productivity and Informal Care)
-  prod_cost <- get_cost_sum(costs_config$productivity_loss, "societal")
+  prod_cost <- get_cost_sum(costs_config$costs$productivity_loss, "societal")
   informal_care_cost <-
-    get_cost_sum(costs_config$informal_care, "societal")
+    get_cost_sum(costs_config$costs$informal_care, "societal")
 
   am_new[oa == 1 & dead == 0, cycle_cost_societal := cycle_cost_societal + prod_cost + informal_care_cost]
 
   # 6. TKA Complication Cost
   healthcare_complication_cost <-
-    get_cost_sum(costs_config$tka_complication, "healthcare_system")
+    get_cost_sum(costs_config$costs$tka_complication, "healthcare_system")
   patient_complication_cost <-
-    get_cost_sum(costs_config$tka_complication, "patient")
+    get_cost_sum(costs_config$costs$tka_complication, "patient")
 
   am_new[comp == 1, cycle_cost_healthcare := cycle_cost_healthcare + healthcare_complication_cost]
   am_new[comp == 1, cycle_cost_patient := cycle_cost_patient + patient_complication_cost]
