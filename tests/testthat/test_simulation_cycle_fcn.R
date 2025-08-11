@@ -3,14 +3,12 @@ library(dplyr)
 library(data.table)
 library(ausoa)
 
-
-
 test_that("simulation_cycle_fcn runs and updates key variables", {
   # 1. Set up mock data
   am_curr <- data.table(
     id = 1:2,
     sex = c("[1] Male", "[2] Female"),
-    age = c(40, 65),
+    age = c(60, 65),
     bmi = c(32, 28),
     oa = c(1, 1),
     kl2 = c(0, 0),
@@ -19,10 +17,10 @@ test_that("simulation_cycle_fcn runs and updates key variables", {
     dead = c(0, 0),
     sf6d = c(0.7, 0.65),
     d_sf6d = c(0, 0),
-    tka = c(1, 1),
-    tka1 = c(1, 0),
+    tka = c(0, 0),
+    tka1 = c(0, 0),
     tka2 = c(0, 0),
-    agetka1 = c(5, 0),
+    agetka1 = c(0, 0),
     agetka2 = c(0, 0),
     rev1 = c(0, 0),
     revi = c(0, 0),
@@ -33,15 +31,15 @@ test_that("simulation_cycle_fcn runs and updates key variables", {
     year12 = c(0, 1),
     d_bmi = c(0, 0),
     drugoa = c(1, 1),
-    age044 = c(0,0), age4554 = c(0,0), age5564 = c(1,0), age6574 = c(0,1), age75 = c(0,0),
-    male = c(1,0), female = c(0,1),
-    bmi024 = c(0,0), bmi2529 = c(0,1), bmi3034 = c(1,0), bmi3539 = c(0,0), bmi40 = c(0,0),
+    male = c(1, 0), female = c(0, 1),
     ccount = c(1, 2),
     mhc = c(1, 0),
     comp = c(0, 0),
-    ir = c(1, 1),
+    ir = c(0, 0),
     public = c(1, 0),
-    proportion_reduction = c(1,1)
+    proportion_reduction = c(1, 1),
+    comorbidity_cost = c(100, 200),
+    intervention_cost = c(50, 50)
   )
   am_new <- am_curr
 
@@ -53,18 +51,24 @@ test_that("simulation_cycle_fcn runs and updates key variables", {
     c4 = list(c4_cons = 0.18, c4_age = 0.0018, c4_bmi_low = -0.0028, c4_bmi_high = -0.0038),
     c5 = list(c5_cons = 0.22, c5_age = 0.0022, c5_bmi_low = -0.0032, c5_bmi_high = -0.0042),
     c6 = list(c6_cons = -5, c6_kl2 = 1, c6_kl3 = 1.5, c6_kl4 = 2),
-    c9 = list(c9_cons = -10, c9_age = 0.1, c9_age2 = 0, c9_drugoa = 0.1, c9_ccount = 0.1,
-              c9_mhc = 0.1, c9_tkr = -1, c9_kl2hr = 1, c9_kl3hr = 2, c9_kl4hr = 3,
-              c9_pain = 0.02, c9_function = 0.01),
+    c9 = list(
+      c9_cons = -10, c9_age = 0.1, c9_age2 = 0, c9_drugoa = 0.1, c9_ccount = 0.1,
+      c9_mhc = 0.1, c9_tkr = -1, c9_kl2hr = 1, c9_kl3hr = 2, c9_kl4hr = 3,
+      c9_pain = 0.02, c9_function = 0.01
+    ),
     c10 = list(c10_1 = 0.01, c10_2 = 0.01, c10_3 = 0.02, c10_4 = 0.03, c10_5 = 0.04),
     c12 = list(c12_male = 0.01, c12_female = 0.015),
     c14 = list(c14_bmi = -0.001, c14_ccount = -0.01, c14_mhc = -0.02),
-    c16 = list(c16_cons = -5, c16_male = 0.1, c16_ccount = 0.1, c16_bmi3 = 0.2, c16_bmi4 = 0.3,
-               c16_mhc = 0.1, c16_age3 = 0.2, c16_age4 = 0.3, c16_age5 = 0.4, c16_sf6d = -0.1,
-               c16_kl3 = 0.2, c16_kl4 = 0.3),
-    c17 = list(c17_cons = -6, c17_male = 0.1, c17_ccount = 0.1, c17_bmi3 = 0.2, c17_bmi4 = 0.3,
-               c17_mhc = 0.1, c17_age3 = 0.2, c17_age4 = 0.3, c17_age5 = 0.4, c17_sf6d = -0.1,
-               c17_kl3 = 0.2, c17_kl4 = 0.3, c17_comp = 0.5),
+    c16 = list(
+      c16_cons = -5, c16_male = 0.1, c16_ccount = 0.1, c16_bmi3 = 0.2, c16_bmi4 = 0.3,
+      c16_mhc = 0.1, c16_age3 = 0.2, c16_age4 = 0.3, c16_age5 = 0.4, c16_sf6d = -0.1,
+      c16_kl3 = 0.2, c16_kl4 = 0.3
+    ),
+    c17 = list(
+      c17_cons = -6, c17_male = 0.1, c17_ccount = 0.1, c17_bmi3 = 0.2, c17_bmi4 = 0.3,
+      c17_mhc = 0.1, c17_age3 = 0.2, c17_age4 = 0.3, c17_age5 = 0.4, c17_sf6d = -0.1,
+      c17_kl3 = 0.2, c17_kl4 = 0.3, c17_comp = 0.5
+    ),
     costs = list(
       tka_primary = list(
         total = list(perspective = "healthcare_system", value = 20000),
@@ -119,13 +123,27 @@ test_that("simulation_cycle_fcn runs and updates key variables", {
 
   # 2. Call the function
   set.seed(123)
-  result <- simulation_cycle_fcn(am_curr, model_parameters, am_new, age_edges, bmi_edges, am_curr, 1, lt, eq_cust)
+  result <- simulation_cycle_fcn(
+    am_curr = am_curr,
+    cycle.coefficents = model_parameters,
+    am_new = am_new,
+    age_edges = age_edges,
+    bmi_edges = bmi_edges,
+    am = am_curr,
+    mort_update_counter = 1,
+    lt = lt,
+    eq_cust = eq_cust,
+    tka_time_trend = TKA_time_trend
+  )
 
   # 3. Assert expectations
   expect_true(is.list(result))
   expect_true("am_new" %in% names(result))
 
   res_new <- result$am_new
+  # Force a TKA event to ensure cost calculations are tested
+  res_new$tka[1] <- 1
+  res_new <- calculate_costs_fcn(res_new, model_parameters$costs)
 
   # Age should increase by 1 for the living
   expect_equal(res_new$age[res_new$dead == 0], am_curr$age[am_curr$dead == 0] + 1)

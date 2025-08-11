@@ -40,27 +40,27 @@ bmi_mod_fcn <- function(am_curr, cycle_coefficients, bmi_customisations) {
   dt[, bmi_over30 := ifelse(dt$bmi > 30, dt$bmi - 30, 0)]
   # --- Vectorized BMI Progression Calculation ---
   # Get calibration factors once, ensuring they are numeric and default to 1
-  calib_c1 <- 
+  calib_c1 <-
     as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c1"])
   if (length(calib_c1) == 0) {
     calib_c1 <- 1.0
   }
-  calib_c2 <- 
+  calib_c2 <-
     as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c2"])
   if (length(calib_c2) == 0) {
     calib_c2 <- 1.0
   }
-  calib_c3 <- 
+  calib_c3 <-
     as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c3"])
   if (length(calib_c3) == 0) {
     calib_c3 <- 1.0
   }
-  calib_c4 <- 
+  calib_c4 <-
     as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c4"])
   if (length(calib_c4) == 0) {
     calib_c4 <- 1.0
   }
-  calib_c5 <- 
+  calib_c5 <-
     as.numeric(bmi_customisations$proportion_reduction[bmi_customisations$covariate_set == "c5"])
   if (length(calib_c5) == 0) {
     calib_c5 <- 1.0
@@ -72,41 +72,41 @@ bmi_mod_fcn <- function(am_curr, cycle_coefficients, bmi_customisations) {
   if (nrow(dt[dt$sex == "[1] Male" & dt$age < 50]) > 0) {
     dt[dt$sex == "[1] Male" & dt$age < 50, d_bmi := (
       cycle_coefficients$c1$c1_cons +
-      cycle_coefficients$c1$c1_year12 * dt[dt$sex == "[1] Male" & dt$age < 50]$year12 +
-      cycle_coefficients$c1$c1_age * dt[dt$sex == "[1] Male" & dt$age < 50]$age +
-      cycle_coefficients$c1$c1_bmi * dt[dt$sex == "[1] Male" & dt$age < 50]$bmi
+        cycle_coefficients$c1$c1_year12 * dt[dt$sex == "[1] Male" & dt$age < 50]$year12 +
+        cycle_coefficients$c1$c1_age * dt[dt$sex == "[1] Male" & dt$age < 50]$age +
+        cycle_coefficients$c1$c1_bmi * dt[dt$sex == "[1] Male" & dt$age < 50]$bmi
     ) * calib_c1]
   }
   if (nrow(dt[dt$sex == "[1] Male" & dt$age >= 50]) > 0) {
     dt[dt$sex == "[1] Male" & dt$age >= 50, d_bmi := (
       cycle_coefficients$c2$c2_cons +
-      cycle_coefficients$c2$c2_year12 * dt[dt$sex == "[1] Male" & dt$age >= 50]$year12 +
-      cycle_coefficients$c2$c2_age * dt[dt$sex == "[1] Male" & dt$age >= 50]$age +
-      cycle_coefficients$c2$c2_bmi * dt[dt$sex == "[1] Male" & dt$age >= 50]$bmi
+        cycle_coefficients$c2$c2_year12 * dt[dt$sex == "[1] Male" & dt$age >= 50]$year12 +
+        cycle_coefficients$c2$c2_age * dt[dt$sex == "[1] Male" & dt$age >= 50]$age +
+        cycle_coefficients$c2$c2_bmi * dt[dt$sex == "[1] Male" & dt$age >= 50]$bmi
     ) * calib_c2]
   }
   if (nrow(dt[dt$sex == "[2] Female" & dt$age < 50]) > 0) {
     dt[dt$sex == "[2] Female" & dt$age < 50, d_bmi := (
       cycle_coefficients$c3$c3_cons +
-      cycle_coefficients$c3$c3_age * dt[dt$sex == "[2] Female" & dt$age < 50]$age +
-      cycle_coefficients$c3$c3_bmi_low * dt[dt$sex == "[2] Female" & dt$age < 50]$bmi_under30 +
-      cycle_coefficients$c3$c3_bmi_high * dt[dt$sex == "[2] Female" & dt$age < 50]$bmi_over30
+        cycle_coefficients$c3$c3_age * dt[dt$sex == "[2] Female" & dt$age < 50]$age +
+        cycle_coefficients$c3$c3_bmi_low * dt[dt$sex == "[2] Female" & dt$age < 50]$bmi_under30 +
+        cycle_coefficients$c3$c3_bmi_high * dt[dt$sex == "[2] Female" & dt$age < 50]$bmi_over30
     ) * calib_c3]
   }
   if (nrow(dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 1]) > 0) {
     dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 1, d_bmi := (
       cycle_coefficients$c4$c4_cons +
-      cycle_coefficients$c4$c4_age * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 1]$age +
-      cycle_coefficients$c4$c4_bmi_low * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 1]$bmi_under30 +
-      cycle_coefficients$c4$c4_bmi_high * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 1]$bmi_over30
+        cycle_coefficients$c4$c4_age * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 1]$age +
+        cycle_coefficients$c4$c4_bmi_low * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 1]$bmi_under30 +
+        cycle_coefficients$c4$c4_bmi_high * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 1]$bmi_over30
     ) * calib_c4]
   }
   if (nrow(dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 0]) > 0) {
     dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 0, d_bmi := (
       cycle_coefficients$c5$c5_cons +
-      cycle_coefficients$c5$c5_age * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 0]$age +
-      cycle_coefficients$c5$c5_bmi_low * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 0]$bmi_under30 +
-      cycle_coefficients$c5$c5_bmi_high * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 0]$bmi_over30
+        cycle_coefficients$c5$c5_age * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 0]$age +
+        cycle_coefficients$c5$c5_bmi_low * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 0]$bmi_under30 +
+        cycle_coefficients$c5$c5_bmi_high * dt[dt$sex == "[2] Female" & dt$age >= 50 & dt$year12 == 0]$bmi_over30
     ) * calib_c5]
   }
   # --- Clean up temporary columns ---

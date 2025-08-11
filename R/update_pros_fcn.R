@@ -10,7 +10,6 @@
 #' @return The `am_new` data.table with updated `pain` and `function_score` columns.
 #' @export
 update_pros_fcn <- function(am_new, cycle.coefficents) {
-
   # Declare variables to avoid R CMD check notes
   oa <- dead <- pain <- function_score <- tka <- NULL
 

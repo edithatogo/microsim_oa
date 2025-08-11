@@ -18,7 +18,6 @@
 #' @importFrom stats runif
 #' @export
 TKA_revisions <- function(am_all, cycle.coefficents) {
-
   # Declare variables to avoid R CMD check notes
   age <- cr_age <- cr_age53 <- cr_age63 <- cr_age69 <- cr_age74 <- cr_age83 <- NULL
   female <- cr_female <- ASA2 <- cr_asa2 <- ASA3 <- cr_asa3 <- ASA4_5 <- cr_asa4_5 <- NULL

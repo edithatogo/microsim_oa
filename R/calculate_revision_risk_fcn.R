@@ -22,24 +22,32 @@ calculate_revision_risk_fcn <- function(am_curr, rev_coeffs) {
 
   # --- 2. Calculate Hazard for Early Revision (Year 1 post-TKA) ---
   # Individuals in their first year since TKA (agetka1 == 1)
-  am_curr[agetka1 == 1,
-          rev_haz_early := rev_coeffs$early_hazard$intercept + rev_lpv]
+  am_curr[
+    agetka1 == 1,
+    rev_haz_early := rev_coeffs$early_hazard$intercept + rev_lpv
+  ]
 
   # Convert log-hazard to probability
-  am_curr[agetka1 == 1,
-          rev_prob_early := 1 - exp(-exp(rev_haz_early))]
+  am_curr[
+    agetka1 == 1,
+    rev_prob_early := 1 - exp(-exp(rev_haz_early))
+  ]
 
   # --- 3. Calculate Hazard for Late Revision (Year 2+ post-TKA) ---
   # Individuals with 2 or more years since TKA (agetka1 >= 2)
   # Using a simple log-time model for late hazard
-  am_curr[agetka1 >= 2,
-          rev_haz_late := rev_coeffs$late_hazard$intercept +
-            rev_coeffs$late_hazard$log_time * log(agetka1) +
-            rev_lpv]
+  am_curr[
+    agetka1 >= 2,
+    rev_haz_late := rev_coeffs$late_hazard$intercept +
+      rev_coeffs$late_hazard$log_time * log(agetka1) +
+      rev_lpv
+  ]
 
   # Convert log-hazard to probability
-  am_curr[agetka1 >= 2,
-          rev_prob_late := 1 - exp(-exp(rev_haz_late))]
+  am_curr[
+    agetka1 >= 2,
+    rev_prob_late := 1 - exp(-exp(rev_haz_late))
+  ]
 
   # --- 4. Determine Revision Events ---
   # Combine probabilities and generate random numbers

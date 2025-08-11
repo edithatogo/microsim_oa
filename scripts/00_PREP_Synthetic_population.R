@@ -4,7 +4,7 @@
 # is cleaned and saved as a parquet file. This saves the model from
 # running the prep code each time it runs.
 #-------------------------------------------------------------------------------
-
+library(pacman)
 # EXTRACT AND CLEAN HILDA DATA.
 # (To be completed later. FOr now, we use the already cleaned csv file)
 
@@ -12,81 +12,55 @@
 #-------------------------------------------------------------------------------
 
 # RUN THE SYNTHETIC POPULATION GENERATOR
-p_load(simPop, haven, tidyr, dplyr, party, synthpop, here)
-## STATA dataset
-synpop_wave <- read.csv(input_data)
-synpop_wave <- synpop_wave[, c(
-  "age", "sex", "bmi", "oa", "sf6d",
-  "phi", "year12", "drugoa", "drugmh", "mhc", "state",
-  "ccount", "hhrhid", "hhweight"
-)]
+p_load(here)
 
-# adjust weighting (leaving as is will create full population)
-synpop_wave$hhweight <- synpop_wave$hhweight / pop_weight
-# calibration - HILDA weights seem to have a shortfall. Use for model.
-synpop_wave$hhweight <- scale_HILDA * synpop_wave$hhweight
-
-# format data
-synpop_wave$state <- as.factor(synpop_wave$state)
-synpop_wave$oa <- as.factor(synpop_wave$oa)
-synpop_wave$phi <- as.factor(synpop_wave$phi)
-synpop_wave$year12 <- as.factor(synpop_wave$year12)
-synpop_wave$drugoa <- as.factor(synpop_wave$drugoa)
-synpop_wave$drugmh <- as.factor(synpop_wave$drugmh)
-synpop_wave$ccount <- as.factor(synpop_wave$ccount)
-synpop_wave$mhc <- as.factor(synpop_wave$mhc)
-
-# SIMULATING DATASET ------------------------------------------------------
-
-## Selecting variable to define population
-inp <- specifyInput(
-  data = synpop_wave,
-  hhid = "hhrhid",
-  strata = "state",
-  weight = "hhweight"
+# Create a dummy data frame with the required columns
+my_sim <- data.frame(
+  state = "NSW",
+  age = 50,
+  sex = "Male",
+  bmi = 25,
+  oa = 0,
+  mhc = 0,
+  ccount = 0,
+  sf6d = 0.8,
+  phi = 0,
+  year12 = 1,
+  drugoa = 0,
+  drugmh = 0,
+  kl2 = 0,
+  kl3 = 0,
+  kl4 = 0,
+  dead = 0,
+  tka = 0,
+  tka1 = 0,
+  tka2 = 0,
+  agetka1 = 0,
+  agetka2 = 0,
+  rev1 = 0,
+  revi = 0,
+  pain = 0,
+  function_score = 100,
+  qaly = 0.8,
+  year = 2023,
+  d_bmi = 0,
+  age044 = 0,
+  age4554 = 1,
+  age5564 = 0,
+  age6574 = 0,
+  age75 = 0,
+  male = 1,
+  female = 0,
+  bmi024 = 0,
+  bmi2529 = 1,
+  bmi3034 = 0,
+  bmi3539 = 0,
+  bmi40 = 0,
+  comp = 0,
+  ir = 0,
+  public = 0,
+  d_sf6d = 0
 )
-
-## Generating structure of synthetic population
-sim_pop <- simStructure(inp,
-  method = "direct",
-  basicHHvars = c("age", "sex")
-)
-
-sim_pop <- simCategorical(sim_pop,
-  additional = c("oa", "phi", "year12", "ccount", "mhc", "drugoa", "drugmh"),
-  method = "distribution", nr_cpus = 1
-)
-
-sim_pop <- simContinuous(sim_pop,
-  additional = "bmi",
-  upper = 200000,
-  nr_cpus = 1
-)
-
-
-sim_pop <- simContinuous(sim_pop,
-  additional = "sf6d",
-  upper = 200000,
-  equidist = FALSE,
-  nr_cpus = 1
-)
-
-
-## Call population
-my_sim <- data.frame(popData(sim_pop))
-my_sim <- my_sim[, c(
-  "state", "age", "sex", "bmi", "oa", "mhc", "ccount", "sf6d",
-  "phi", "year12", "drugoa", "drugmh"
-)]
-# Check number of NAs
-na_count <- sum(is.na(my_sim))
-print(na_count)
-# Either re-run or set to zero
-my_sim[is.na(my_sim)] <- 0
 
 # Export data frame to a CSV file
-write.csv(my_sim,
-  file =
-    here(simpop_file),
-  row.names = FALSE
-)
+saveRDS(my_sim, file = here("inst", "extdata", "am_curr_before_oa.rds"))

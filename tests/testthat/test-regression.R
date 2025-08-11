@@ -1,4 +1,5 @@
 library(testthat)
+library(data.table)
 
 
 
@@ -12,10 +13,10 @@ test_that("Simulation produces consistent outputs", {
   set.seed(123)
 
   # --- 1. SETUP ---
-  # Use here::here() to construct paths relative to the project root
+  # Use test_path to construct a path relative to the tests/testthat directory.
   # This makes the test robust to changes in the working directory.
-  config_path <- here::here("config")
-  initial_am_path <- here::here("am_curr_before_oa.rds")
+  initial_am_path <- test_path("am_curr_before_oa.rds")
+  config_path <- system.file("config", package = "ausoa", mustWork = TRUE)
 
   # Check that the required files exist before running the test
   if (!dir.exists(config_path)) {
@@ -35,6 +36,7 @@ test_that("Simulation produces consistent outputs", {
   n_test_pop <- 50
   n_test_cycles <- 2
   am_test_input <- am_initial[1:n_test_pop, ]
+  setDT(am_test_input)
   am_test_input[, public := 0]
 
   # Robustly ensure all columns that should be numeric are converted.
@@ -44,7 +46,7 @@ test_that("Simulation produces consistent outputs", {
     "agetka1", "agetka2", "rev1", "revi", "pain", "function_score", "qaly",
     "year", "d_bmi", "drugoa", "age044", "age4554", "age5564", "age6574",
     "age75", "male", "female", "bmi024", "bmi2529", "bmi3034", "bmi3539",
-    "bmi40", "ccount", "mhc", "comp", "ir", "public", "sf6d", "d_sf6d"
+    "bmi40", "ccount", "mhc", "comp", "ir", "public", "sf6d", "d_sf6d", "year12"
   )
 
   for (col in cols_to_convert) {
@@ -52,10 +54,6 @@ test_that("Simulation produces consistent outputs", {
       # Handle potential factors by converting to character first
       am_test_input[[col]] <- as.numeric(as.character(am_test_input[[col]]))
     }
-  }
-  # year12 is a factor with levels "0" and "1"
-  if ("year12" %in% names(am_test_input)) {
-    am_test_input$year12 <- as.numeric(as.character(am_test_input$year12))
   }
 
   # Override simulation parameters for the test run
@@ -88,11 +86,12 @@ test_that("Simulation produces consistent outputs", {
 
   # Run the simulation loop
   am_final_state <- am_test_input
-  
+
   # Get the live parameters
   live_coeffs <- get_params(params$coefficients)
-  
+
   for (i in 1:n_test_cycles) {
+    am_new <- data.table::copy(am_final_state)
     # The function returns a list; we need the 'am_new' element
     results_list <- simulation_cycle_fcn(
       am_curr = am_final_state,
@@ -106,7 +105,7 @@ test_that("Simulation produces consistent outputs", {
       eq_cust = eq_cust,
       tka_time_trend = tka_time_trend
     )
-    am_final_state <- results_list$am_curr
+    am_final_state <- results_list$am_new
   }
 
   # --- 3. VERIFICATION ---

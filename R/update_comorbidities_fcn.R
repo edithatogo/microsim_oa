@@ -16,7 +16,6 @@
 #' @export
 #'
 update_comorbidities <- function(attribute_matrix, comorbidity_params) {
-
   # --- Guard Clauses ---
   if (is.null(comorbidity_params) || !isTRUE(comorbidity_params$enabled)) {
     return(attribute_matrix)
@@ -38,7 +37,6 @@ update_comorbidities <- function(attribute_matrix, comorbidity_params) {
   # --- Update Comorbidities and their Impact ---
 
   for (comorbidity in names(comorbidity_params$conditions)) {
-
     params <- comorbidity_params$conditions[[comorbidity]]
     col_name <- paste0("has_", comorbidity)
 

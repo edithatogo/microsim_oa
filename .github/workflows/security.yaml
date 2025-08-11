@@ -1,0 +1,24 @@
+# .github/workflows/security.yaml
+name: 'Dependency Review'
+on: [pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Set up R'
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+
+      - name: 'Restore renv environment'
+        uses: r-lib/actions/setup-renv@v2
+
+      - name: 'Dependency Review'
+        uses: actions/dependency-review-action@v4

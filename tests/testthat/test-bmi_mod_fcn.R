@@ -5,7 +5,6 @@ library(testthat)
 
 
 test_that("BMI modification function calculates correctly", {
-
   # Create a sample data frame for multiple individuals
   am_curr <- data.frame(
     sex = c("[1] Male", "[1] Male", "[2] Female", "[2] Female", "[2] Female"),

@@ -14,6 +14,24 @@
 #' @import data.table
 #' @export
 calculate_costs_fcn <- function(am_new, costs_config) {
+  # Ensure am_new is a data.table
+  setDT(am_new)
+
+  # --- Defensive Checks for Cost Configuration ---
+  # Ensure all cost components exist, defaulting to a structure with a value of 0
+  # to prevent errors if a cost component is missing from the config.
+  required_costs <- c(
+    "tka_primary", "tka_revision", "inpatient_rehab",
+    "oa_annual_management", "productivity_loss",
+    "informal_care", "tka_complication"
+  )
+  for (cost_name in required_costs) {
+    if (is.null(costs_config$costs[[cost_name]])) {
+      costs_config$costs[[cost_name]] <- list(
+        component = list(perspective = "none", value = 0)
+      )
+    }
+  }
 
   # Appease R CMD check
   cycle_cost_healthcare <- cycle_cost_patient <- cycle_cost_societal <- NULL

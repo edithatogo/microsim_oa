@@ -22,15 +22,13 @@
 #' @export
 #'
 OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
-
-  am_curr$sf6d_change <- 0
   turn.out.inloop.summary <- FALSE
 
   # Customize OA age coefficients
   cycle.coefficents <- apply_coefficient_customisations(cycle.coefficents, OA_cust, "c6", "c6")
 
   # OA initiation
-  
+
   # Ensure all required coefficients are present, defaulting to 0 if missing
   required_coeffs <- c(
     "c6_cons", "c6_year12", "c6_age1m", "c6_age2m", "c6_age3m", "c6_age4m", "c6_age5m",
@@ -70,7 +68,7 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
 
 
   if (turn.out.inloop.summary == TRUE) {
-    summary_risk <- am_curr[am_curr$age_cat != "[14,45]",] %>%
+    summary_risk <- am_curr[am_curr$age_cat != "[14,45]", ] %>%
       group_by(sex, age_cat) %>%
       summarise(mean.annual.oa.risk.percent = mean(oa_initiation_prob) * 100)
   }
@@ -79,7 +77,7 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   am_curr$oa_initiation_prob <- as.numeric(am_curr$oa_initiation_prob > oa_initiation_rand)
 
   if (turn.out.inloop.summary == TRUE) {
-    summary_events <- am_curr[am_curr$age_cat != "[14,45]",] %>%
+    summary_events <- am_curr[am_curr$age_cat != "[14,45]", ] %>%
       group_by(sex, age_cat) %>%
       summarise(mean.annual.oa.event.percent = mean(oa_initiation_prob) * 100)
     summary_risk.overall <- merge(summary_risk, summary_events, by = c("sex", "age_cat"))
@@ -90,8 +88,7 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   am_new$oa <- am_curr$oa_initiation_prob + am_curr$oa
   am_new$kl2 <- am_curr$oa_initiation_prob + am_curr$kl2
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_initiation_prob *
-                                                  cycle.coefficents$utilities$kl_grades$kl2)
+
 
   # update medication status, if newly OA test if the also get meds,
   # should only happen when a person is newly OA
@@ -101,10 +98,10 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
 
   am_curr$drugoa[which(am_curr$oa_initiation_prob == 1)] <- as.numeric(
     0.56 > med_rand[which(am_curr$oa_initiation_prob == 1)]
-    )
+  )
 
   # OA progression from KL2 to KL3
-  
+
   # Ensure all required coefficients are present, defaulting to 0 if missing
   required_coeffs_prog <- c(
     "c7_cons", "c7_sex", "c7_age3", "c7_age4", "c7_age5", "c7_bmi0", "c7_bmi1",
@@ -139,14 +136,13 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   oa_progression_rand <- runif(nrow(am_curr), 0, 1)
   am_curr$oa_progression_prob <- as.numeric(am_curr$oa_progression_prob > oa_progression_rand)
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_prob *
-                                                  cycle.coefficents$utilities$kl_grades$kl3)
+
 
   am_new$kl3 <- am_curr$oa_progression_prob + am_curr$kl3
   am_new$kl2 <- am_curr$kl2 - am_curr$oa_progression_prob
 
   # OA progression KL 3 and 4
-  
+
   # Ensure all required coefficients are present, defaulting to 0 if missing
   required_coeffs_kl3_kl4 <- c(
     "c8_cons", "c8_sex", "c8_age3", "c8_age4", "c8_age5", "c8_bmi0", "c8_bmi1",
@@ -181,10 +177,9 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
 
   oa_progression_kl3_kl4_rand <- runif(nrow(am_curr), 0, 1)
   am_curr$oa_progression_kl3_kl4_prob <- as.numeric(am_curr$oa_progression_kl3_kl4_prob >
-                                                      oa_progression_kl3_kl4_rand)
+    oa_progression_kl3_kl4_rand)
 
-  am_curr$sf6d_change <- am_curr$sf6d_change + (am_curr$oa_progression_kl3_kl4_prob *
-                                                  cycle.coefficents$utilities$kl_grades$kl4)
+
 
   am_new$kl4 <- am_curr$oa_progression_kl3_kl4_prob + am_curr$kl4
   am_new$kl3 <- am_curr$kl3 - am_curr$oa_progression_kl3_kl4_prob

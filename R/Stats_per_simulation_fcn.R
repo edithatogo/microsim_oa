@@ -20,7 +20,6 @@
 #' @importFrom magrittr %>%
 #' @export
 stats_per_simulation <- function(sim_storage, sim_number, group_vars) {
-
   # Declare variables to avoid R CMD check notes
   dead <- age <- bmi <- NULL
 

@@ -80,4 +80,3 @@ test_that("calculate_costs_fcn calculates costs correctly", {
   expect_equal(result$cycle_cost_societal[5], 2500 + 1800)
   expect_equal(result$cycle_cost_total[5], (18000 + 800 + 5000 + 50) + (2000 + 200 + 500) + (2500 + 1800))
 })
-

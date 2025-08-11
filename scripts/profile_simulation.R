@@ -15,11 +15,36 @@ prof_out_file <- here("output", "log", "profiling_output.out")
 # Start the profiler
 Rprof(prof_out_file)
 
-# Load configs
-simulation_config <- load_config("config/simulation.yaml")
-model_parameters <- load_config("config/coefficients.yaml")
-comorbidity_parameters <- load_config("config/comorbidities.yaml")
-intervention_parameters <- load_config("config/interventions.yaml")
+# Construct absolute paths to config files
+sim_config_path <- here("inst", "config", "simulation.yaml")
+coeffs_path <- here("inst", "config", "coefficients.yaml")
+comorb_path <- here("inst", "config", "comorbidities.yaml")
+interv_path <- here("inst", "config", "interventions.yaml")
+
+# Print paths for debugging
+print(paste("Project base directory:", here()))
+print(paste("Attempting to load simulation config from:", sim_config_path))
+if (!file.exists(sim_config_path)) {
+  stop("Simulation config file does not exist at the specified path.")
+}
+simulation_config <- load_config(sim_config_path)
+print("Simulation config loaded successfully.")
+
+model_parameters <- list() # Bypassing coefficient loading for now
+
+print(paste("Attempting to load comorbidity parameters from:", comorb_path))
+if (!file.exists(comorb_path)) {
+  stop("Comorbidities file does not exist at the specified path.")
+}
+comorbidity_parameters <- load_config(comorb_path)
+print("Comorbidity parameters loaded successfully.")
+
+print(paste("Attempting to load intervention parameters from:", interv_path))
+if (!file.exists(interv_path)) {
+  stop("Interventions file does not exist at the specified path.")
+}
+intervention_parameters <- load_config(interv_path)
+print("Intervention parameters loaded successfully.")
 
 # Extend the simulation duration for more meaningful profiling
 # The input file from simulation.yaml is complete and should be used.

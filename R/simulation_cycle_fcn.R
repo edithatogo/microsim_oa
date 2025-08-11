@@ -4,7 +4,6 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  mort_update_counter, lt,
                                  eq_cust,
                                  tka_time_trend) {
-
   print(paste("Start of cycle, nrow(am_curr):", nrow(am_curr)))
 
   # --- Pre-emptive Initialization ---
@@ -204,7 +203,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_curr[, qx := ifelse(male == 1, lt$male_sep1_bmi0[age], lt$female_sep1_bmi0[age])]
 
   # % Adjust mortality rate for BMI/SEP and implement
-  
+
   # Calculate the hazard ratio for mortality in a temporary variable
   hr_mort_calc <- (1 +
     am_curr$bmi2529 * live_coeffs$hr$hr_BMI_mort +
@@ -221,7 +220,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   } else {
     am_curr$hr_mort <- hr_mort_calc
   }
-  
+
   am_curr$qx <- am_curr$qx * am_curr$hr_mort
   am_curr$qx <- (1 - am_curr$dead) * am_curr$qx # only die once
 

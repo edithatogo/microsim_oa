@@ -39,8 +39,7 @@ apply_policy_levers <- function(params, policy_levers) {
       if (length(path) == 1) {
         original_value <- lst[[path[1]]]
 
-        new_value <- switch(
-          operation,
+        new_value <- switch(operation,
           "multiply" = original_value * value,
           "add" = original_value + value,
           "replace" = value,
