@@ -3,3 +3,9 @@
 ^_pkgdown\.yaml$
 ^pkgdown$
 ^docs$
+^\.Rproj\.user$
+^\.commitlintrc\.js$
+^\.lintr$
+^\.pre-commit-config\.yaml$
+^\.github$
+^\.pytest_cache$

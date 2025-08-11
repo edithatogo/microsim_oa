@@ -10,11 +10,14 @@
 #'
 #' @return The updated attribute_matrix with the `d_sf6d` column populated with
 #'   the total utility decrement for the cycle.
-#'
+#' @export
 calculate_qaly <- function(attribute_matrix, utility_params) {
   # --- Initialize d_sf6d ---
   # This column represents the change in utility for the current cycle.
-  attribute_matrix$d_sf6d <- rep(0, nrow(attribute_matrix))
+  if (!"d_sf6d" %in% names(attribute_matrix)) {
+    attribute_matrix$d_sf6d <- 0
+  }
+  attribute_matrix$d_sf6d <- 0
 
 
   # --- 1. Decrement from KL Grade ---
@@ -22,44 +25,45 @@ calculate_qaly <- function(attribute_matrix, utility_params) {
   # Note: This assumes KL grades are mutually exclusive columns (kl2, kl3, kl4).
   if ("kl2" %in% names(attribute_matrix)) {
     attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d -
-      (attribute_matrix$kl2 * utility_params$kl_grades$kl2)
+      (attribute_matrix$kl2 * utility_params$utilities$kl_grades$kl2)
   }
   if ("kl3" %in% names(attribute_matrix)) {
     attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d -
-      (attribute_matrix$kl3 * utility_params$kl_grades$kl3)
+      (attribute_matrix$kl3 * utility_params$utilities$kl_grades$kl3)
   }
   if ("kl4" %in% names(attribute_matrix)) {
     attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d -
-      (attribute_matrix$kl4 * utility_params$kl_grades$kl4)
+      (attribute_matrix$kl4 * utility_params$utilities$kl_grades$kl4)
   }
 
   # --- 2. Decrement from BMI ---
   # This is a linear decrement based on BMI value.
-  if ("d_bmi" %in% names(attribute_matrix)) {
-    attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d +
-      (attribute_matrix$d_bmi * utility_params$c14$c14_bmi)
+  if (is.null(attribute_matrix$d_bmi)) {
+    attribute_matrix$d_bmi <- 0
   }
+  attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d +
+    (attribute_matrix$d_bmi * utility_params$c14$c14_bmi)
 
 
   # --- 3. Decrement from TKA Revision ---
   if ("revi" %in% names(attribute_matrix)) {
     attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d -
-      (attribute_matrix$revi * utility_params$c14_rev)
+      (attribute_matrix$revi * utility_params$utilities$c14_rev)
   }
 
   # --- 4. Decrement from TKA Complication ---
   if ("comp" %in% names(attribute_matrix) &&
-    "tka_complication" %in% names(utility_params)) {
+    "tka_complication" %in% names(utility_params$utilities)) {
     attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d -
-      (attribute_matrix$comp * utility_params$tka_complication)
+      (attribute_matrix$comp * utility_params$utilities$tka_complication)
   }
 
   # --- 5. Decrement from Comorbidities ---
-  if (!is.null(utility_params$comorbidities)) {
-    for (comorbidity in names(utility_params$comorbidities)) {
+  if (!is.null(utility_params$utilities$comorbidities)) {
+    for (comorbidity in names(utility_params$utilities$comorbidities)) {
       col_name <- paste0("has_", comorbidity)
       if (col_name %in% names(attribute_matrix)) {
-        decrement <- utility_params$comorbidities[[comorbidity]]
+        decrement <- utility_params$utilities$comorbidities[[comorbidity]]
         attribute_matrix$d_sf6d <- attribute_matrix$d_sf6d -
           (attribute_matrix[[col_name]] * decrement)
       }

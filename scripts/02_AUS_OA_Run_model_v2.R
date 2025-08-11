@@ -123,19 +123,26 @@ run_simulation <- function(simulation_config, model_coefficients,
   am <- initialize_kl_grades(am, cycle.coefficents$utilities, cycle.coefficents$initial_kl_grades)
 
   # --- 7. Run Simulation Loop ---
-  am_all <- am
+  am_all <- data.frame()
   am_curr <- am
   am_new <- am
 
   num_years <- sim_params$length_years
+  
+  # Pre-allocate am_all
+  am_all <- vector("list", num_years + 1)
+  am_all[[1]] <- am
+  
+  # Add a progress bar
+  pb <- txtProgressBar(min = 0, max = num_years, style = 3)
+
   for (i in 2:(num_years + 1)) {
-    print(paste("Year:", i))
+    setTxtProgressBar(pb, i-1)
 
     am_curr$d_sf6d <- 0
     am_curr$d_bmi <- 0
     am_new$year <- am_curr$year + 1
 
-    print(paste("Calling simulation_cycle_fcn for year", am_new$year[1]))
     simulation_output_data <- simulation_cycle_fcn(
       am_curr = am_curr,
       cycle.coefficents = cycle.coefficents,
@@ -148,7 +155,6 @@ run_simulation <- function(simulation_config, model_coefficients,
       eq_cust = eq_cust,
       tka_time_trend = tka_time_trend
     )
-    print(paste("Returned from simulation_cycle_fcn for year", am_new$year[1]))
 
     am_curr <- simulation_output_data[["am_curr"]]
     am_new <- simulation_output_data[["am_new"]]
@@ -160,9 +166,13 @@ run_simulation <- function(simulation_config, model_coefficients,
       )
     }
 
-    am_all <- rbind(am_all, am_new)
+    am_all[[i]] <- am_new
     am_curr <- am_new
   }
+  
+  close(pb)
+  
+  am_all <- do.call(rbind, am_all)
 
   # --- 8. Post-processing ---
   # The cost calculation is now inside the simulation cycle.

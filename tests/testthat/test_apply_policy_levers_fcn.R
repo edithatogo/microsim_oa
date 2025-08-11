@@ -1,7 +1,5 @@
 library(testthat)
 
-source(here::here("R", "apply_policy_levers_fcn.R"))
-
 test_that("apply_policy_levers works correctly with 2 levels of nesting", {
   # 1. Mock data
   params <- list(

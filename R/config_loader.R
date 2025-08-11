@@ -53,6 +53,9 @@ get_params <- function(config, analysis_type = "live") {
   if (analysis_type == "live") {
     # Recursively traverse the list and extract the value of a key named 'live' or 'value'
     purrr::map_if(config, is.list, function(x) {
+      if (any(c("costs", "utilities") %in% names(x))) {
+        return(x)
+      }
       if ("live" %in% names(x)) {
         x$live
       } else if ("value" %in% names(x)) {
@@ -64,6 +67,9 @@ get_params <- function(config, analysis_type = "live") {
   } else if (analysis_type == "psa") {
     # Recursively sample from the specified distribution for each parameter
     purrr::map_if(config, is.list, function(x) {
+      if (any(c("costs", "utilities") %in% names(x))) {
+        return(x)
+      }
       if (all(c("live", "distribution", "std_error") %in% names(x))) {
         if (x$distribution == "normal") {
           rnorm(1, mean = x$live, sd = x$std_error)

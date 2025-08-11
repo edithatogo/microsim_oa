@@ -1,8 +1,6 @@
 library(testthat)
 library(data.table)
 
-source(here::here("R", "update_pros_fcn.R"))
-
 test_that("update_pros_fcn updates PROs correctly", {
   # 1. Mock data
   am_new <- data.table(

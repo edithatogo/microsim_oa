@@ -45,25 +45,22 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
   # # browser()
   # # where there is no scaling factor (either NA, INF or 0) keep current estimated risk
   am_curr$scaling_factor_smooth <- 1
-  # am_curr$scaling_factor_smooth <- ifelse(is.na(am_curr$scaling_factor_smooth), 1,
-  # am_curr$scaling_factor_smooth)
-  # am_curr$scaling_factor_smooth <- ifelse(is.infinite(am_curr$scaling_factor_smooth), 1,
-  # am_curr$scaling_factor_smooth)
-  # am_curr$scaling_factor_smooth <- ifelse(am_curr$scaling_factor_smooth == 0, 1,
-  # am_curr$scaling_factor_smooth)
+  
+  am_curr$tkai <- 0
+  oa_indices <- which(am_curr$oa == 1)
 
-  ### Calculate probability of TKA and adjust for eligibility
-  # calculate the probability of TKA
-  am_curr$tkai <- cycle.coefficents$c9_age * am_curr$age +
-    cycle.coefficents$c9_age2 * (am_curr$age^2) +
-    cycle.coefficents$c9_drugoa * am_curr$drugoa +
-    cycle.coefficents$c9_ccount * am_curr$ccount +
-    cycle.coefficents$c9_mhc * am_curr$mhc +
-    cycle.coefficents$c9_tkr * am_curr$tka1
-
-  am_curr$tkai <- -exp(am_curr$tkai) * cycle.coefficents$c9_cons
-  am_curr$tkai <- 1 - exp(am_curr$tkai)
-  am_curr$tkai <- ((1 + am_curr$tkai)^0.2) - 1
+  if (length(oa_indices) > 0) {
+    am_curr$tkai[oa_indices] <- cycle.coefficents$c9_age * am_curr$age[oa_indices] +
+      cycle.coefficents$c9_age2 * (am_curr$age[oa_indices]^2) +
+      cycle.coefficents$c9_drugoa * am_curr$drugoa[oa_indices] +
+      cycle.coefficents$c9_ccount * am_curr$ccount[oa_indices] +
+      cycle.coefficents$c9_mhc * am_curr$mhc[oa_indices] +
+      cycle.coefficents$c9_tkr * am_curr$tka1[oa_indices]
+  
+    am_curr$tkai[oa_indices] <- -exp(am_curr$tkai[oa_indices]) * cycle.coefficents$c9_cons
+    am_curr$tkai[oa_indices] <- 1 - exp(am_curr$tkai[oa_indices])
+    am_curr$tkai[oa_indices] <- ((1 + am_curr$tkai[oa_indices])^0.2) - 1
+  }
 
   # summary of annual risk, before controlling for KL status
   summ_tka_risk_pre <- am_curr %>%
@@ -76,9 +73,11 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
 
 
   # # adjust TKA rate based on KL status
-  am_curr$tkai <- cycle.coefficents$c9_kl2hr * am_curr$tkai * am_curr$kl2 +
-    cycle.coefficents$c9_kl3hr * am_curr$tkai * am_curr$kl3 +
-    cycle.coefficents$c9_kl4hr * am_curr$tkai * am_curr$kl4 # % only have TKA if have OA.
+  if (length(oa_indices) > 0) {
+    am_curr$tkai[oa_indices] <- cycle.coefficents$c9_kl2hr * am_curr$tkai[oa_indices] * am_curr$kl2[oa_indices] +
+      cycle.coefficents$c9_kl3hr * am_curr$tkai[oa_indices] * am_curr$kl3[oa_indices] +
+      cycle.coefficents$c9_kl4hr * am_curr$tkai[oa_indices] * am_curr$kl4[oa_indices]
+  }
   # Incorporate a HR for 4 vervsus 3 verus 2
 
   # summary of annual risk, before controlling for KL status

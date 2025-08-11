@@ -30,6 +30,19 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   cycle.coefficents <- apply_coefficient_customisations(cycle.coefficents, OA_cust, "c6", "c6")
 
   # OA initiation
+  
+  # Ensure all required coefficients are present, defaulting to 0 if missing
+  required_coeffs <- c(
+    "c6_cons", "c6_year12", "c6_age1m", "c6_age2m", "c6_age3m", "c6_age4m", "c6_age5m",
+    "c6_age1f", "c6_age2f", "c6_age3f", "c6_age4f", "c6_age5f", "c6_bmi0", "c6_bmi1",
+    "c6_bmi2", "c6_bmi3", "c6_bmi4"
+  )
+  for (coeff in required_coeffs) {
+    if (is.null(cycle.coefficents[[coeff]])) {
+      cycle.coefficents[[coeff]] <- 0
+    }
+  }
+
   am_curr$oa_initiation_prob <- exp(cycle.coefficents$c6_cons +
     cycle.coefficents$c6_year12 * am_curr$year12 +
     cycle.coefficents$c6_age1m * am_curr$age044 * am_curr$male +
@@ -91,6 +104,18 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
     )
 
   # OA progression from KL2 to KL3
+  
+  # Ensure all required coefficients are present, defaulting to 0 if missing
+  required_coeffs_prog <- c(
+    "c7_cons", "c7_sex", "c7_age3", "c7_age4", "c7_age5", "c7_bmi0", "c7_bmi1",
+    "c7_bmi2", "c7_bmi3", "c7_bmi4"
+  )
+  for (coeff in required_coeffs_prog) {
+    if (is.null(cycle.coefficents[[coeff]])) {
+      cycle.coefficents[[coeff]] <- 0
+    }
+  }
+
   am_curr$oa_progression_prob <- exp(cycle.coefficents$c7_cons +
     cycle.coefficents$c7_sex * am_curr$female +
     cycle.coefficents$c7_age3 * am_curr$age5564 +
@@ -121,6 +146,18 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   am_new$kl2 <- am_curr$kl2 - am_curr$oa_progression_prob
 
   # OA progression KL 3 and 4
+  
+  # Ensure all required coefficients are present, defaulting to 0 if missing
+  required_coeffs_kl3_kl4 <- c(
+    "c8_cons", "c8_sex", "c8_age3", "c8_age4", "c8_age5", "c8_bmi0", "c8_bmi1",
+    "c8_bmi2", "c8_bmi3", "c8_bmi4"
+  )
+  for (coeff in required_coeffs_kl3_kl4) {
+    if (is.null(cycle.coefficents[[coeff]])) {
+      cycle.coefficents[[coeff]] <- 0
+    }
+  }
+
   am_curr$oa_progression_kl3_kl4_prob <- exp(cycle.coefficents$c8_cons +
     cycle.coefficents$c8_sex * am_curr$female +
     cycle.coefficents$c8_age3 * am_curr$age5564 +

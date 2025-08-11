@@ -19,6 +19,9 @@ apply_coefficient_customisations <- function(cycle_coefficients,
                                              customisation_data,
                                              coeff_prefix_cycle,
                                              coeff_prefix_cust) {
+  if (nrow(customisation_data) == 0) {
+    return(cycle_coefficients)
+  }
   customisation_data$proportion_reduction <-
     as.numeric(customisation_data$proportion_reduction)
 

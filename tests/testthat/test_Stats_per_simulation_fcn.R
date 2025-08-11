@@ -2,8 +2,6 @@ library(testthat)
 library(dplyr)
 library(tidyr)
 
-source(here::here("R", "Stats_per_simulation_fcn.R"))
-
 test_that("stats_per_simulation calculates statistics correctly", {
   # 1. Set up mock data
   sim_storage <- list(

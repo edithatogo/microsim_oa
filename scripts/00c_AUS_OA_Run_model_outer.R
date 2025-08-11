@@ -12,7 +12,7 @@ if (!exists("simulation_config")) {
   intervention_parameters <- load_config(here::here("config", "interventions.yaml"))
 }
 
-number_of_sims <- as.integer(get_param_value("number_of_simulations"))
+number_of_sims <- as.integer(get_param_value("simulation_parameters.number_of_simulations"))
 loop_vector <- 1:number_of_sims
 
 # Check if parallel execution is enabled in the scenario config

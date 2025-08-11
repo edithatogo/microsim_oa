@@ -78,8 +78,8 @@ test_that("Simulation produces consistent outputs", {
   # Create dummy customisation tables
   eq_cust <- list(
     BMI = data.frame(covariate_set = "c1", proportion_reduction = 1),
-    TKR = data.frame(),
-    OA = data.frame(covariate_set = "c6", proportion_reduction = 1)
+    TKR = data.frame(covariate_set = "c9_cons", proportion_reduction = 1),
+    OA = data.frame(covariate_set = "c6_cons", proportion_reduction = 1)
   )
 
   # Create a dummy TKA time trend table
@@ -88,11 +88,15 @@ test_that("Simulation produces consistent outputs", {
 
   # Run the simulation loop
   am_final_state <- am_test_input
+  
+  # Get the live parameters
+  live_coeffs <- get_params(params$coefficients)
+  
   for (i in 1:n_test_cycles) {
     # The function returns a list; we need the 'am_new' element
     results_list <- simulation_cycle_fcn(
       am_curr = am_final_state,
-      cycle.coefficents = params$coefficients,
+      cycle.coefficents = live_coeffs,
       am_new = am_new,
       age_edges = age_edges,
       bmi_edges = bmi_edges,

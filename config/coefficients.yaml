@@ -283,12 +283,14 @@ coefficients:
         perspective: patient
 
     productivity_loss:
-      value: 2500
-      perspective: societal
+      main:
+        value: 2500
+        perspective: societal
 
     informal_care:
-      value: 1800
-      perspective: societal
+      main:
+        value: 1800
+        perspective: societal
 
     tka_complication:
       additional_hospital_stay:
@@ -305,6 +307,12 @@ coefficients:
   # Applied to costs and outcomes
   discount_rate:
     value: 0.05
+
+  hr: # Hazard Ratios for mortality
+    hr_BMI_mort:
+      live: 1.0
+    hr_SEP_mort:
+      live: 1.0
 
   utilities:
     # Utility decrements for different health states.

@@ -1,6 +1,7 @@
 library(testthat)
 library(dplyr)
 library(data.table)
+library(ausoa)
 
 
 
@@ -9,7 +10,7 @@ test_that("simulation_cycle_fcn runs and updates key variables", {
   am_curr <- data.table(
     id = 1:2,
     sex = c("[1] Male", "[2] Female"),
-    age = c(60, 65),
+    age = c(40, 65),
     bmi = c(32, 28),
     oa = c(1, 1),
     kl2 = c(0, 0),
@@ -40,7 +41,7 @@ test_that("simulation_cycle_fcn runs and updates key variables", {
     comp = c(0, 0),
     ir = c(1, 1),
     public = c(1, 0),
-    public = c(1, 0)
+    proportion_reduction = c(1,1)
   )
   am_new <- am_curr
 
@@ -133,6 +134,7 @@ test_that("simulation_cycle_fcn runs and updates key variables", {
   expect_true(all(res_new$qaly > am_curr$qaly))
 
   # Costs should be calculated
+  print(res_new[, c("id", "cycle_cost_healthcare", "cycle_cost_patient", "cycle_cost_societal", "cycle_cost_total")])
   expect_true("cycle_cost_total" %in% names(res_new))
   expect_true(all(res_new$cycle_cost_total > 0))
 

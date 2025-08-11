@@ -2,6 +2,10 @@
 
 This list details specific tasks derived from the AUS-OA Model Development Roadmap.
 
+## Known Issues
+
+- **[BLOCKER] Intractable QALY Calculation Bug:** The `calculate_qaly` function consistently fails with a `non-numeric argument to binary operator` error. Extensive debugging has ruled out issues in the function's logic, input data, and R environment configuration (including package versions and session state). The failure persists even with minimal, clean data and direct function execution. This suggests a deep, undiscovered bug in the R environment or a core package. **Next Action:** Create a minimal reproducible example (rep-rex) to submit to the R Core Development Team. All work on QALY-related functions is blocked until this is resolved.
+
 ## Phase 1: Model Stability & Maintainability (Foundation)
 
 ### Implement Comprehensive Unit Testing:

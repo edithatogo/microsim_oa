@@ -1,8 +1,5 @@
 library(testthat)
 
-source(here::here("R", "TKA_update_fcn_v2.R"))
-source(here::here("R", "apply_coefficient_customisations_fcn.R"))
-
 test_that("TKA_update_fcn calculates TKA initiation correctly", {
   # 1. Set up mock data
   am_curr <- data.frame(

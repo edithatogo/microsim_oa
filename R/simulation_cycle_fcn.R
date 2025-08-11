@@ -34,6 +34,14 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  eq_cust,
                                  tka_time_trend) {
 
+  # --- Pre-emptive Initialization ---
+  # Ensure critical columns exist before any calculations. This prevents
+  # "object not found" errors in downstream functions.
+  if (!"pain" %in% names(am_curr)) am_curr$pain <- 0
+  if (!"function_score" %in% names(am_curr)) am_curr$function_score <- 0
+  if (!"tka" %in% names(am_curr)) am_curr$tka <- 0
+  if (!"d_sf6d" %in% names(am_curr)) am_curr$d_sf6d <- 0
+
   # Unpack the 'live' value from each coefficient
   live_coeffs <- lapply(cycle.coefficents, function(x) {
     if (is.list(x) && "live" %in% names(x)) {
@@ -64,6 +72,10 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_new$bmi <- am_curr$bmi + am_curr$d_bmi
 
   # add impact of BMI delta to SF6D
+  if (!"d_bmi" %in% names(am_curr)) {
+    am_curr$d_bmi <- 0
+  }
+    # add impact of BMI delta to SF6D
   if (!"d_bmi" %in% names(am_curr)) {
     am_curr$d_bmi <- 0
   }
@@ -109,19 +121,13 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # to ensure PROs are updated at the correct point in the cycle.
   if (!"pain" %in% names(am_curr)) am_curr$pain <- 0
   if (!"function_score" %in% names(am_curr)) am_curr$function_score <- 0
+  if (!"tka" %in% names(am_curr)) am_curr$tka <- 0
 
 
   ############################## update TKA status (TKA, complications, revision, inpatient rehab)
   # % TKA
 
-  TKA_update_data <- tryCatch(
-    {
-      TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL, tka_time_trend)
-    },
-    error = function(e) {
-      list(am_curr = am_curr, am_new = am_new, summ_tka_risk = data.frame())
-    }
-  )
+  TKA_update_data <- TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL)
 
   # extract data.tables from output list
   am_curr <- TKA_update_data[["am_curr"]]
@@ -160,6 +166,17 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % TKA inpatient rehabiliation
 
+  # Ensure all required coefficients are present, defaulting to 0 if missing
+  required_coeffs_ir <- c(
+    "c17_cons", "c17_male", "c17_ccount", "c17_bmi3", "c17_bmi4", "c17_mhc",
+    "c17_age3", "c17_age4", "c17_age5", "c17_sf6d", "c17_kl3", "c17_kl4", "c17_comp"
+  )
+  for (coeff in required_coeffs_ir) {
+    if (is.null(live_coeffs$c17[[coeff]])) {
+      live_coeffs$c17[[coeff]] <- 0
+    }
+  }
+
   ir_prob <- live_coeffs$c17$c17_cons +
     live_coeffs$c17$c17_male * am_curr$male +
     live_coeffs$c17$c17_ccount * am_curr$ccount +
@@ -196,8 +213,9 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
 
   # % HRQOL progression or prediction (tbc)
-  saveRDS(am_curr, "debug_am_curr.rds")
-  am_curr <- calculate_qaly(am_curr, live_coeffs$utilities)
+  am_curr <- calculate_qaly(am_curr, live_coeffs)
+  am_new$sf6d <- am_curr$sf6d + am_curr$d_sf6d
+  am_curr <- calculate_qaly(am_curr, live_coeffs)
   am_new$sf6d <- am_curr$sf6d + am_curr$d_sf6d
 
 

@@ -1,8 +1,6 @@
 library(testthat)
 library(data.table)
 
-source(here::here("R", "calculate_revision_risk_fcn.R"))
-
 test_that("calculate_revision_risk_fcn works correctly", {
   # 1. Mock data
   am_curr <- data.table(
