@@ -1,38 +1,11 @@
-#' Run a Single Microsimulation Cycle
-#'
-#' This is the main function that drives the microsimulation for a single year (cycle).
-#' It orchestrates the updates for BMI, osteoarthritis, comorbidities, TKA,
-#' mortality, and other individual attributes.
-#'
-#' @param am_curr A data.frame representing the attribute matrix for the current
-#'   cycle (time `t`).
-#' @param cycle.coefficents A list or data.frame of all model coefficients for
-#'   the cycle.
-#' @param am_new A data.frame representing the attribute matrix for the next
-#'   cycle (time `t+1`), which will be populated by this function.
-#' @param age_edges A numeric vector defining the break points for age categories.
-#' @param bmi_edges A numeric vector defining the break points for BMI categories.
-#' @param am A data.frame, presumably the full attribute matrix (used for mortality).
-#'   Note: The usage of this parameter seems unusual and might need review.
-#' @param mort_update_counter A counter variable for the mortality loop.
-#'   Note: The usage of this parameter seems unusual and might need review.
-#' @param lt A data.frame representing the life table used for mortality calculations.
-#' @param eq_cust A list of data.frames containing customisation factors for
-#'   the model equations (BMI, TKR, OA).
-#'
-#' @return A list containing three elements:
-#'   \item{am_curr}{The `am_curr` data.frame with intermediate calculations.}
-#'   \item{am_new}{The fully updated `am_new` data.frame for the next cycle.}
-#'   \item{summ_tka_risk}{A summary data.frame of TKA risk calculations.}
-#' @importFrom stats runif
-#' @import data.table
-#' @export
 simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  age_edges, bmi_edges,
                                  am,
                                  mort_update_counter, lt,
                                  eq_cust,
                                  tka_time_trend) {
+
+  print(paste("Start of cycle, nrow(am_curr):", nrow(am_curr)))
 
   # --- Pre-emptive Initialization ---
   # Ensure critical columns exist before any calculations. This prevents
@@ -65,21 +38,15 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   ############################## update BMI in cycle
   am_curr <- bmi_mod_fcn(am_curr, live_coeffs, BMI_cust)
+  print(paste("After bmi_mod_fcn, nrow(am_curr):", nrow(am_curr)))
 
 
   # am_new.bmi = am_curr.bmi + d_bmi;
   # update BMI data using delta
   am_new$bmi <- am_curr$bmi + am_curr$d_bmi
 
-  # add impact of BMI delta to SF6D
-  if (!"d_bmi" %in% names(am_curr)) {
-    am_curr$d_bmi <- 0
-  }
-    # add impact of BMI delta to SF6D
-  if (!"d_bmi" %in% names(am_curr)) {
-    am_curr$d_bmi <- 0
-  }
-  am_curr$d_sf6d <- am_curr$d_sf6d + (am_curr$d_bmi * live_coeffs$c14$c14_bmi)
+  # add impact of BMI delta to SF6D - This is now handled by calculate_qaly()
+  # am_curr$d_sf6d <- am_curr$d_sf6d + (am_curr$d_bmi * live_coeffs$c14$c14_bmi)
 
   ############################## update personal charactistics (agecat, bmicat)
   # These need to be calculated on am_curr before being passed to OA and TKA functions
@@ -107,6 +74,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # extract data.tables from output list
   am_curr <- OA_update_data[["am_curr"]]
   am_new <- OA_update_data[["am_new"]]
+  print(paste("After OA_update, nrow(am_curr):", nrow(am_curr)))
 
   # note: change in sf6d calculated in the OA_update function
 
@@ -115,6 +83,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % Comorbidities
   am_curr <- update_comorbidities(am_curr, live_coeffs$comorbidities)
+  print(paste("After update_comorbidities, nrow(am_curr):", nrow(am_curr)))
 
   # Initialize PROs columns before TKA function, as they are used as predictors
   # Note: This is a temporary fix. The simulation logic should be reviewed
@@ -132,6 +101,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # extract data.tables from output list
   am_curr <- TKA_update_data[["am_curr"]]
   am_new <- TKA_update_data[["am_new"]]
+  print(paste("After TKA_update_fcn, nrow(am_curr):", nrow(am_curr)))
 
   summ_tka_risk <- TKA_update_data[["summ_tka_risk"]]
 
@@ -206,15 +176,15 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   if (!"agetka1" %in% names(am_new)) am_new$agetka1 <- 0
   am_new <- calculate_revision_risk_fcn(am_new, live_coeffs$revision_model)
 
-  revi_util <- am_new$revi * live_coeffs$utilities$revision
-  if (length(revi_util) > 0) {
-    am_curr$d_sf6d <- am_curr$d_sf6d + revi_util
-  }
+  # TKA revision utility is now handled by calculate_qaly()
+  # revi_util <- am_new$revi * live_coeffs$utilities$revision
+  # if (length(revi_util) > 0) {
+  #   am_curr$d_sf6d <- am_curr$d_sf6d + revi_util
+  # }
 
 
   # % HRQOL progression or prediction (tbc)
-  am_curr <- calculate_qaly(am_curr, live_coeffs)
-  am_new$sf6d <- am_curr$sf6d + am_curr$d_sf6d
+  print(paste("Before calculate_qaly, nrow(am_curr):", nrow(am_curr)))
   am_curr <- calculate_qaly(am_curr, live_coeffs)
   am_new$sf6d <- am_curr$sf6d + am_curr$d_sf6d
 
@@ -231,27 +201,27 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## Determine mortality in the cycle
 
   # % Mortality
-
-
-
-
-  for (mort_update_counter in 1:nrow(am)) {
-    am_curr$qx[mort_update_counter] <-
-      lt$male_sep1_bmi0[am_curr$age[mort_update_counter]] * am_curr$male[mort_update_counter] +
-      lt$female_sep1_bmi0[am_curr$age[mort_update_counter]] *
-      (1 - am_curr$male[mort_update_counter])
-  }
+  am_curr[, qx := ifelse(male == 1, lt$male_sep1_bmi0[age], lt$female_sep1_bmi0[age])]
 
   # % Adjust mortality rate for BMI/SEP and implement
-
-
-  am_curr$hr_mort <- 1 +
+  
+  # Calculate the hazard ratio for mortality in a temporary variable
+  hr_mort_calc <- (1 +
     am_curr$bmi2529 * live_coeffs$hr$hr_BMI_mort +
     am_curr$bmi3034 * live_coeffs$hr$hr_BMI_mort^2 +
     am_curr$bmi3539 * live_coeffs$hr$hr_BMI_mort^3 +
-    am_curr$bmi40 * live_coeffs$hr$hr_BMI_mort^4
+    am_curr$bmi40 * live_coeffs$hr$hr_BMI_mort^4) *
+    (1 - am_curr$year12) * live_coeffs$hr$hr_SEP_mort
 
-  am_curr$hr_mort <- am_curr$hr_mort * (1 - am_curr$year12) * live_coeffs$hr$hr_SEP_mort
+  # Defensive check: If the calculation results in a zero-length or non-numeric vector
+  # (e.g., due to missing coefficients or filtered data), default to 1.0 (no effect).
+  if (length(hr_mort_calc) == 0) {
+    am_curr$hr_mort <- 1.0
+    warning("Calculated 'hr_mort' was zero-length. Defaulting to 1.0. Check input data and coefficients.")
+  } else {
+    am_curr$hr_mort <- hr_mort_calc
+  }
+  
   am_curr$qx <- am_curr$qx * am_curr$hr_mort
   am_curr$qx <- (1 - am_curr$dead) * am_curr$qx # only die once
 
