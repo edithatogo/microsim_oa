@@ -1,0 +1,343 @@
+coefficients:
+  # Model Coefficients for AUS-OA V2
+  # This file replaces the 'Parameter inputs' sheet in the Excel file.
+
+  # Each top-level key is an equation family.
+  # Each parameter has a 'live' value (the point estimate) and optional
+  # properties for probabilistic sensitivity analysis (PSA), such as
+  # 'distribution' and 'std_error'.
+
+  c1: # BMI progression, males < 50
+    c1_cons:
+      live: 0.1
+      distribution: normal
+      std_error: 0.01
+    c1_year12:
+      live: -0.05
+      distribution: normal
+      std_error: 0.005
+    c1_age:
+      live: 0.01
+      distribution: normal
+      std_error: 0.001
+    c1_bmi:
+      live: 0.02
+      distribution: normal
+      std_error: 0.002
+
+  c2: # BMI progression, males >= 50
+    c2_cons:
+      live: 0.1
+    c2_year12:
+      live: -0.05
+    c2_age:
+      live: 0.01
+    c2_bmi:
+      live: 0.02
+
+  c3: # BMI progression, females < 50
+    c3_cons:
+      live: 0.1
+    c3_age:
+      live: 0.01
+    c3_bmi_low:
+      live: 0.02
+    c3_bmi_high:
+      live: 0.03
+
+  c4: # BMI progression, females >= 50, year12 == 1
+    c4_cons:
+      live: 0.1
+    c4_age:
+      live: 0.01
+    c4_bmi_low:
+      live: 0.02
+    c4_bmi_high:
+      live: 0.03
+
+  c5: # BMI progression, females >= 50, year12 == 0
+    c5_cons:
+      live: 0.1
+    c5_age:
+      live: 0.01
+    c5_bmi_low:
+      live: 0.02
+    c5_bmi_high:
+      live: 0.03
+
+  c6: # OA initiation
+    c6_cons:
+      live: -5.0
+      distribution: normal
+      std_error: 0.1
+    c6_year12:
+      live: -0.2
+      distribution: normal
+      std_error: 0.02
+    c6_age1m:
+      live: 0.5
+      distribution: normal
+      std_error: 0.05
+    c6_age2m:
+      live: 0.5
+    c6_age3m:
+      live: 0.5
+    c6_age4m:
+      live: 0.5
+    c6_age5m:
+      live: 0.5
+    c6_age1f:
+      live: 0.5
+    c6_age2f:
+      live: 0.5
+    c6_age3f:
+      live: 0.5
+    c6_age4f:
+      live: 0.5
+    c6_age5f:
+      live: 0.5
+    c6_bmi0:
+      live: 0.1
+    c6_bmi1:
+      live: 0.1
+    c6_bmi2:
+      live: 0.1
+    c6_bmi3:
+      live: 0.1
+    c6_bmi4:
+      live: 0.1
+
+  c7: # OA progression KL2 to 3
+    c7_cons:
+      live: -5.0
+    c7_sex:
+      live: 0.1
+    c7_age3:
+      live: 0.1
+    c7_age4:
+      live: 0.1
+    c7_age5:
+      live: 0.1
+    c7_bmi0:
+      live: 0.1
+    c7_bmi1:
+      live: 0.1
+    c7_bmi2:
+      live: 0.1
+    c7_bmi3:
+      live: 0.1
+    c7_bmi4:
+      live: 0.1
+
+  c8: # OA progression KL3 to 4
+    c8_cons:
+      live: -5.0
+    c8_sex:
+      live: 0.1
+    c8_age3:
+      live: 0.1
+    c8_age4:
+      live: 0.1
+    c8_age5:
+      live: 0.1
+    c8_bmi0:
+      live: 0.1
+    c8_bmi1:
+      live: 0.1
+    c8_bmi2:
+      live: 0.1
+    c8_bmi3:
+      live: 0.1
+    c8_bmi4:
+      live: 0.1
+
+  c9: # TKA Initiation
+    c9_cons:
+      live: -10.0
+    c9_age:
+      live: 0.1
+    c9_age2:
+      live: 0.0
+    c9_drugoa:
+      live: 0.1
+    c9_ccount:
+      live: 0.05
+    c9_mhc:
+      live: 0.05
+    c9_tkr:
+      live: -0.5
+    c9_kl2hr:
+      live: 1.0
+    c9_kl3hr:
+      live: 1.5
+    c9_kl4hr:
+      live: 2.0
+    c9_pain:
+      live: 0.02 # Higher pain score increases probability
+      distribution: normal
+      std_error: 0.005
+    c9_function:
+      live: 0.01 # Higher function score (worse function) increases probability
+      distribution: normal
+      std_error: 0.005
+
+  c16: # TKA complication
+    c16_cons:
+      live: -5.0
+    c16_male:
+      live: 0.1
+    c16_ccount:
+      live: 0.1
+    c16_bmi3:
+      live: 0.1
+    c16_bmi4:
+      live: 0.1
+    c16_mhc:
+      live: 0.1
+    c16_age3:
+      live: 0.1
+    c16_age4:
+      live: 0.1
+    c16_age5:
+      live: 0.1
+    c16_sf6d:
+      live: 0.1
+    c16_kl3:
+      live: 0.1
+    c16_kl4:
+      live: 0.1
+
+  c14: # SF6D progression
+    c14_bmi:
+      live: -0.005
+
+  revision_model:
+    linear_predictor:
+      age: 0.02
+      female: -0.1
+      bmi: 0.03
+      public: 0.2
+    early_hazard: # Year 1
+      intercept: -6.0 # Baseline log-hazard
+    late_hazard: # Year 2+
+      intercept: -8.0
+      log_time: 1.1 # Effect of log(time since TKA)
+
+  # ... and so on for all other equation families (c2, c3, c4, c5, c7, c8, etc.)
+
+  costs:
+    # Costs are broken down by component and perspective.
+    # Perspectives can be:
+    # - 'healthcare_system': Costs borne by the government/insurers.
+    # - 'patient': Out-of-pocket costs for the individual.
+    # - 'societal': Broader costs like productivity loss.
+
+    tka_primary:
+      hospital_stay:
+        value: 15000
+        perspective: healthcare_system
+      surgeon_anaesthetist:
+        value: 4000
+        perspective: healthcare_system
+      prosthesis:
+        value: 3000
+        perspective: healthcare_system
+      patient_gap:
+        value: 2000
+        perspective: patient
+
+    tka_revision:
+      hospital_stay:
+        value: 22000
+        perspective: healthcare_system
+      surgeon_anaesthetist:
+        value: 6000
+        perspective: healthcare_system
+      prosthesis:
+        value: 4000
+        perspective: healthcare_system
+      patient_gap:
+        value: 3000
+        perspective: patient
+
+    inpatient_rehab:
+      rehab_facility:
+        value: 5500
+        perspective: healthcare_system
+      patient_gap:
+        value: 500
+        perspective: patient
+
+    oa_annual_management:
+      gp_visits:
+        value: 300
+        perspective: healthcare_system
+      specialist_visits:
+        value: 400
+        perspective: healthcare_system
+      medications:
+        value: 300
+        perspective: healthcare_system
+      patient_oop: # Other out-of-pocket (e.g., physio)
+        value: 200
+        perspective: patient
+
+    productivity_loss:
+      main:
+        value: 2500
+        perspective: societal
+
+    informal_care:
+      main:
+        value: 1800
+        perspective: societal
+
+    tka_complication:
+      additional_hospital_stay:
+        value: 7000
+        perspective: healthcare_system
+      specialist_follow_up:
+        value: 1000
+        perspective: healthcare_system
+      additional_medications:
+        value: 500
+        perspective: patient
+
+  # --- Discounting ---
+  # Applied to costs and outcomes
+  discount_rate:
+    value: 0.05
+
+  hr: # Hazard Ratios for mortality
+    hr_BMI_mort:
+      live: 1.0
+    hr_SEP_mort:
+      live: 1.0
+
+  utilities:
+    # Utility decrements for different health states.
+    # These values are subtracted from the baseline utility (SF-6D).
+    kl_grades:
+      kl2: 0.05
+      kl3: 0.10
+      kl4: 0.15
+
+    revision: 0.20
+
+    bmi_decrement: -0.005 # Per unit increase in BMI
+
+    comorbidities:
+      stroke: 0.15
+      peptic_ulcer: 0.05
+      metabolic_syndrome: 0.08
+      hypertension: 0.03
+      depression: 0.10
+      copd: 0.09
+
+    tka_complication: 0.10
+
+  initial_kl_grades:
+    p_KL2init:
+      live: 0.5
+    p_KL3init:
+      live: 0.2

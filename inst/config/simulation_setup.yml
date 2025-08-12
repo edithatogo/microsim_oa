@@ -1,0 +1,15 @@
+base_population_parameters:
+  generate_new_base_population: false
+  input_data_for_base_population: synpop_wave13imp3.csv
+  population_scale: 1000
+  population_adjuster: 1.026
+  synthetic_population_if_not_generating_a_new_one: mysim_public.csv
+simulation_parameters:
+  simulation_start_year: 2013
+  simulation_length_years: 10
+  probabilistic: true
+  number_of_simulations: 5
+  parallelize: true
+  cores: 4
+  calibration_mode: true
+  set_seed: true

@@ -1,0 +1,56 @@
+# Simulation Setup Parameters
+
+# --- General Settings ---
+simulation:
+  start_year: 2013
+  length_years: 20
+  set_seed: true
+
+# --- Execution Modes ---
+run_modes:
+  # Run with probabilistic sampling for coefficients?
+  probabilistic: false
+  # Use calibration modifiers? (Overrides probabilistic)
+  calibration_mode: false
+  # Use parallel processing?
+  parallelize: true
+  # Number of cores to use if parallelize is true
+  cores: 4
+
+# --- Population Settings ---
+population:
+  # Scale factor for the base population
+  scale: 0.1
+  # Adjuster for the base population
+  adjuster: 1.0
+  # Input data file for generating a new base population
+  base_population_file: "mysim_public.csv"
+  # Pre-generated synthetic population to use if not generating a new one
+  synthetic_population_file: "am_2013.parquet"
+
+# --- File Paths (relative to project root) ---
+# Note: In the new architecture, most of these will be handled automatically.
+# This section is for reference and for parameters that might still be needed.
+paths:
+  input_directory: "input"
+  output_directory: "output"
+  input_file: "input/scenarios/ausoa_input_public.xlsx"
+
+# --- Life Tables ---
+life_tables:
+  sheet: "Life tables 2013"
+  range: "N6:AG107"
+
+# --- TKA Utilisation ---
+tka_utilisation:
+  sheet: "TKA utilisation"
+  range: "A53:I94"
+
+# --- Calibration ---
+calibration:
+  BMI:
+    proportion_reduction: 1
+  OA:
+    proportion_reduction: 1
+  TKR:
+    proportion_reduction: 1

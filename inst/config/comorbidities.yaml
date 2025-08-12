@@ -1,0 +1,62 @@
+# config/comorbidities.yaml
+
+# --- Comorbidity Modelling Configuration ---
+
+# Set 'enabled' to true to include comorbidities in the simulation.
+# If false, the entire comorbidity update step will be skipped.
+enabled: true
+
+# --- Conditions ---
+# Parameters are based on a combination of literature review and modeling assumptions.
+# Incidence rates for the general population are adjusted by prevalence ratios
+# in OA patients where available from Swain et al. (2020).
+# Costs and QALYs are estimates from various Australian sources.
+
+conditions:
+  stroke:
+    # Incidence: ~210 per 100k -> 0.0021. Relative risk in OA ~2.61.
+    annual_incidence_rate: 0.0055 # (0.0021 * 2.61)
+    # QALY: Lifetime loss of 5-6 QALYs. Assuming 10-year duration post-stroke. Using a conservative annual estimate.
+    qaly_decrement: 0.20
+    # Cost: Lifetime cost ~$350k. Assuming 10-year duration.
+    annual_cost: 35000
+
+  peptic_ulcer:
+    # Incidence: ~4.5 per 1k -> 0.0045. Relative risk in OA ~2.36.
+    annual_incidence_rate: 0.0106 # (0.0045 * 2.36)
+    # QALY: Placeholder value.
+    qaly_decrement: 0.05
+    # Cost: Placeholder value for annual management.
+    annual_cost: 800
+
+  metabolic_syndrome:
+    # Incidence: Estimated from prevalence of ~33%. Relative risk in OA ~1.94.
+    annual_incidence_rate: 0.064 # (0.033 * 1.94)
+    # QALY: Placeholder value.
+    qaly_decrement: 0.08
+    # Cost: Placeholder value.
+    annual_cost: 1200
+
+  hypertension:
+    # Incidence: Estimated from prevalence of ~23%. No RR available, assuming 1.5.
+    annual_incidence_rate: 0.0345 # (0.023 * 1.5)
+    # QALY: Placeholder value.
+    qaly_decrement: 0.03
+    # Cost: Based on AIHW data ($1.2B / 3M patients).
+    annual_cost: 400
+
+  depression:
+    # Incidence: Estimated from prevalence of ~9%. No RR available, assuming 1.8.
+    annual_incidence_rate: 0.0162 # (0.009 * 1.8)
+    # QALY: Significant QALY loss reported. Using a conservative annual estimate.
+    qaly_decrement: 0.12
+    # Cost: Based on AIHW data ($11B / 2.1M patients).
+    annual_cost: 5200
+
+  copd:
+    # Incidence: Estimated from prevalence of ~2.5%. No RR available, assuming 1.7.
+    annual_incidence_rate: 0.0043 # (0.0025 * 1.7)
+    # QALY: Placeholder value based on DALYs.
+    qaly_decrement: 0.09
+    # Cost: Based on AIHW data ($831M / 638k patients).
+    annual_cost: 1300
