@@ -2,25 +2,23 @@
 
 This list details specific tasks derived from the AUS-OA Model Development Roadmap.
 
-## Priority Tasks (2025-08-12)
+## Priority Tasks (2025-08-24)
 
 A `devtools::check()` run revealed critical issues that must be addressed before further development.
 
-- **[BLOCKER] `renv` Environment Out of Sync:** The project's dependencies are not synchronized, making builds unreliable.
-  - **Action:** Run `renv::restore()` to bring the environment to a known good state.
-- **[BLOCKER] Failing Test in `Stats_per_simulation_fcn.R`:** A core statistical function is failing its regression test (`numeric_stats$N` is `0.0` instead of `4.0`), indicating a logic error.
-  - **Action:** Debug the function and fix the underlying issue.
+- Ensure `renv` is synced: Run `renv::restore()` after fresh clones or dependency updates.
+- Verify new tests pass on CI (R-CMD-check): address any failures promptly.
 - **[HIGH] Address `devtools::check()` Warnings and Notes:**
   - **Action:** Fix the undocumented `colors` argument in `f_plot_distribution.Rd`.
   - **Action:** Update `.Rbuildignore` to clean up the package build.
-  - **Action:** Rename the long-named `.xlsx` file to ensure portability.
+  - **Action:** Data file rename completed to `supporting_data/raw_data/adult_obesity_by_age_sex_2022.xlsx`; update any references if missed.
   - **Action:** Investigate the `httpuv` Makefile warning.
 
 ---
 
 ## Known Issues
 
-- **[BLOCKER] Intractable QALY Calculation Bug:** The `calculate_qaly` function consistently fails with a `non-numeric argument to binary operator` error. Extensive debugging has ruled out issues in the function's logic, input data, and R environment configuration (including package versions and session state). The failure persists even with minimal, clean data and direct function execution. This suggests a deep, undiscovered bug in the R environment or a core package. **Next Action:** Create a minimal reproducible example (rep-rex) to submit to the R Core Development Team. All work on QALY-related functions is blocked until this is resolved.
+- None critical at this time. Monitor CI and tests for regressions.
 
 ## Phase 1: Model Stability & Maintainability (Foundation)
 

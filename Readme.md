@@ -2,8 +2,9 @@
 
 AUS-OA is a dynamic discrete-time microsimulation model of osteoarthritis and its treatment in Australia. It aims to provide policymakers and researchers with an enhanced capacity to evaluate the burden and treatment of osteoarthritis across Australia.
 
-<!-- Add CI/CD badges here when available -->
-<!-- e.g. [![R-CMD-check](https://github.com/aus-oa-public/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/aus-oa-public/actions/workflows/R-CMD-check.yaml) -->
+<!-- CI/CD badges -->
+[![R-CMD-check](https://github.com/edithatogo/microsim_oa/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/edithatogo/microsim_oa/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/edithatogo/microsim_oa/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/edithatogo/microsim_oa/actions/workflows/pkgdown.yaml)
 
 ## Features
 
@@ -53,8 +54,8 @@ This project has evolved significantly from its original version. Here's a summa
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/aus_oa_public.git
-    cd aus_oa_public
+    git clone https://github.com/edithatogo/microsim_oa.git
+    cd microsim_oa
     ```
 
 2.  **Install dependencies:** This project uses `renv` to manage dependencies. Open the `AUS-OA.Rproj` file in RStudio, and `renv` should automatically start installing the required packages. If not, run the following command in the R console:
@@ -94,10 +95,10 @@ This project uses a structured development approach:
 If you use this model in your research, please cite it as follows:
 
 ```
-AUS-OA Team (2023). A Microsimulation Model of Osteoarthritis in Australia (Version 2.0.0) [Computer software]. https://github.com/your-username/aus_oa_public
+AUS-OA Team (2025). A Microsimulation Model of Osteoarthritis in Australia (Version 2.0.0) [Computer software]. https://github.com/edithatogo/microsim_oa
 ```
 
-For more details, see the `CITATION.cff` file.
+For more details and source references, see `docs/CITATIONS.md`.
 
 ## License
 

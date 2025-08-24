@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.0.0-dev (2025-08-24)
+
+### Added
+- New unit tests for interventions, policy levers, KL initialization, graph functions, comorbidities, and stats helpers.
+- Snapshot for regression testing.
+- VS Code MCP config (`.vscode/mcp.json`) and `.env.example` with placeholders.
+
+### Changed
+- `ggsave` calls now use `ragg::agg_png` for consistent PNG output.
+- Minor code hygiene in scripts and functions; updated `renv/settings.json` to `snapshot.type: implicit`.
+
+### Fixed
+- Documentation links and badges in README now point to `edithatogo/microsim_oa`.
+
 ## v2.0-beta (2025-07-31)
 
 This is the first beta release of AUS-OA Model v2. This version represents a complete architectural relaunch, transforming the model into a modern, robust, and scalable R package.
