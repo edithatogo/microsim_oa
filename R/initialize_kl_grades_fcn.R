@@ -7,6 +7,9 @@
 #' @param utilities A list of utility coefficients.
 #' @param initial_kl_grades A list of initial KL grade probabilities.
 #' @return A data.frame with the attribute matrix updated with KL grades.
+#' @export
+#' @export
+#' @export
 initialize_kl_grades <- function(am, utilities, initial_kl_grades) {
   # % add KL levels
   am$kl0 <- ifelse(am$oa == 1, 1, 0)

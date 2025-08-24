@@ -1249,7 +1249,7 @@ void fs__mktemp(uv_fs_t* req, uv__fs_mktemp_func func) {
   size_t len;
   uint64_t v;
   char* path;
-  
+
   path = (char*)req->path;
   len = wcslen(req->file.pathw);
   ep = req->file.pathw + len;

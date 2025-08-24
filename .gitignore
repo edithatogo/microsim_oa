@@ -23,3 +23,7 @@ output/
 
 # Notebook outputs
 *.nb.html
+
+# Local environment files
+.env
+.env.local

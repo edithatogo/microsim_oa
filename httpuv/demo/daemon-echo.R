@@ -9,7 +9,7 @@ app <- list(
                   "ws://",
                   ifelse(is.null(req$HTTP_HOST), req$SERVER_NAME, req$HTTP_HOST),
                   '"')
-    
+
     list(
       status = 200L,
       headers = list(
@@ -64,4 +64,3 @@ server <- startDaemonizedServer("0.0.0.0", 9454, app)
 
 # call this after done
 #stopDaemonizedServer(server)
-

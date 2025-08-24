@@ -34,6 +34,7 @@ This roadmap outlines the strategic development plan for Version 3 of the AUS-OA
     *   Implement a comprehensive framework for Probabilistic Sensitivity Analysis (PSA), **with standard outputs like Cost-Effectiveness Acceptability Curves (CEACs).**
     *   Explore replacing a core statistical process with a Machine Learning model (e.g., GBM for progression), including Explainable AI (XAI) analysis.
     *   **Performance Review & `Rcpp`:** Profile the new V2 engine and implement `Rcpp` for the top 1-2 bottlenecks if required.
+    *   **Data Portability Review:** Evaluate replacing internal `.rds` data files (e.g., in `inst/extdata`) with a more portable, version-agnostic format like `arrow` or `fst` to improve long-term stability and reproducibility across different R versions.
 
 ---
 

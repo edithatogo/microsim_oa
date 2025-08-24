@@ -36,40 +36,49 @@ apply_policy_levers <- function(params, policy_levers) {
 
     # Use a recursive function to navigate and modify the nested list
     modify_nested_list <- function(lst, path, operation, value) {
+      # Base case: we are at the target's parent
       if (length(path) == 1) {
-        original_value <- lst[[path[1]]]
+        target_name <- path[1]
+
+        # Check for unknown operation first
+        if (!operation %in% c("multiply", "add", "replace")) {
+            warning(paste("Unknown operation:", operation, "- Skipping this effect."))
+            return(lst)
+        }
+
+        # Check for non-existent target for non-replace operations
+        if (!target_name %in% names(lst) && operation != "replace") {
+          warning(paste("Target '", target_name, "' not found. Skipping '", operation, "' operation.", sep = ""))
+          return(lst)
+        }
+
+        original_value <- lst[[target_name]] # Will be NULL if it doesn't exist (for 'replace')
 
         new_value <- switch(operation,
           "multiply" = original_value * value,
-          "add" = original_value + value,
-          "replace" = value,
-          {
-            warning(paste(
-              "Unknown operation:",
-              operation,
-              "- Skipping this effect."
-            ))
-            original_value
-          }
+          "add"      = original_value + value,
+          "replace"  = value
         )
-        lst[[path[1]]] <- new_value
-      } else {
-        if (!path[1] %in% names(lst)) {
-          if (operation == "replace") {
-            lst[[path[1]]] <- list()
-          } else {
-            warning(paste(
-              "Target path not found:",
-              paste(path, collapse = "."),
-              "- Skipping."
-            ))
-            return(lst)
-          }
-        }
-        lst[[path[1]]] <-
-          modify_nested_list(lst[[path[1]]], path[-1], operation, value)
+        lst[[target_name]] <- new_value
+        return(lst)
       }
-      lst
+
+      # Recursive step
+      parent_name <- path[1]
+      child_path <- path[-1]
+
+      # If a parent in the path doesn't exist
+      if (!parent_name %in% names(lst)) {
+         if (operation == "replace") {
+            lst[[parent_name]] <- list() # Create it
+         } else {
+            warning(paste("Target path '", paste(path, collapse="."), "' not found. Skipping '", operation, "' operation.", sep=""))
+            return(lst)
+         }
+      }
+
+      lst[[parent_name]] <- modify_nested_list(lst[[parent_name]], child_path, operation, value)
+      return(lst)
     }
 
     params <-

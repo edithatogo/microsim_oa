@@ -762,4 +762,3 @@ rawToBase64 <- function(x) {
 #' @inheritParams startServer
 #' @export
 startDaemonizedServer <- startServer
-

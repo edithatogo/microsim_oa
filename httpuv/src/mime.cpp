@@ -1560,6 +1560,6 @@ std::string find_mime_type(const std::string& ext) {
   if (it == mime_map.end()) {
     return "";
   }
-  
+
   return it->second;
 }

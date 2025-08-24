@@ -89,14 +89,11 @@ get_target_indices <- function(am, target_def) {
   }
 
   # Filter by KL grade
-  if (!is.null(target_def$min_kl_grade)) {
-    # Assumes kl_grade is a single column. If not, this needs adjustment.
-    # Let's find the max KL grade for each person first.
-    kl_cols <- c("kl0", "kl1", "kl2", "kl3", "kl4")
-    kl_data <- am[, kl_cols[kl_cols %in% names(am)]]
-    am$current_kl_grade <- apply(kl_data * col(kl_data), 1, max)
-
-    indices <- indices & (am$current_kl_grade >= target_def$min_kl_grade)
+  if (!is.null(target_def$min_kl)) {
+    indices <- indices & (am$oa_state >= target_def$min_kl)
+  }
+  if (!is.null(target_def$max_kl)) {
+    indices <- indices & (am$oa_state <= target_def$max_kl)
   }
 
   indices

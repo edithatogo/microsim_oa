@@ -2,9 +2,6 @@
 
 library(testthat)
 
-# Source the function to be tested
-# Note: In a real package, this would be handled by devtools::load_all()
-source("../../R/apply_interventions_fcn.R")
 
 # --- Test Data Setup ---
 create_test_am <- function(n = 10) {
@@ -150,18 +147,18 @@ test_that("apply_interventions respects the uptake rate", {
   )
 
   result <- apply_interventions(am, params, 2025)
-  
+
   # Check that approximately 50% of the population has been modified
   modified_count <- sum(result$bmi != am_original$bmi)
   expected_count <- 1000 * 0.5
   # Allow for some stochastic variation
-  expect_lt(abs(modified_count - expected_count), 100) 
-  
+  expect_lt(abs(modified_count - expected_count), 100)
+
   # Check that the modification was applied correctly to those who were changed
   modified_indices <- result$bmi != am_original$bmi
   expected_bmi <- pmax(15, am_original$bmi[modified_indices] - 2.0)
   expect_equal(result$bmi[modified_indices], expected_bmi, tolerance = 1e-6)
-  
+
   # Check that the non-modified population remains unchanged
   unmodified_indices <- result$bmi == am_original$bmi
   expect_equal(result$bmi[unmodified_indices], am_original$bmi[unmodified_indices])

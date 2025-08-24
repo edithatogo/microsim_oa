@@ -3,7 +3,7 @@
 * [cjdns](https://github.com/cjdelisle/cjdns): Encrypted self-configuring network/VPN routing engine
 * [clearskies_core](https://github.com/larroy/clearskies_core): Clearskies file synchronization program. (C++11)
 * [CMake](https://cmake.org) open-source, cross-platform family of tools designed to build, test and package software
-* [Coherence](https://github.com/liesware/coherence/): Cryptographic server for modern web apps. 
+* [Coherence](https://github.com/liesware/coherence/): Cryptographic server for modern web apps.
 * [DPS-For-IoT](https://github.com/intel/dps-for-iot/wiki): Fully distributed publish/subscribe protocol.
 * [HashLink](https://github.com/HaxeFoundation/hashlink): Haxe run-time with libuv support included.
 * [Haywire](https://github.com/kellabyte/Haywire): Asynchronous HTTP server.

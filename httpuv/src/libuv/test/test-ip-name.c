@@ -51,7 +51,7 @@ TEST_IMPL(ip_name) {
     ASSERT_EQ(0, uv_ip6_addr("fe80::2acf:daff:fedd:342a", TEST_PORT, addr6));
     ASSERT_EQ(0, uv_ip6_name(addr6, dst, INET6_ADDRSTRLEN));
     ASSERT_EQ(0, strcmp("fe80::2acf:daff:fedd:342a", dst));
-    
+
     ASSERT_EQ(0, uv_ip_name(addr, dst, INET6_ADDRSTRLEN));
     ASSERT_EQ(0, strcmp("fe80::2acf:daff:fedd:342a", dst));
 

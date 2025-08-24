@@ -109,8 +109,10 @@ generate_report <- function(model_stats,
         ggsave(
           filename = file.path(output_dir, paste0(var, "_timeseries.png")),
           plot = p,
+          device = ragg::agg_png,
           width = 10,
-          height = 6
+          height = 6,
+          dpi = 300
         )
       }
     }

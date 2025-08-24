@@ -34,26 +34,26 @@ app_handle <- startServer("0.0.0.0", app_port,
         return(NULL)
       }
     },
-    call = function(req) {      
+    call = function(req) {
       if (req$PATH_INFO %in% c("/", "/sync")) {
         return(content)
 
       } else if (req$PATH_INFO == "/body-error") {
         return(content)
 
-        
+
       } else if (req$PATH_INFO == "/sync-delay") {
         Sys.sleep(5)
         return(content)
 
       } else if (req$PATH_INFO == "/sync-error") {
         stop("Error in app (sync)")
-        
+
       } else if (req$PATH_INFO == "/async") {
         promise(function(resolve, reject) {
           resolve(content)
         })
-        
+
       } else if (req$PATH_INFO == "/async-delay") {
         promise(function(resolve, reject) {
           Sys.sleep(5)

@@ -158,6 +158,7 @@ ggsave(
       ".png"
     )
   ),
+  device = ragg::agg_png,
   width = 10, height = 10, units = "in", dpi = 300
 )
 ```
@@ -195,6 +196,7 @@ ggsave(
       ".png"
     )
   ),
+  device = ragg::agg_png,
   width = 10, height = 10, units = "in", dpi = 300
 )
 ```
@@ -232,6 +234,7 @@ ggsave(
       ".png"
     )
   ),
+  device = ragg::agg_png,
   width = 10, height = 10, units = "in", dpi = 300
 )
 
@@ -380,6 +383,7 @@ ggsave(
       ".png"
     )
   ),
+  device = ragg::agg_png,
   width = 10, height = 10, units = "in", dpi = 300
 )
 ```

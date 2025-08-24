@@ -50,40 +50,43 @@ load_config <- function(config_path = "config") {
 #' @importFrom stats rnorm
 #' @export
 get_params <- function(config, analysis_type = "live") {
+  params <- list()
+
   if (analysis_type == "live") {
-    # Recursively traverse the list and extract the value of a key named 'live' or 'value'
-    purrr::map_if(config, is.list, function(x) {
-      if (any(c("costs", "utilities", "hr") %in% names(x))) {
-        return(x)
-      }
-      if ("live" %in% names(x)) {
-        x$live
-      } else if ("value" %in% names(x)) {
-        x$value
-      } else {
-        get_params(x, analysis_type)
-      }
-    })
+    # Extract the 'live' value from each parameter
+    params <- purrr::map_depth(config, 2, ~ .x$live)
   } else if (analysis_type == "psa") {
-    # Recursively sample from the specified distribution for each parameter
-    purrr::map_if(config, is.list, function(x) {
-      if (any(c("costs", "utilities", "hr") %in% names(x))) {
-        return(x)
-      }
-      if (all(c("live", "distribution", "std_error") %in% names(x))) {
-        if (x$distribution == "normal") {
-          rnorm(1, mean = x$live, sd = x$std_error)
-        } else {
-          # Return the live value if the distribution is not supported
-          x$live
-        }
-      } else if ("value" %in% names(x)) {
-        x$value
+    # Sample from the specified distribution for each parameter
+    params <- purrr::map_depth(config, 2, ~ {
+      if ("distribution" %in% names(.x) && .x$distribution == "normal") {
+        rnorm(1, mean = .x$live, sd = .x$std_error)
       } else {
-        get_params(x, analysis_type)
+        .x$live
       }
     })
   } else {
     stop("Invalid analysis type specified.")
   }
+
+  # Specific logic to correctly structure the revision model coefficients
+  if (!is.null(params$revision_model)) {
+    rev_coeffs <- params$revision_model
+    params$revision_model <- list(
+      linear_predictor = list(
+        age = rev_coeffs$age,
+        female = rev_coeffs$female,
+        bmi = rev_coeffs$bmi,
+        public = rev_coeffs$public
+      ),
+      early_hazard = list(
+        intercept = rev_coeffs$early_intercept
+      ),
+      late_hazard = list(
+        intercept = rev_coeffs$late_intercept,
+        log_time = rev_coeffs$log_time
+      )
+    )
+  }
+
+  return(params)
 }

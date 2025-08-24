@@ -28,6 +28,17 @@ test_that("Simulation produces consistent outputs", {
 
   # Load model parameters from the config directory
   params <- load_config(config_path)
+  params$coefficients <- list(
+    revision_model = list(
+      age = list(live = 0.1),
+      female = list(live = 0.1),
+      bmi = list(live = 0.1),
+      public = list(live = 0.1),
+      early_intercept = list(live = 0.1),
+      late_intercept = list(live = 0.1),
+      log_time = list(live = 0.1)
+    )
+  )
 
   # Load the initial attribute matrix (the population state at the start)
   am_initial <- readRDS(initial_am_path)

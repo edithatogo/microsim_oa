@@ -83,7 +83,7 @@ static void read_speeds(unsigned int numcpus, uv_cpu_info_t* ci);
 static uint64_t read_cpufreq(unsigned int cpunum);
 
 int uv__platform_loop_init(uv_loop_t* loop) {
-  
+
   loop->inotify_fd = -1;
   loop->inotify_watchers = NULL;
 
@@ -243,7 +243,7 @@ int uv_uptime(double* uptime) {
   int r;
 
   /* Try /proc/uptime first, then fallback to clock_gettime(). */
-  
+
   if (0 == uv__slurp("/proc/uptime", buf, sizeof(buf)))
     if (1 == sscanf(buf, "%lf", uptime))
       return 0;

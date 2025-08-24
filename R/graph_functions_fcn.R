@@ -109,9 +109,10 @@ f_plot_trend_age_sex <-
 #' @param data A data.frame containing the data to plot.
 #' @param variable The variable (unquoted) to be plotted on the y-axis.
 #' @param yearv The specific year to filter the data by.
+#' @param colors A vector of color values to use for the plot.
 #' @return A ggplot object.
 #' @export
-f_plot_distribution <- function(data, variable, yearv) {
+f_plot_distribution <- function(data, variable, yearv, colors) {
   # Filter data for the selected year
   filtered_data <- data %>%
     filter(.data$year %in% c(yearv) & .data$dead == 0) %>%
@@ -125,7 +126,7 @@ f_plot_distribution <- function(data, variable, yearv) {
     aes(x = .data$age_group, y = .data$mean_value, fill = .data$sex)
   ) +
     geom_bar(stat = "identity", position = "dodge", width = 0.5) +
-    scale_fill_manual(values = .data$colors) +
+    scale_fill_manual(values = colors) +
     labs(x = "Age group", y = paste0(variable, " (%)"), fill = "") +
     scale_y_continuous(limits = c(0, max(filtered_data$mean_value))) +
     facet_wrap(~ .data$year, ncol = 2) +

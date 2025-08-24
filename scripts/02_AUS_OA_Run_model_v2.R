@@ -128,11 +128,11 @@ run_simulation <- function(simulation_config, model_coefficients,
   am_new <- am
 
   num_years <- sim_params$length_years
-  
+
   # Pre-allocate am_all
   am_all <- vector("list", num_years + 1)
   am_all[[1]] <- am
-  
+
   # Add a progress bar
   pb <- txtProgressBar(min = 0, max = num_years, style = 3)
 
@@ -169,9 +169,9 @@ run_simulation <- function(simulation_config, model_coefficients,
     am_all[[i]] <- am_new
     am_curr <- am_new
   }
-  
+
   close(pb)
-  
+
   am_all <- do.call(rbind, am_all)
 
   # --- 8. Post-processing ---

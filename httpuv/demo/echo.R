@@ -7,7 +7,7 @@ app <- list(
                   "ws://",
                   ifelse(is.null(req$HTTP_HOST), req$SERVER_NAME, req$HTTP_HOST),
                   '"')
-    
+
     list(
       status = 200L,
       headers = list(
@@ -57,5 +57,3 @@ app <- list(
 
 browseURL("http://localhost:9454/")
 runServer("0.0.0.0", 9454, app, 250)
-
-

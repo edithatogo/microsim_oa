@@ -581,7 +581,7 @@ libuv_la_OBJECTS = $(am_libuv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
-am__v_lt_1 = 
+am__v_lt_1 =
 libuv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libuv_la_CFLAGS) \
 	$(CFLAGS) $(libuv_la_LDFLAGS) $(LDFLAGS) -o $@
@@ -863,11 +863,11 @@ am__v_P_1 = :
 AM_V_GEN = $(am__v_GEN_@AM_V@)
 am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
 am__v_GEN_0 = @echo "  GEN     " $@;
-am__v_GEN_1 = 
+am__v_GEN_1 =
 AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
-am__v_at_1 = 
+am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
@@ -1138,7 +1138,7 @@ LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
-am__v_CC_1 = 
+am__v_CC_1 =
 CCLD = $(CC)
 LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -1146,7 +1146,7 @@ LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
-am__v_CCLD_1 = 
+am__v_CCLD_1 =
 SOURCES = $(libuv_la_SOURCES) $(test_run_tests_SOURCES)
 DIST_SOURCES = $(am__libuv_la_SOURCES_DIST) \
 	$(am__test_run_tests_SOURCES_DIST)
@@ -1363,7 +1363,7 @@ uvinclude_HEADERS = include/uv/errno.h include/uv/threadpool.h \
 	$(am__append_36) $(am__append_39) $(am__append_42) \
 	$(am__append_44) $(am__append_50) $(am__append_53) \
 	$(am__append_56)
-CLEANFILES = 
+CLEANFILES =
 lib_LTLIBRARIES = libuv.la
 libuv_la_CFLAGS = @CFLAGS@ $(am__append_1) $(am__append_17) \
 	$(am__append_20) $(am__append_24) $(am__append_27) \
@@ -1766,7 +1766,7 @@ src/unix/libuv_la-os390.lo: src/unix/$(am__dirstamp) \
 src/unix/libuv_la-os390-syscalls.lo: src/unix/$(am__dirstamp) \
 	src/unix/$(DEPDIR)/$(am__dirstamp)
 
-libuv.la: $(libuv_la_OBJECTS) $(libuv_la_DEPENDENCIES) $(EXTRA_libuv_la_DEPENDENCIES) 
+libuv.la: $(libuv_la_OBJECTS) $(libuv_la_DEPENDENCIES) $(EXTRA_libuv_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(libuv_la_LINK) -rpath $(libdir) $(libuv_la_OBJECTS) $(libuv_la_LIBADD) $(LIBS)
 test/$(am__dirstamp):
 	@$(MKDIR_P) test

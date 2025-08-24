@@ -10,7 +10,7 @@ int main() {
 
     uv_tty_init(loop, &tty, STDOUT_FILENO, 0);
     uv_tty_set_mode(&tty, UV_TTY_MODE_NORMAL);
-    
+
     if (uv_guess_handle(1) == UV_TTY) {
         uv_write_t req;
         uv_buf_t buf;

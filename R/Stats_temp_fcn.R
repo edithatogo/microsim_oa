@@ -1,5 +1,5 @@
-#' Get Percentages and Frequencies of Binary Variables
-#'
+'Get Percentages and Frequencies of Binary Variables
+'
 #' Calculates the percentage and frequency of binary (0/1) variables for each
 #' level of specified grouping variables.
 #'
@@ -102,6 +102,8 @@ BMI_summary_data <- function(am_all) {
   # create a flag for overweight and obese, check defintion
   BMI_by_sex_and_year$overweight_obese <- ifelse(BMI_by_sex_and_year$bmi >= 25, TRUE, FALSE)
 
+  BMI_by_sex_and_year$sex <- gsub("\\\\[[0-9]+\\\\]", "", BMI_by_sex_and_year$sex)
+
   BMI_by_sex_and_year <- BMI_by_sex_and_year %>%
     group_by(year, age_cat, sex) %>%
     summarise(prop_overweight_obese = sum(overweight_obese) / n())
@@ -123,8 +125,8 @@ BMI_summary_data <- function(am_all) {
 
   BMI_by_sex_and_year$sex <- as.factor(BMI_by_sex_and_year$sex)
   BMI_by_sex_and_year$sex <- fct_recode(BMI_by_sex_and_year$sex,
-    "Male" = "[1] Male",
-    "Female" = "[2] Female"
+    "Male" = "Male",
+    "Female" = "Female"
   )
 
 
@@ -145,6 +147,7 @@ BMI_summary_data <- function(am_all) {
 #' @param current.mod.value A value used to create a unique filename for the saved plot.
 #' @return A ggplot object is printed to the console and a file is saved to disk.
 #' @import ggplot2
+#' @importFrom ragg agg_png
 #' @export
 BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
                              BMI_by_sex_and_year,
@@ -153,11 +156,11 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
   year <- prop_overweight_obese <- age_cat <- lower_CI <- upper_CI <- sex <- NULL
 
   # remove the lower age-brackets from the comparison data
-  percent_overweight_and_obesity_by_sex_joint <-
+  percent_overweight_and_obesity_by_sex_joint <- 
     percent_overweight_and_obesity_by_sex_joint[which(
       percent_overweight_and_obesity_by_sex_joint$age_cat != "18-24"
     ), ]
-  percent_overweight_and_obesity_by_sex_joint <-
+  percent_overweight_and_obesity_by_sex_joint <- 
     percent_overweight_and_obesity_by_sex_joint[which(
       percent_overweight_and_obesity_by_sex_joint$age_cat != "25-34"
     ), ]
@@ -165,7 +168,7 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
     as.factor(percent_overweight_and_obesity_by_sex_joint$age_cat)
 
   # remove any age brackets not represented in the BMI data
-  percent_overweight_and_obesity_by_sex_joint <-
+  percent_overweight_and_obesity_by_sex_joint <- 
     percent_overweight_and_obesity_by_sex_joint[which(
       percent_overweight_and_obesity_by_sex_joint$age_cat %in% BMI_by_sex_and_year$age_cat
     ), ]
@@ -192,17 +195,26 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
     aes(x = year, y = prop_overweight_obese, color = age_cat)
   )
 
-  print(p + geom_point() +
+  plot_object <- p + geom_point() +
     geom_errorbar(aes(ymin = lower_CI, ymax = upper_CI, color = age_cat, width = 0.2), alpha = 0.5) +
     geom_line(
       data = cycle.plotting.data[which(cycle.plotting.data$source == "Simulated"), ],
       aes(x = year, y = prop_overweight_obese * 100, color = age_cat, group = age_cat)
-    ) +
+    ) + 
     facet_wrap(age_cat ~ sex) +
     theme(legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1)) +
-    scale_x_continuous(breaks = seq(min(cycle.plotting.data$year), max(cycle.plotting.data$year), 2)))
+    scale_x_continuous(breaks = seq(min(cycle.plotting.data$year), max(cycle.plotting.data$year), 2))
 
-  ggsave(paste0("output_figures/BMI_validation_modval_", current.mod.value, ".png"))
+  print(plot_object)
+
+  ggsave(
+    filename = paste0("output_figures/BMI_validation_modval_", current.mod.value, ".png"),
+    plot = plot_object,
+    device = ragg::agg_png,
+    width = 10,
+    height = 8,
+    dpi = 300
+  )
 }
 
 #' Calculate RMSE for BMI Summary
@@ -246,11 +258,16 @@ BMI_summary_RMSE <- function(percent_overweight_and_obesity_by_sex_joint,
   # change name for consistency
   names(percent_overweight_and_obesity_by_sex_joint)[2] <- "prop_overweight_obese"
 
+  # Ensure columns match before rbind
+  percent_overweight_and_obesity_by_sex_joint$lower_CI <- NULL
+  percent_overweight_and_obesity_by_sex_joint$upper_CI <- NULL
+  common_cols <- intersect(names(cycle.assessment.data), names(percent_overweight_and_obesity_by_sex_joint))
+  cycle.assessment.data <- cycle.assessment.data[, common_cols]
+  percent_overweight_and_obesity_by_sex_joint <- percent_overweight_and_obesity_by_sex_joint[, common_cols]
+
+
   # merge observed and simulated data
   cycle.assessment.data <- rbind(cycle.assessment.data, percent_overweight_and_obesity_by_sex_joint)
-
-  cycle.assessment.data$upper_CI <- NULL
-  cycle.assessment.data$lower_CI <- NULL
 
   # get the % difference between the simulated and observed data
   cycle.assessment.data <- cycle.assessment.data %>%
@@ -282,20 +299,19 @@ BMI_summary_RMSE <- function(percent_overweight_and_obesity_by_sex_joint,
 #' @param am_all A data.frame representing the full simulation output.
 #' @return A data.frame with the summarised OA prevalence statistics.
 #' @importFrom dplyr filter select mutate group_by summarise bind_rows case_when
-#' @importFrom stringr str_replace
 #' @export
 OA_summary_fcn <- function(am_all) {
   # Declare variables to avoid R CMD check notes
   dead <- age <- year <- sex <- oa <- age_group <- percent <- NULL
 
-  Z <-
+  Z <- 
     am_all %>%
     filter(dead == 0 & age > 34) %>%
     select(year, sex, starts_with("age"), oa) %>%
     # The age cat groups do not match with the validation data
     # so we need to re-calculate the age groups
     mutate(
-      age_group =
+      age_group = 
         case_when(
           age > 34 & age <= 44 ~ "35-44",
           age > 44 & age <= 54 ~ "45-54",
@@ -303,12 +319,14 @@ OA_summary_fcn <- function(am_all) {
           age > 64 & age <= 74 ~ "65-74",
           age > 74 ~ "75+"
         ),
-      sex = str_replace(sex, "\\[\\d+\\] ", ""),
+      sex = gsub("\\\\[[0-9]+\\\\]", "", sex)
+    ) %>%
+    mutate(
       sex = ifelse(sex == "Female", "Females", "Males")
     ) %>%
     select(sex, year, age, age_group, oa)
 
-  ZZ <-
+  ZZ <- 
     bind_rows(
       ### Percent by age and sex
       Z %>%

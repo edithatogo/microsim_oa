@@ -4,7 +4,7 @@
 \alias{f_plot_distribution}
 \title{Plot Distribution by Age and Sex for a Given Year}
 \usage{
-f_plot_distribution(data, variable, yearv)
+f_plot_distribution(data, variable, yearv, colors)
 }
 \arguments{
 \item{data}{A data.frame containing the data to plot.}
@@ -12,6 +12,8 @@ f_plot_distribution(data, variable, yearv)
 \item{variable}{The variable (unquoted) to be plotted on the y-axis.}
 
 \item{yearv}{The specific year to filter the data by.}
+
+\item{colors}{A vector of color values to use for the plot.}
 }
 \value{
 A ggplot object.

@@ -121,6 +121,7 @@ ggsave(
     folder,
     paste0(fig_name, ".png")
   ),
+  device = ragg::agg_png,
   width = 10, height = 10, units = "in", dpi = 300
 )
 
@@ -168,6 +169,7 @@ ggsave(
     folder,
     paste0(fig_name, ".png")
   ),
+  device = ragg::agg_png,
   width = 10, height = 10, units = "in", dpi = 300
 )
 
@@ -215,6 +217,7 @@ ggsave(
     folder,
     paste0(fig_name, ".png")
   ),
+  device = ragg::agg_png,
   width = 10, height = 10, units = "in", dpi = 300
 )
 
@@ -264,6 +267,7 @@ ggsave(
     folder,
     paste0(fig_name, ".png")
   ),
+  device = ragg::agg_png,
   width = 10, height = 10, units = "in", dpi = 300
 )
 

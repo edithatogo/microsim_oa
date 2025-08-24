@@ -119,7 +119,7 @@ loop.
 Error handling
 --------------
 
-Initialization functions or synchronous functions which may fail return a negative number on error. Async functions that may fail will pass a status parameter to their callbacks. The error messages are defined as ``UV_E*`` `constants`_. 
+Initialization functions or synchronous functions which may fail return a negative number on error. Async functions that may fail will pass a status parameter to their callbacks. The error messages are defined as ``UV_E*`` `constants`_.
 
 .. _constants: http://docs.libuv.org/en/v1.x/errors.html#error-constants
 
@@ -134,7 +134,7 @@ Handles and Requests
 libuv works by the user expressing interest in particular events. This is
 usually done by creating a **handle** to an I/O device, timer or process.
 Handles are opaque structs named as ``uv_TYPE_t`` where type signifies what the
-handle is used for. 
+handle is used for.
 
 .. rubric:: libuv watchers
 .. code-block:: c

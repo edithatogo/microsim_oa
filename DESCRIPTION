@@ -21,7 +21,8 @@ Imports:
     rlang,
     scales,
     magrittr,
-    readr
+    readr,
+    ragg
 Suggests:
     testthat (>= 3.0.0),
     arrow,

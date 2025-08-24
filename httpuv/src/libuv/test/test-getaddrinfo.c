@@ -86,7 +86,7 @@ TEST_IMPL(getaddrinfo_fail) {
 #if defined(__QEMU__)
   RETURN_SKIP("Test does not currently work in QEMU");
 #endif
-  
+
   uv_getaddrinfo_t req;
 
   ASSERT(UV_EINVAL == uv_getaddrinfo(uv_default_loop(),
@@ -183,7 +183,7 @@ TEST_IMPL(getaddrinfo_concurrent) {
 #if defined(__QEMU__)
   RETURN_SKIP("Test does not currently work in QEMU");
 #endif
-  
+
   int i, r;
   int* data;
 

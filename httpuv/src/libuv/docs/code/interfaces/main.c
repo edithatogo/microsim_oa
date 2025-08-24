@@ -15,7 +15,7 @@ int main() {
 
         printf("Name: %s\n", interface.name);
         printf("Internal? %s\n", interface.is_internal ? "Yes" : "No");
-        
+
         if (interface.address.address4.sin_family == AF_INET) {
             uv_ip4_name(&interface.address.address4, buf, sizeof(buf));
             printf("IPv4 address: %s\n", buf);
