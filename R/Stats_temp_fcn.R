@@ -102,7 +102,11 @@ BMI_summary_data <- function(am_all) {
   # create a flag for overweight and obese, check defintion
   BMI_by_sex_and_year$overweight_obese <- ifelse(BMI_by_sex_and_year$bmi >= 25, TRUE, FALSE)
 
-  BMI_by_sex_and_year$sex <- gsub("\\\\[[0-9]+\\\\]", "", BMI_by_sex_and_year$sex)
+  # Clean sex labels of forms like "[1] Male" -> "Male"
+  BMI_by_sex_and_year$sex <-
+    stringr::str_squish(
+      stringr::str_remove_all(BMI_by_sex_and_year$sex, "\\[[0-9]+\\]")
+    )
 
   BMI_by_sex_and_year <- BMI_by_sex_and_year %>%
     group_by(year, age_cat, sex) %>%
@@ -156,11 +160,11 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
   year <- prop_overweight_obese <- age_cat <- lower_CI <- upper_CI <- sex <- NULL
 
   # remove the lower age-brackets from the comparison data
-  percent_overweight_and_obesity_by_sex_joint <- 
+  percent_overweight_and_obesity_by_sex_joint <-
     percent_overweight_and_obesity_by_sex_joint[which(
       percent_overweight_and_obesity_by_sex_joint$age_cat != "18-24"
     ), ]
-  percent_overweight_and_obesity_by_sex_joint <- 
+  percent_overweight_and_obesity_by_sex_joint <-
     percent_overweight_and_obesity_by_sex_joint[which(
       percent_overweight_and_obesity_by_sex_joint$age_cat != "25-34"
     ), ]
@@ -168,7 +172,7 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
     as.factor(percent_overweight_and_obesity_by_sex_joint$age_cat)
 
   # remove any age brackets not represented in the BMI data
-  percent_overweight_and_obesity_by_sex_joint <- 
+  percent_overweight_and_obesity_by_sex_joint <-
     percent_overweight_and_obesity_by_sex_joint[which(
       percent_overweight_and_obesity_by_sex_joint$age_cat %in% BMI_by_sex_and_year$age_cat
     ), ]
@@ -200,7 +204,7 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
     geom_line(
       data = cycle.plotting.data[which(cycle.plotting.data$source == "Simulated"), ],
       aes(x = year, y = prop_overweight_obese * 100, color = age_cat, group = age_cat)
-    ) + 
+  ) +
     facet_wrap(age_cat ~ sex) +
     theme(legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1)) +
     scale_x_continuous(breaks = seq(min(cycle.plotting.data$year), max(cycle.plotting.data$year), 2))
@@ -304,14 +308,14 @@ OA_summary_fcn <- function(am_all) {
   # Declare variables to avoid R CMD check notes
   dead <- age <- year <- sex <- oa <- age_group <- percent <- NULL
 
-  Z <- 
+  Z <-
     am_all %>%
     filter(dead == 0 & age > 34) %>%
     select(year, sex, starts_with("age"), oa) %>%
     # The age cat groups do not match with the validation data
     # so we need to re-calculate the age groups
     mutate(
-      age_group = 
+  age_group =
         case_when(
           age > 34 & age <= 44 ~ "35-44",
           age > 44 & age <= 54 ~ "45-54",
@@ -319,14 +323,14 @@ OA_summary_fcn <- function(am_all) {
           age > 64 & age <= 74 ~ "65-74",
           age > 74 ~ "75+"
         ),
-      sex = gsub("\\\\[[0-9]+\\\\]", "", sex)
+  sex = stringr::str_squish(stringr::str_remove_all(sex, "\\[[0-9]+\\]"))
     ) %>%
     mutate(
       sex = ifelse(sex == "Female", "Females", "Males")
     ) %>%
     select(sex, year, age, age_group, oa)
 
-  ZZ <- 
+  ZZ <-
     bind_rows(
       ### Percent by age and sex
       Z %>%
@@ -356,4 +360,6 @@ OA_summary_fcn <- function(am_all) {
         mutate(age_group = "All ages", sex = "All")
     ) %>%
     mutate(Source = "Model")
+
+  return(ZZ)
 }

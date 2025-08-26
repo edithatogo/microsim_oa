@@ -31,3 +31,6 @@
 ^manuscripts$
 ^notes$
 ^project_management$
+^\.vscode$
+^\.env\.example$
+^test_regex\.R$

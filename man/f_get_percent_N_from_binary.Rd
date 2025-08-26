@@ -2,7 +2,8 @@
 % Please edit documentation in R/Stats_temp_fcn.R
 \name{f_get_percent_N_from_binary}
 \alias{f_get_percent_N_from_binary}
-\title{Get Percentages and Frequencies of Binary Variables}
+\title{Calculates the percentage and frequency of binary (0/1) variables for each
+level of specified grouping variables.}
 \usage{
 f_get_percent_N_from_binary(df, group_vars)
 }

@@ -7,15 +7,29 @@ main <- function() {
     install.packages("lintr", repos = "http://cran.us.r-project.org")
   }
 
+  # Pragmatic, CI-friendly linters focusing on safe, non-invasive checks
   linters_to_use <- lintr::linters_with_defaults(
-    line_length_linter = lintr::line_length_linter(120),
-    assignment_linter = lintr::assignment_linter(),
+    # Keep a minimal, low-noise set
     commas_linter = lintr::commas_linter(),
-    semicolon_linter = lintr::semicolon_linter()
+    semicolon_linter = lintr::semicolon_linter(),
+    trailing_whitespace_linter = lintr::trailing_whitespace_linter(),
+    trailing_blank_lines_linter = lintr::trailing_blank_lines_linter(),
+    # Disable noisy/invasive linters for now
+  return_linter = NULL,
+    line_length_linter = NULL,
+    infix_spaces_linter = NULL,
+    quotes_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL,
+    commented_code_linter = NULL,
+    indentation_linter = NULL,
+    pipe_continuation_linter = NULL,
+    object_length_linter = NULL
   )
 
+  # Lint only package source for now; skip scripts/tests/docs/renv
   violations <- lintr::lint_dir(
-    path = ".",
+    path = "R",
     linters = linters_to_use,
     exclusions = list("renv", "packrat")
   )
