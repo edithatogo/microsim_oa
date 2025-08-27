@@ -215,8 +215,10 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # Defensive check: If the calculation results in a zero-length or non-numeric vector
   # (e.g., due to missing coefficients or filtered data), default to 1.0 (no effect).
   if (length(hr_mort_calc) == 0) {
-    am_curr$hr_mort <- 1.0
-    warning("Calculated 'hr_mort' was zero-length. Defaulting to 1.0. Check input data and coefficients.")
+    am_curr$hr_mort <- rep(1.0, nrow(am_curr))
+    if (isTRUE(getOption("ausoa.warn_zero_length_hr_mort", FALSE))) {
+      warning("Calculated 'hr_mort' was zero-length. Defaulted to 1.0. Check input data and coefficients.")
+    }
   } else {
     am_curr$hr_mort <- hr_mort_calc
   }
