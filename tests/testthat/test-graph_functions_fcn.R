@@ -30,7 +30,7 @@ test_that("f_plot_trend_overall returns a ggplot object", {
     x_label = "Year",
     y_label = "Some Value"
   )
-  expect_true(is.ggplot(p))
+  expect_s3_class(p, "ggplot")
 })
 
 # --- Tests for f_plot_trend_age_sex ---
@@ -47,7 +47,7 @@ test_that("f_plot_trend_age_sex returns a ggplot object", {
     x_label = "Year",
     y_label = "Some Value"
   )
-  expect_true(is.ggplot(p))
+  expect_s3_class(p, "ggplot")
 })
 
 # --- Tests for f_plot_distribution ---
@@ -60,5 +60,5 @@ test_that("f_plot_distribution returns a ggplot object", {
     yearv = 2022,
     colors = c("male" = "blue", "female" = "red")
   )
-  expect_true(is.ggplot(p))
+  expect_s3_class(p, "ggplot")
 })

@@ -116,7 +116,7 @@ f_plot_distribution <- function(data, variable, yearv, colors) {
   # Filter data for the selected year
   filtered_data <- data %>%
     filter(.data$year %in% c(yearv) & .data$dead == 0) %>%
-    select(.data$year, {{ variable }}, .data$age_group, .data$sex) %>%
+    select(all_of(c("year", "age_group", "sex")), {{ variable }}) %>%
     group_by(.data$year, .data$sex, .data$age_group) %>%
     summarise(mean_value = mean(!!sym(variable)) * 100, .groups = "drop")
 
