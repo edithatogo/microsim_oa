@@ -32,11 +32,11 @@ f_plot_trend_overall <- function(data,
                                  y_label) {
   ggplot(
     data,
-    aes_string(
-      x = x_var,
-      y = y_var,
-      shape = shape_var,
-      color = color_var
+    aes(
+      x = .data[[x_var]],
+      y = .data[[y_var]],
+      shape = .data[[shape_var]],
+      color = .data[[color_var]]
     )
   ) +
     geom_point(size = 3) +
@@ -80,7 +80,7 @@ f_plot_trend_age_sex <-
            colors,
            x_label,
            y_label) {
-    ggplot(data, aes_string(x = x_var, y = y_var, color = color_var)) +
+  ggplot(data, aes(x = .data[[x_var]], y = .data[[y_var]], color = .data[[color_var]])) +
       geom_point(size = 2) +
       geom_line(linewidth = 0.8) +
       facet_wrap(as.formula(paste("~", age_group_var)), scales = "free_y") +
