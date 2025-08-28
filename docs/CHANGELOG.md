@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.0.0-dev (2025-08-28)
+
+### Changed
+- Plot helpers now use tidy-eval with `.data[[...]]` instead of deprecated `aes_string()`.
+- Tests assert ggplot objects via `expect_s3_class()`.
+- Linting narrowed to safe checks over `R/` and made CI-friendly.
+
+### Fixed
+- Silenced noisy regression warning by default for zero-length `hr_mort` fallback (opt-in with `options(ausoa.warn_zero_length_hr_mort = TRUE)`).
+- Resolved tidyselect deprecation warnings in `f_plot_distribution()`.
+
 ## v2.0.0-dev (2025-08-24)
 
 ### Added

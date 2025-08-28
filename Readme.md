@@ -90,6 +90,14 @@ This project uses a structured development approach:
 -   **Testing:** `testthat` is used for unit testing. You can run the tests using the `run_tests.R` script in the `scripts/` directory.
 -   **Style:** A consistent code style is encouraged.
 
+### Debugging options
+
+-   To surface a warning when a zero-length mortality hazard is encountered during a cycle (default is silent fallback to 1.0), set:
+    ```r
+    options(ausoa.warn_zero_length_hr_mort = TRUE)
+    ```
+    This can help diagnose missing coefficients or filtered data situations in custom runs.
+
 ## Citation
 
 If you use this model in your research, please cite it as follows:
