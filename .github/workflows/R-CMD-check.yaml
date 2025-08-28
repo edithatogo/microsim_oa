@@ -44,14 +44,9 @@ jobs:
         with:
           cache-version: 1
 
-      - name: Check style
+      - name: Lint (minimal, package sources only)
         run: |
-          styler::style_pkg(dry = "fail")
-        shell: Rscript {0}
-
-      - name: Lint package
-        run: |
-          lintr::lint_package()
+          source("run_lintr.R")
         shell: Rscript {0}
 
       - name: Run R CMD check
