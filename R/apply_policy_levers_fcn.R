@@ -72,7 +72,7 @@ apply_policy_levers <- function(params, policy_levers) {
          if (operation == "replace") {
             lst[[parent_name]] <- list() # Create it
          } else {
-            warning(paste("Target path '", paste(path, collapse="."), "' not found. Skipping '", operation, "' operation.", sep=""))
+            warning(paste("Target path '", paste(path, collapse = "."), "' not found. Skipping '", operation, "' operation.", sep = ""))
             return(lst)
          }
       }

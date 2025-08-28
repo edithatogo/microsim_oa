@@ -17,7 +17,7 @@ main <- function() {
     # Disable noisy/invasive linters for now
   return_linter = NULL,
     line_length_linter = NULL,
-    infix_spaces_linter = NULL,
+  infix_spaces_linter = lintr::infix_spaces_linter(),
     quotes_linter = NULL,
     object_name_linter = NULL,
     object_usage_linter = NULL,
