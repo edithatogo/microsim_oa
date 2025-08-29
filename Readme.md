@@ -6,6 +6,8 @@ AUS-OA is a dynamic discrete-time microsimulation model of osteoarthritis and it
 [![R-CMD-check](https://github.com/edithatogo/microsim_oa/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/edithatogo/microsim_oa/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/edithatogo/microsim_oa/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/edithatogo/microsim_oa/actions/workflows/pkgdown.yaml)
 
+**Live Site:** https://edithatogo.github.io/microsim_oa/
+
 ## Features
 
 This project has evolved significantly from its original version. Here's a summary of its current features:
