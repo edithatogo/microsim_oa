@@ -23,8 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: write
-      id-token: write
+  pages: write
+  id-token: write
     # Only restrict concurrency for non-PR jobs
     concurrency:
       group: pkgdown-${{ github.ref }}
@@ -42,12 +42,15 @@ jobs:
 
       - uses: r-lib/actions/setup-pkgdown@v2
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Build site
         run: pkgdown::build_site()
         shell: Rscript {0}
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs
 
@@ -64,4 +67,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+  uses: actions/deploy-pages@v4

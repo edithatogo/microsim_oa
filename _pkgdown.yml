@@ -1,0 +1,11 @@
+url: https://edithatogo.github.io/microsim_oa/
+template:
+  bootstrap: 5
+navbar:
+  structure:
+    left: [reference, articles, tutorials, news]
+    right: [search]
+  components:
+    news:
+      text: News
+      href: news/index.html
