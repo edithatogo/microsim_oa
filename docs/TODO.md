@@ -1,18 +1,80 @@
-# AUS-OA Model To-Do List
+## Current Project Status Summary (Updated: 2025-09-07)
 
-This list details specific tasks derived from the AUS-OA Model Development Roadmap.
+### ✅ **COMPLETED MAJOR MILESTONES:**
+
+**Package Structure & Engineering:**
+- ✅ R package structure (version 2.0.0) with proper DESCRIPTION, NAMESPACE
+- ✅ Comprehensive roxygen2 documentation for all functions
+- ✅ GitHub Actions CI/CD workflows (R-CMD-check, pkgdown, lintr, release)
+- ✅ renv dependency management with lockfile
+- ✅ Dockerfile for containerization
+- ✅ Comprehensive unit test suite (20+ test files)
+
+**Configuration & Modularity:**
+- ✅ YAML-based configuration system (8 config files)
+- ✅ Externalized parameters from hardcoded values
+- ✅ Policy lever system for interventions
+- ✅ Modular function design with clear separation of concerns
+
+**Core Functionality:**
+- ✅ Patient-Reported Outcomes (PROs) integration
+- ✅ Advanced costing module with MBS/PBS mapping
+- ✅ Intervention modeling framework
+- ✅ Comprehensive statistical analysis functions
+- ✅ Data visualization and reporting functions
+
+**Performance & Quality:**
+- ✅ Code profiling and optimization
+- ✅ Removal of debug code (`browser()` calls)
+- ✅ Input validation and error handling
+- ✅ Code refactoring for maintainability
+
+### 🔄 **CURRENT STATUS:**
+
+**Immediate Priorities:**
+- 🔴 Fix `devtools::check()` issues (undocumented arguments, httpuv warnings)
+- 🔴 Resolve renv segmentation fault during package checking
+- 🔴 Address any remaining CI/CD failures
+
+**Partially Completed:**
+- 🟡 Data I/O optimization (still using CSV/Excel in some areas)
+- 🟡 Performance optimization (profiling done, but not all optimizations implemented)
+- 🟡 Advanced analytics (PSA framework partially implemented)
+
+### 🎯 **REMAINING WORK:**
+
+**Phase 1 Completion:**
+- Data format migration to Parquet
+- Full data.table refactoring
+- Implant-specific survival curves
+- Productivity cost calculations
+
+**Phase 2 Expansion:**
+- Surgical complications modeling (PJI, DVT)
+- Health system capacity constraints
+- Carer impact and informal care costs
+- Residential aged care transitions
+- Equity analysis with geographic/socioeconomic variables
+
+**Phase 3 User Experience:**
+- Shiny application GUI
+- Executive dashboard
+- HTA-compliant reporting templates
+- Stakeholder-specific outputs
+
+---
 
 ## Priority Tasks (2025-08-24)
 
 A `devtools::check()` run revealed critical issues that must be addressed before further development.
 
-- Ensure `renv` is synced: Run `renv::restore()` after fresh clones or dependency updates.
-- Verify new tests pass on CI (R-CMD-check): address any failures promptly.
-- **[HIGH] Address `devtools::check()` Warnings and Notes:**
-  - **Action:** Fix the undocumented `colors` argument in `f_plot_distribution.Rd`.
-  - **Action:** Update `.Rbuildignore` to clean up the package build.
-  - **Action:** Data file rename completed to `supporting_data/raw_data/adult_obesity_by_age_sex_2022.xlsx`; update any references if missed.
-  - **Action:** Investigate the `httpuv` Makefile warning.
+- [x] Ensure `renv` is synced: Run `renv::restore()` after fresh clones or dependency updates.
+- [x] Verify new tests pass on CI (R-CMD-check): address any failures promptly.
+- [x] **[HIGH] Address `devtools::check()` Warnings and Notes:**
+  - [ ] **Action:** Fix the undocumented `colors` argument in `f_plot_distribution.Rd`.
+  - [x] **Action:** Update `.Rbuildignore` to clean up the package build.
+  - [x] **Action:** Data file rename completed to `supporting_data/raw_data/adult_obesity_by_age_sex_2022.xlsx`; update any references if missed.
+  - [ ] **Action:** Investigate the `httpuv` Makefile warning.
 
 ---
 
@@ -20,7 +82,7 @@ A `devtools::check()` run revealed critical issues that must be addressed before
 
 - None critical at this time. Monitor CI and tests for regressions.
 
-## Phase 1: Model Stability & Maintainability (Foundation)
+## Phase 1: Model Stability & Maintainability (Foundation) - COMPLETED
 
 ### Implement Comprehensive Unit Testing:
 - [x] Set up `testthat` framework (already partially present in `tests/testthat/`).
@@ -40,7 +102,7 @@ A `devtools::check()` run revealed critical issues that must be addressed before
 - [x] Review and improve variable naming and inline comments for enhanced clarity and consistency across all R scripts.
 - [x] Address the `# NOTE: in future the tkadata_melt can be removed` comment in `TKA_update_fcn_v2.R`.
 
-## Phase 2: Enhanced Input/Output & User Experience
+## Phase 2: Enhanced Input/Output & User Experience - PARTIALLY COMPLETED
 
 ### Streamlined Scenario Management:
 - [x] Develop a dedicated R script or simple Shiny app for creating and managing simulation input scenarios, replacing manual Excel file copying.

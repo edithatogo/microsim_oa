@@ -9,45 +9,45 @@ This roadmap outlines the strategic development plan for Version 3 of the AUS-OA
 
 ---
 
-## Phase 1: Completing the Core Engine & Expanding Scope
+## Phase 1: Completing the Core Engine & Expanding Scope - PARTIALLY COMPLETED
 
 **Objective:** Finalize the core V2 engine, incorporate more complex system interactions, and answer deeper policy questions.
 
 **Key Pillars:**
 
-*   **Pillar 1.1: Finalize Core Engine**
-    *   Transition all data I/O from CSV/Excel to the efficient Parquet format using the `arrow` package.
-    *   Finalize the granular costing module to map events to specific **MBS and PBS item numbers**, calculate patient out-of-pocket costs, and include methodologies for productivity and informal care costs. **Discounting will be an explicit feature.**
-    *   Fully integrate Patient-Reported Outcomes (PROs) as a primary driver of model progression.
+*   **Pillar 1.1: Finalize Core Engine - MOSTLY COMPLETED**
+    *   [ ] Transition all data I/O from CSV/Excel to the efficient Parquet format using the `arrow` package.
+    *   [x] Finalize the granular costing module to map events to specific **MBS and PBS item numbers**, calculate patient out-of-pocket costs, and include methodologies for productivity and informal care costs. **Discounting will be an explicit feature.**
+    *   [x] Fully integrate Patient-Reported Outcomes (PROs) as a primary driver of model progression.
 
-*   **Pillar 1.2: Deepening Clinical & System Realism**
-    *   Model key surgical complications (e.g., PJI, DVT).
-    *   **Health System Capacity Module:** Add the ability to model system capacity constraints and waiting list dynamics.
-    *   Differentiate between **public and private** care pathways and their associated costs and outcomes.
+*   **Pillar 1.2: Deepening Clinical & System Realism - PARTIALLY COMPLETED**
+    *   [ ] Model key surgical complications (e.g., PJI, DVT).
+    *   [ ] **Health System Capacity Module:** Add the ability to model system capacity constraints and waiting list dynamics.
+    *   [ ] Differentiate between **public and private** care pathways and their associated costs and outcomes.
 
-*   **Pillar 1.3: Broadening the Economic & Social Perspective**
-    *   Integrate the impact on carers (informal care costs, quality of life).
-    *   Model the link to the residential aged care system.
+*   **Pillar 1.3: Broadening the Economic & Social Perspective - NOT STARTED**
+    *   [ ] Integrate the impact on carers (informal care costs, quality of life).
+    *   [ ] Model the link to the residential aged care system.
     *   Analyze equity and access, using new geographic (remoteness) and socioeconomic variables in the synthetic population.
 
-*   **Pillar 1.4: Advanced Analytics & Validation**
-    *   Implement a comprehensive framework for Probabilistic Sensitivity Analysis (PSA), **with standard outputs like Cost-Effectiveness Acceptability Curves (CEACs).**
-    *   Explore replacing a core statistical process with a Machine Learning model (e.g., GBM for progression), including Explainable AI (XAI) analysis.
-    *   **Performance Review & `Rcpp`:** Profile the new V2 engine and implement `Rcpp` for the top 1-2 bottlenecks if required.
-    *   **Data Portability Review:** Evaluate replacing internal `.rds` data files (e.g., in `inst/extdata`) with a more portable, version-agnostic format like `arrow` or `fst` to improve long-term stability and reproducibility across different R versions.
+*   **Pillar 1.4: Advanced Analytics & Validation - PARTIALLY COMPLETED**
+    *   [ ] Implement a comprehensive framework for Probabilistic Sensitivity Analysis (PSA), **with standard outputs like Cost-Effectiveness Acceptability Curves (CEACs).**
+    *   [ ] Explore replacing a core statistical process with a Machine Learning model (e.g., GBM for progression), including Explainable AI (XAI) analysis.
+    *   [x] **Performance Review & `Rcpp`:** Profile the new V2 engine and implement `Rcpp` for the top 1-2 bottlenecks if required.
+    *   [ ] **Data Portability Review:** Evaluate replacing internal `.rds` data files (e.g., in `inst/extdata`) with a more portable, version-agnostic format like `arrow` or `fst` to improve long-term stability and reproducibility across different R versions.
 
 ---
 
-## Phase 2: User Experience & Dissemination
+## Phase 2: User Experience & Dissemination - NOT STARTED
 
 **Objective:** Make the model's power accessible to different audiences and translate its findings into actionable insights.
 
 **Key Pillars:**
 
-*   **Pillar 2.1: Scenario & Results Management**
-    *   Develop a simple Shiny application to act as a graphical user interface (GUI) for setting up simulation scenarios and exploring high-level results.
-    *   Create a suite of standardized reporting functions to generate tables, figures, and reports.
-    *   **Develop a Standard Operating Procedure (SOP) for evaluating a new intervention.**
+*   **Pillar 2.1: Scenario & Results Management - PARTIALLY COMPLETED**
+    *   [ ] Develop a simple Shiny application to act as a graphical user interface (GUI) for setting up simulation scenarios and exploring high-level results.
+    *   [x] Create a suite of standardized reporting functions to generate tables, figures, and reports.
+    *   [ ] **Develop a Standard Operating Procedure (SOP) for evaluating a new intervention.**
 
 *   **Pillar 2.2: Stakeholder-Specific Outputs**
     *   Develop an "Executive Dashboard" output summarizing key findings for policymakers.
