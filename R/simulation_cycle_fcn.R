@@ -41,8 +41,8 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
 
   # am_new.bmi = am_curr.bmi + d_bmi;
-  # update BMI data using delta
-  am_new$bmi <- am_curr$bmi + am_curr$d_bmi
+  # update BMI data using delta - optimized with data.table
+  am_new[, bmi := am_curr$bmi + am_curr$d_bmi]
 
   # add impact of BMI delta to SF6D - This is now handled by calculate_qaly()
   # am_curr$d_sf6d <- am_curr$d_sf6d + (am_curr$d_bmi * live_coeffs$c14$c14_bmi)
@@ -50,19 +50,29 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## update personal charactistics (agecat, bmicat)
   # These need to be calculated on am_curr before being passed to OA and TKA functions
 
-  am_curr$age_cat <- cut(am_curr$age, breaks = age_edges, include.lowest = TRUE)
-  am_curr$age044 <- ifelse(am_curr$age_cat == levels(am_curr$age_cat)[1], 1, 0)
-  am_curr$age4554 <- ifelse(am_curr$age_cat == levels(am_curr$age_cat)[2], 1, 0)
-  am_curr$age5564 <- ifelse(am_curr$age_cat == levels(am_curr$age_cat)[3], 1, 0)
-  am_curr$age6574 <- ifelse(am_curr$age_cat == levels(am_curr$age_cat)[4], 1, 0)
-  am_curr$age75 <- ifelse(am_curr$age_cat == levels(am_curr$age_cat)[5], 1, 0)
+  # Convert to data.table for efficient operations
+  setDT(am_curr)
+  setDT(am_new)
 
-  am_curr$bmi_cat <- cut(am_curr$bmi, breaks = bmi_edges, include.lowest = TRUE)
-  am_curr$bmi024 <- ifelse(am_curr$bmi_cat == levels(am_curr$bmi_cat)[1], 1, 0)
-  am_curr$bmi2529 <- ifelse(am_curr$bmi_cat == levels(am_curr$bmi_cat)[2], 1, 0)
-  am_curr$bmi3034 <- ifelse(am_curr$bmi_cat == levels(am_curr$bmi_cat)[3], 1, 0)
-  am_curr$bmi3539 <- ifelse(am_curr$bmi_cat == levels(am_curr$bmi_cat)[4], 1, 0)
-  am_curr$bmi40 <- ifelse(am_curr$bmi_cat == levels(am_curr$bmi_cat)[5], 1, 0)
+  # Create age categories efficiently
+  am_curr[, age_cat := cut(age, breaks = age_edges, include.lowest = TRUE)]
+  am_curr[, `:=`(
+    age044 = as.integer(age_cat == levels(age_cat)[1]),
+    age4554 = as.integer(age_cat == levels(age_cat)[2]),
+    age5564 = as.integer(age_cat == levels(age_cat)[3]),
+    age6574 = as.integer(age_cat == levels(age_cat)[4]),
+    age75 = as.integer(age_cat == levels(age_cat)[5])
+  )]
+
+  # Create BMI categories efficiently
+  am_curr[, bmi_cat := cut(bmi, breaks = bmi_edges, include.lowest = TRUE)]
+  am_curr[, `:=`(
+    bmi024 = as.integer(bmi_cat == levels(bmi_cat)[1]),
+    bmi2529 = as.integer(bmi_cat == levels(bmi_cat)[2]),
+    bmi3034 = as.integer(bmi_cat == levels(bmi_cat)[3]),
+    bmi3539 = as.integer(bmi_cat == levels(bmi_cat)[4]),
+    bmi40 = as.integer(bmi_cat == levels(bmi_cat)[5])
+  )]
 
   ############################## update OA incidence
 
@@ -95,7 +105,8 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## update TKA status (TKA, complications, revision, inpatient rehab)
   # % TKA
 
-  TKA_update_data <- TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL)
+  TKA_update_data <- TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL,
+                                   implant_survival_data = NULL, default_implant_type = "standard")
 
   # extract data.tables from output list
   am_curr <- TKA_update_data[["am_curr"]]

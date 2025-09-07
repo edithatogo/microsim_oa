@@ -97,11 +97,47 @@ calculate_costs_fcn <- function(am_new, costs_config) {
   am_new[oa == 1 & dead == 0, cycle_cost_patient := cycle_cost_patient + patient_oa_cost]
 
   # 5. Societal Costs (Productivity and Informal Care)
-  prod_cost <- get_cost_sum(costs_config$costs$productivity_loss, "societal")
-  informal_care_cost <-
-    get_cost_sum(costs_config$costs$informal_care, "societal")
+  # Enhanced productivity cost calculation based on PROs and workforce status
+  am_new[, productivity_cost := 0]
 
-  am_new[oa == 1 & dead == 0, cycle_cost_societal := cycle_cost_societal + prod_cost + informal_care_cost]
+  # Calculate productivity costs for working-age individuals with OA
+  if ("pain" %in% names(am_new) && "function_score" %in% names(am_new)) {
+    # Assume working age is 18-65 for productivity calculations
+    working_age_indices <- which(am_new$age >= 18 & am_new$age <= 65 & am_new$oa == 1 & am_new$dead == 0)
+
+    if (length(working_age_indices) > 0) {
+      # Absenteeism: days off work based on pain and function scores
+      # Higher pain and lower function = more absenteeism
+      pain_factor <- am_new$pain[working_age_indices]
+      function_factor <- 1 - am_new$function_score[working_age_indices]  # invert so lower function = higher cost
+
+      # Normalize and combine factors (simplified model)
+      absenteeism_factor <- (pain_factor + function_factor) / 2
+
+      # Presenteeism: reduced productivity while at work
+      presenteeism_factor <- absenteeism_factor * 0.7  # Assume presenteeism is 70% of absenteeism impact
+
+      # Calculate annual productivity cost
+      # Assume average annual wage and working days
+      avg_annual_wage <- 50000  # This should come from config
+      working_days_per_year <- 220
+
+      annual_absenteeism_cost <- avg_annual_wage * (absenteeism_factor / working_days_per_year) * 5  # 5 days max absenteeism
+      annual_presenteeism_cost <- avg_annual_wage * presenteeism_factor * 0.3  # 30% productivity loss
+
+      am_new$productivity_cost[working_age_indices] <- annual_absenteeism_cost + annual_presenteeism_cost
+    }
+  }
+
+  # Fallback to simple productivity cost if PROs not available
+  if (all(am_new$productivity_cost == 0)) {
+    prod_cost <- get_cost_sum(costs_config$costs$productivity_loss, "societal")
+    am_new[oa == 1 & dead == 0, productivity_cost := prod_cost]
+  }
+
+  informal_care_cost <- get_cost_sum(costs_config$costs$informal_care, "societal")
+
+  am_new[, cycle_cost_societal := cycle_cost_societal + productivity_cost + informal_care_cost]
 
   # 6. TKA Complication Cost
   healthcare_complication_cost <-

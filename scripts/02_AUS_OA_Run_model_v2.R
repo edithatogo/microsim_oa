@@ -93,14 +93,8 @@ run_simulation <- function(simulation_config, model_coefficients,
 
   # --- 5. Prepare Other Inputs ---
   input_file <- here::here(simulation_config$paths$input_file)
-  lt <- read_excel(input_file,
-                   sheet = simulation_config$life_tables$sheet,
-                   range = simulation_config$life_tables$range
-  )
-  tka_time_trend <- read_excel(input_file,
-                               sheet = simulation_config$tka_utilisation$sheet,
-                               range = simulation_config$tka_utilisation$range
-  )
+  lt <- read_data(file.path(input_file, "Life tables 2013.parquet"))
+  tka_time_trend <- read_data(file.path(input_file, "TKA utilisation.parquet"))
 
   if (run_modes$calibration_mode) {
     eq_cust <- simulation_config$calibration

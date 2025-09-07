@@ -9,17 +9,29 @@
 #'   cycle.
 #' @param cycle.coefficents A list or data.frame of model coefficients.
 #' @param TKR_cust A data.frame with customisation factors for TKA coefficients.
-#' @param summary_TKR_observed_diff A data.frame containing the difference
-#'   between observed and expected TKA rates.
+#' @param implant_survival_data A data.frame containing implant-specific survival
+#'   curves with columns: implant_type, time_years, survival_probability
+#' @param default_implant_type The default implant type to use if not specified
 #'
 #' @return A list containing the updated attribute matrices and a summary of TKA
-#'   risk.
+#'   risk. The function now also models post-operative complications including
+#'   PJI (Periprosthetic Joint Infection) and DVT (Deep Vein Thrombosis) with
+#'   associated impacts on utility/QALY.
+#' @section TKA Complications:
+#' The function includes sophisticated modeling of post-operative complications:
+#' \itemize{
+#'   \item \strong{PJI (Periprosthetic Joint Infection)}: Risk factors include age, BMI, and comorbidities
+#'   \item \strong{DVT (Deep Vein Thrombosis)}: Risk factors include age and obesity
+#'   \item \strong{Utility Impacts}: Complications reduce SF-6D utility scores appropriately
+#'   \item \strong{Modular Design}: Complications are calculated using \code{\link{calculate_tka_complications}}
+#' }
 #' @importFrom dplyr group_by summarise left_join n
 #' @importFrom stats runif
 #' @importFrom readr read_csv
 #' @importFrom here here
 #' @export
-TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary_TKR_observed_diff) {
+TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary_TKR_observed_diff,
+                           implant_survival_data = NULL, default_implant_type = "standard") {
   # Appease R CMD check
   age_group <- sex_tka_adj <- age_group_tka_adj <- summ_tka_risk_count <- kl_score <- tkai_backup <- NULL
 
@@ -140,7 +152,6 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
   summary(am_curr$tkai_backup[which(am_curr$tkai_backup > 0)])
   summary(am_curr[which(am_curr$tkai == 1), c("age", "drugoa", "ccount", "mhc", "tka1", "tkai", "kl3", "kl4")])
 
-  # browser()
   # determine events based on TKA probability
   # Ensure tkai is not NA before the comparison
   am_curr$tkai[is.na(am_curr$tkai)] <- 0
@@ -149,6 +160,43 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
 
   # Ensure the final tkai column is not NA
   am_curr$tkai[is.na(am_curr$tkai)] <- 0
+
+  # --- Implant-Specific Survival Curves ---
+  # Assign implant types and calculate revision risk based on implant survival
+  if (!is.null(implant_survival_data) && sum(am_curr$tkai) > 0) {
+    # Assign implant types to new TKA recipients
+    tka_indices <- which(am_curr$tkai == 1)
+
+    # For now, assign default implant type, but this could be made more sophisticated
+    am_curr$implant_type <- default_implant_type
+    am_curr$implant_type[tka_indices] <- default_implant_type
+
+    # Calculate time since TKA for existing TKA patients
+    am_curr$time_since_tka <- 0
+    if ("agetka1" %in% names(am_curr) && "age" %in% names(am_curr)) {
+      am_curr$time_since_tka[!is.na(am_curr$agetka1)] <- am_curr$age[!is.na(am_curr$agetka1)] - am_curr$agetka1[!is.na(am_curr$agetka1)]
+    }
+
+    # Apply implant-specific revision risk
+    if (nrow(implant_survival_data) > 0) {
+      # This is a simplified implementation - in practice, you'd interpolate
+      # survival curves based on time since implantation
+      am_curr$implant_revision_risk <- 0
+
+      for (implant_type in unique(implant_survival_data$implant_type)) {
+        implant_data <- implant_survival_data[implant_survival_data$implant_type == implant_type, ]
+
+        # Simple lookup for current time period (this could be made more sophisticated)
+        current_survival <- implant_data$survival_probability[implant_data$time_years == 1]  # 1-year survival as example
+        if (length(current_survival) == 0) current_survival <- 0.95  # default
+
+        implant_indices <- which(am_curr$implant_type == implant_type & am_curr$tka1 == 1)
+        if (length(implant_indices) > 0) {
+          am_curr$implant_revision_risk[implant_indices] <- 1 - current_survival
+        }
+      }
+    }
+  }
 
   if (nrow(am_curr) > 0 && "tkai" %in% names(am_curr) && sum(am_curr$tkai, na.rm = TRUE) > 0) {
     # summary of annual risk, after adjustment
@@ -184,6 +232,10 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
   am_new$tka1 <- am_curr$tka1 + (am_curr$tkai * (1 - am_curr$tka1))
   # if a tka is recorded and there is a prior tka (ie am_curr$tka1 == 1), then record tka2
   am_new$tka2 <- am_curr$tka2 + (am_curr$tkai * am_curr$tka1)
+
+  # --- TKA Complications: PJI and DVT ---
+  # Use modular complication calculation function
+  am_new <- calculate_tka_complications(am_curr, am_new, cycle.coefficents)
 
   # this operates as a counter, effectively years since the TKA
   am_new$agetka1 <- am_curr$agetka1 + am_curr$tka1

@@ -22,10 +22,10 @@ Imports:
     scales,
     magrittr,
     readr,
-    ragg
+    ragg,
+    arrow
 Suggests:
     testthat (>= 3.0.0),
-    arrow,
     covr,
     pkgdown,
     lintr,
