@@ -341,3 +341,149 @@ coefficients:
       live: 0.5
     p_KL3init:
       live: 0.2
+
+  # PJI (Periprosthetic Joint Infection) Coefficients
+  pji_risk:
+    # Baseline intercept for PJI risk model
+    intercept:
+      live: -4.5  # Very low baseline risk
+      distribution: normal
+      std_error: 0.2
+
+    # Age coefficient (risk increases with age)
+    age_coeff:
+      live: 0.3
+      distribution: normal
+      std_error: 0.05
+
+    # BMI risk coefficient
+    bmi_coeff:
+      live: 0.4
+      distribution: normal
+      std_error: 0.08
+
+    # Diabetes coefficient (major risk factor)
+    diabetes_coeff:
+      live: 1.2
+      distribution: normal
+      std_error: 0.15
+
+    # Smoking coefficient
+    smoking_coeff:
+      live: 0.8
+      distribution: normal
+      std_error: 0.12
+
+    # Immunosuppression coefficient
+    immunosuppression_coeff:
+      live: 1.5
+      distribution: normal
+      std_error: 0.2
+
+    # Surgical complexity coefficient
+    surgical_complexity_coeff:
+      live: 0.6
+      distribution: normal
+      std_error: 0.1
+
+    # Previous infection coefficient
+    previous_infection_coeff:
+      live: 1.8
+      distribution: normal
+      std_error: 0.25
+
+  pji_treatment:
+    # Treatment success probabilities by infection timing
+    early_success_prob:
+      live: 0.85  # Early PJI: high success with DAIR
+      distribution: beta
+      alpha: 85
+      beta: 15
+
+    delayed_success_prob:
+      live: 0.75  # Delayed PJI: moderate success
+      distribution: beta
+      alpha: 75
+      beta: 25
+
+    late_success_prob:
+      live: 0.65  # Late PJI: lower success rate
+      distribution: beta
+      alpha: 65
+      beta: 35
+
+    chronic_success_prob:
+      live: 0.45  # Chronic PJI: challenging to treat
+      distribution: beta
+      alpha: 45
+      beta: 55
+
+    amputation_prob:
+      live: 0.05  # 5% of chronic cases may require amputation
+      distribution: beta
+      alpha: 5
+      beta: 95
+
+  pji_costs:
+    # Treatment costs by infection type (AUD)
+    early_treatment_cost:
+      live: 45000  # DAIR procedure + antibiotics
+      distribution: gamma
+      shape: 4.5
+      scale: 10000
+
+    delayed_treatment_cost:
+      live: 65000  # Two-stage revision
+      distribution: gamma
+      shape: 6.5
+      scale: 10000
+
+    late_treatment_cost:
+      live: 75000  # Complex revision surgery
+      distribution: gamma
+      shape: 7.5
+      scale: 10000
+
+    chronic_treatment_cost:
+      live: 95000  # Prolonged treatment, multiple surgeries
+      distribution: gamma
+      shape: 9.5
+      scale: 10000
+
+    amputation_cost:
+      live: 120000  # Amputation and rehabilitation
+      distribution: gamma
+      shape: 12
+      scale: 10000
+
+  pji_qaly:
+    # QALY decrements by infection type (annual)
+    early_qaly_decrement:
+      live: 0.25  # Significant but temporary impact
+      distribution: beta
+      alpha: 25
+      beta: 75
+
+    delayed_qaly_decrement:
+      live: 0.35  # Moderate ongoing impact
+      distribution: beta
+      alpha: 35
+      beta: 65
+
+    late_qaly_decrement:
+      live: 0.45  # Substantial impact
+      distribution: beta
+      alpha: 45
+      beta: 55
+
+    chronic_qaly_decrement:
+      live: 0.55  # Severe ongoing impact
+      distribution: beta
+      alpha: 55
+      beta: 45
+
+    amputation_qaly_decrement:
+      live: 0.75  # Major permanent disability
+      distribution: beta
+      alpha: 75
+      beta: 25

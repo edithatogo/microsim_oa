@@ -115,33 +115,22 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   summ_tka_risk <- TKA_update_data[["summ_tka_risk"]]
 
-  # % TKA complication
+  # % TKA complication - Advanced PJI Module Integration
+  # Replace basic complication modeling with advanced PJI module
+  source(here::here("R", "pji_integration.R"))
+  source(here::here("R", "pji_module.R"))
 
+  # Integrate PJI module with simulation cycle
+  pji_integration_result <- integrate_pji_module(am_curr, am_new, live_coeffs)
 
-  # % TKA complication
-  compi_prob <- live_coeffs$c16$c16_cons +
-    live_coeffs$c16$c16_male * am_curr$male +
-    live_coeffs$c16$c16_ccount * am_curr$ccount +
-    live_coeffs$c16$c16_bmi3 * am_curr$bmi3539 +
-    live_coeffs$c16$c16_bmi4 * am_curr$bmi40 +
-    live_coeffs$c16$c16_mhc * am_curr$mhc +
-    live_coeffs$c16$c16_age3 * am_curr$age5564 +
-    live_coeffs$c16$c16_age4 * am_curr$age6574 +
-    live_coeffs$c16$c16_age5 * am_curr$age75 +
-    live_coeffs$c16$c16_sf6d * am_curr$sf6d +
-    live_coeffs$c16$c16_kl3 * am_curr$kl3 +
-    live_coeffs$c16$c16_kl4 * am_curr$kl4
+  # Extract updated matrices and PJI summary
+  am_curr <- pji_integration_result$am_curr
+  am_new <- pji_integration_result$am_new
+  pji_summary <- pji_integration_result$pji_summary
 
-  compi_prob <- exp(compi_prob)
-  compi_prob <- compi_prob / (1 + compi_prob)
-  compi_prob <- compi_prob * am_new$tka # % only have complication if have TKA
-  compi_prob <- (1 - am_curr$dead) * compi_prob # ; % only alive have complication
-
-  compi_rand <- runif(nrow(am_curr), 0, 1)
-  am_curr$compi <- ifelse(compi_prob > compi_rand, 1, 0)
-
-
-  am_new$comp <- am_curr$compi
+  # Keep backward compatibility with existing comp variable
+  # PJI cases are now represented in the comp variable
+  am_curr$compi <- am_new$comp
 
 
   # % TKA inpatient rehabiliation
@@ -262,7 +251,8 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   export_data <- list(
     am_curr = am_curr,
     am_new = am_new,
-    summ_tka_risk = summ_tka_risk
+    summ_tka_risk = summ_tka_risk,
+    pji_summary = pji_summary
   )
 
   return(export_data)
