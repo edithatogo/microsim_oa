@@ -132,6 +132,18 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # PJI cases are now represented in the comp variable
   am_curr$compi <- am_new$comp
 
+  # % TKA DVT complication - Advanced DVT Module Integration
+  # Integrate DVT module with simulation cycle
+  source(here::here("R", "dvt_integration.R"))
+  source(here::here("R", "dvt_module.R"))
+
+  # Integrate DVT module with simulation cycle
+  dvt_integration_result <- integrate_dvt_module(am_curr, am_new, live_coeffs)
+
+  # Extract updated matrices and DVT summary
+  am_curr <- dvt_integration_result$am_curr
+  am_new <- dvt_integration_result$am_new
+  dvt_summary <- dvt_integration_result$dvt_summary
 
   # % TKA inpatient rehabiliation
 
@@ -252,7 +264,8 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
     am_curr = am_curr,
     am_new = am_new,
     summ_tka_risk = summ_tka_risk,
-    pji_summary = pji_summary
+    pji_summary = pji_summary,
+    dvt_summary = dvt_summary
   )
 
   return(export_data)

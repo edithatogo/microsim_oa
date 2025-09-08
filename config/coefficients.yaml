@@ -487,3 +487,160 @@ coefficients:
       distribution: beta
       alpha: 75
       beta: 25
+
+# DVT (Deep Vein Thrombosis) Coefficients
+dvt_risk:
+  # Baseline intercept for DVT risk model (post-TKA)
+  intercept:
+    live: -2.5  # Base risk ~8% without prophylaxis
+    distribution: normal
+    mean: -2.5
+    sd: 0.2
+
+  # Age coefficient (per 10 years above 60)
+  age_coeff:
+    live: 0.3
+    distribution: normal
+    mean: 0.3
+    sd: 0.05
+
+  # BMI risk coefficients
+  bmi30_coeff:
+    live: 0.4  # BMI 30-34.9
+    distribution: normal
+    mean: 0.4
+    sd: 0.08
+  bmi35_coeff:
+    live: 0.7  # BMI 35-39.9
+    distribution: normal
+    mean: 0.7
+    sd: 0.1
+  bmi40_coeff:
+    live: 1.2  # BMI ≥40
+    distribution: normal
+    mean: 1.2
+    sd: 0.15
+
+  # Sex coefficient (male vs female)
+  male_coeff:
+    live: 0.2
+    distribution: normal
+    mean: 0.2
+    sd: 0.05
+
+  # Comorbidity coefficient (per comorbidity)
+  comorbidity_coeff:
+    live: 0.15
+    distribution: normal
+    mean: 0.15
+    sd: 0.03
+
+  # Previous VTE coefficient
+  prev_vte_coeff:
+    live: 1.5
+    distribution: normal
+    mean: 1.5
+    sd: 0.2
+
+  # Cancer coefficient
+  cancer_coeff:
+    live: 0.8
+    distribution: normal
+    mean: 0.8
+    sd: 0.1
+
+  # Prophylaxis effectiveness (relative risk reduction)
+  mechanical_rr:
+    live: 0.6  # 40% risk reduction
+    distribution: beta
+    alpha: 60
+    beta: 40
+  pharma_rr:
+    live: 0.3  # 70% risk reduction
+    distribution: beta
+    alpha: 70
+    beta: 30
+  combined_rr:
+    live: 0.2  # 80% risk reduction
+    distribution: beta
+    alpha: 80
+    beta: 20
+
+  # PE progression probability (DVT progressing to PE)
+  pe_progression_prob:
+    live: 0.15  # 15% of DVT cases progress to PE
+    distribution: beta
+    alpha: 15
+    beta: 85
+
+dvt_treatment:
+  # DVT treatment success probability
+  dvt_treatment_success:
+    live: 0.92  # 92% success rate with anticoagulation
+    distribution: beta
+    alpha: 92
+    beta: 8
+
+  # PE treatment success probability
+  pe_treatment_success:
+    live: 0.88  # 88% success rate for PE treatment
+    distribution: beta
+    alpha: 88
+    beta: 12
+
+  # PE mortality probability (despite treatment)
+  pe_mortality_prob:
+    live: 0.03  # 3% mortality rate for treated PE
+    distribution: beta
+    alpha: 3
+    beta: 97
+
+dvt_costs:
+  # DVT treatment costs (Australian dollars)
+  dvt_acute_cost:
+    live: 8500  # Acute DVT diagnosis and treatment
+    distribution: gamma
+    shape: 8.5
+    scale: 1000
+  dvt_chronic_cost:
+    live: 3200  # Chronic DVT management (annual)
+    distribution: gamma
+    shape: 3.2
+    scale: 1000
+
+  # PE treatment costs
+  pe_acute_cost:
+    live: 18500  # Acute PE diagnosis and treatment
+    distribution: gamma
+    shape: 18.5
+    scale: 1000
+  pe_chronic_cost:
+    live: 5800  # Chronic PE management (annual)
+    distribution: gamma
+    shape: 5.8
+    scale: 1000
+
+dvt_qaly:
+  # QALY decrements for DVT states
+  dvt_acute_qaly:
+    live: 0.15  # Acute DVT impact (3-6 months)
+    distribution: beta
+    alpha: 15
+    beta: 85
+  dvt_chronic_qaly:
+    live: 0.08  # Chronic DVT impact (ongoing)
+    distribution: beta
+    alpha: 8
+    beta: 92
+
+  # QALY decrements for PE states
+  pe_acute_qaly:
+    live: 0.25  # Acute PE impact (significant)
+    distribution: beta
+    alpha: 25
+    beta: 75
+  pe_chronic_qaly:
+    live: 0.12  # Chronic PE impact (post-PE syndrome)
+    distribution: beta
+    alpha: 12
+    beta: 88

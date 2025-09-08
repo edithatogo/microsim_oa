@@ -7,7 +7,7 @@
 This document outlines the prioritized improvement plan for the AUS-OA microsimulation model, building upon the s## Current Status
 
 **Active Priority:** Priority 2 - Phase 2 Clinical Enhancements (CONTINUING)
-**Next Milestone:** Begin DVT module implementation
+**Next Milestone:** Begin Health System Capacity Module implementation
 **Estimated Completion:** 2025-09-16ful completion of Phase 1A. The plan is structured by priority levels with estimated timelines and concrete deliverables.
 
 ---
@@ -65,11 +65,14 @@ This document outlines the prioritized improvement plan for the AUS-OA microsimu
   - [x] Implement infection risk algorithms
   - [x] Add treatment cost calculations
   - [x] Integrate QALY impacts
-- [ ] **DVT (Deep Vein Thrombosis) Module**
-  - [ ] Model prophylaxis strategies
-  - [ ] Implement risk assessment algorithms
-  - [ ] Add complication costs and outcomes
-  - [ ] Validate against clinical literature
+- [x] **DVT (Deep Vein Thrombosis) Module**
+  - [x] Research clinical pathways and prophylaxis strategies
+  - [x] Implement risk assessment algorithms
+  - [x] Add complication costs and outcomes
+  - [x] Validate against clinical literature
+  - [x] Create comprehensive DVT module (dvt_module.R)
+  - [x] Add DVT coefficients to configuration
+  - [x] Integrate DVT module with main simulation
 - [ ] **Revision Surgery Cascade**
   - [ ] Model implant-specific failure rates
   - [ ] Implement revision pathways
