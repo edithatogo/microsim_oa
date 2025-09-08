@@ -9,7 +9,9 @@ TKA_update_fcn(
   am_new,
   cycle.coefficents,
   TKR_cust,
-  summary_TKR_observed_diff
+  summary_TKR_observed_diff,
+  implant_survival_data = NULL,
+  default_implant_type = "standard"
 )
 }
 \arguments{
@@ -23,8 +25,10 @@ cycle.}
 
 \item{TKR_cust}{A data.frame with customisation factors for TKA coefficients.}
 
-\item{summary_TKR_observed_diff}{A data.frame containing the difference
-between observed and expected TKA rates.}
+\item{implant_survival_data}{A data.frame containing implant-specific survival
+curves with columns: implant_type, time_years, survival_probability}
+
+\item{default_implant_type}{The default implant type to use if not specified}
 }
 \value{
 A list containing the updated attribute matrices and a summary of TKA

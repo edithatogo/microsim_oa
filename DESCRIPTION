@@ -22,6 +22,7 @@ Imports:
     scales,
     magrittr,
     readr,
+    readxl,
     ragg,
     arrow
 Suggests:

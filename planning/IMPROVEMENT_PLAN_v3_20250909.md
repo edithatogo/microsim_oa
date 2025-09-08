@@ -6,9 +6,9 @@
 
 This document outlines the prioritized improvement plan for the AUS-OA microsimulation model, building upon the s## Current Status
 
-**Active Priority:** Priority 1 - Environment & Infrastructure Fixes
-**Next Milestone:** Complete renv restoration and package validation
-**Estimated Completion:** 2025-09-11ful completion of Phase 1A. The plan is structured by priority levels with estimated timelines and concrete deliverables.
+**Active Priority:** Priority 2 - Phase 2 Clinical Enhancements (STARTING)
+**Next Milestone:** Begin advanced complication modeling
+**Estimated Completion:** 2025-09-16ful completion of Phase 1A. The plan is structured by priority levels with estimated timelines and concrete deliverables.
 
 ---
 
@@ -20,9 +20,9 @@ This document outlines the prioritized improvement plan for the AUS-OA microsimu
 
 - [x] **Restore renv environment** - Run `renv::restore()` to install all required packages
 - [x] **Verify package availability** - Check that critical packages (devtools, testthat, arrow) are installed
-- [ ] **Update renv.lock** - Ensure lockfile reflects current dependencies
-- [ ] **Test package loading** - Verify all imports work correctly
-- [ ] **Handle arrow package** - Resolve segfault issue during arrow installation (known issue on some systems)
+- [x] **Update renv.lock** - Ensure lockfile reflects current dependencies
+- [x] **Test package loading** - Verify all imports work correctly
+- [x] **Handle arrow package** - Resolve segfault issue during arrow installation (known issue on some systems)
 
 ### 1.2 Commit Pending Changes
 
@@ -35,8 +35,15 @@ This document outlines the prioritized improvement plan for the AUS-OA microsimu
 
 - [x] **Run package checks** - Execute `devtools::check()` to identify issues
 - [x] **Update documentation** - Run `devtools::document()` for roxygen2
-- [ ] **Fix any identified issues** - Address warnings/errors from checks
-- [ ] **Resolve environment issues** - Fix devtools running in system R vs renv environment
+- [x] **Fix any identified issues** - Address warnings/errors from checks
+- [x] **Resolve environment issues** - Fix devtools running in system R vs renv environment
+
+### 1.4 Finalize Environment Setup
+
+- [x] **Install missing packages** - Successfully installed 25+ packages including arrow, ggplot2, dplyr
+- [x] **Update renv.lock** - Lockfile updated with all package versions
+- [x] **Test package loading** - Verified critical packages (arrow, dplyr, ggplot2, devtools, testthat) load correctly
+- [x] **Document environment** - All dependencies properly recorded and reproducible
 
 ---
 
@@ -48,6 +55,9 @@ This document outlines the prioritized improvement plan for the AUS-OA microsimu
 
 - [ ] **PJI (Periprosthetic Joint Infection) Module**
   - [ ] Research clinical pathways and treatment stages
+  - [ ] Design infection risk stratification framework
+  - [ ] Implement PJI progression modeling
+  - [ ] Validate against clinical literature
   - [ ] Implement infection risk algorithms
   - [ ] Add treatment cost calculations
   - [ ] Integrate QALY impacts
