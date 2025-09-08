@@ -171,6 +171,19 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_new <- pathways_integration_result$am_new
   pathways_summary <- pathways_integration_result$integration_summary
 
+  # % Resource Allocation Integration
+  # Model hospital capacity, regional variations, and referral patterns
+  source(here::here("R", "resource_allocation_integration.R"))
+  source(here::here("R", "resource_allocation_module.R"))
+
+  # Integrate resource allocation module with simulation cycle
+  resource_integration_result <- integrate_resource_allocation_module(am_curr, am_new, live_coeffs, cycle.coefficents$cycle_number)
+
+  # Extract updated matrices and resource allocation summary
+  am_curr <- resource_integration_result$am_curr
+  am_new <- resource_integration_result$am_new
+  resource_summary <- resource_integration_result$resource_summary
+
   # % TKA inpatient rehabiliation
 
   # Ensure all required coefficients are present, defaulting to 0 if missing
@@ -293,7 +306,8 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
     pji_summary = pji_summary,
     dvt_summary = dvt_summary,
     waiting_list_summary = waiting_list_summary,
-    pathways_summary = pathways_summary
+    pathways_summary = pathways_summary,
+    resource_summary = resource_summary
   )
 
   return(export_data)

@@ -910,3 +910,157 @@ public_private_pathways:
       distribution: normal
       mean: 0.02
       sd: 0.005
+
+# Resource Allocation Parameters
+# Parameters for modeling hospital capacity, regional variations, and referral patterns
+# in the Australian healthcare system
+
+resource_allocation:
+  # Total system capacity (baseline capacity units)
+  total_system_capacity:
+    live: 10000  # Total capacity units across the system
+    distribution: normal
+    mean: 10000
+    sd: 500
+
+  # Regional distribution parameters
+  regional:
+    # Population distribution
+    metro_population_proportion:
+      live: 0.7  # 70% of population in metropolitan areas
+      distribution: beta
+      alpha: 70
+      beta: 30
+
+    regional_population_proportion:
+      live: 0.3  # 30% of population in regional/rural areas
+      distribution: beta
+      alpha: 30
+      beta: 70
+
+    # Hospital type distribution in metro areas
+    metro_public_hospital_proportion:
+      live: 0.6  # 60% of metro capacity is public
+      distribution: beta
+      alpha: 60
+      beta: 40
+
+    metro_private_hospital_proportion:
+      live: 0.4  # 40% of metro capacity is private
+      distribution: beta
+      alpha: 40
+      beta: 60
+
+    # Hospital type distribution in regional areas
+    regional_public_hospital_proportion:
+      live: 0.8  # 80% of regional capacity is public
+      distribution: beta
+      alpha: 80
+      beta: 20
+
+    regional_private_hospital_proportion:
+      live: 0.2  # 20% of regional capacity is private
+      distribution: beta
+      alpha: 20
+      beta: 80
+
+  # Referral pattern parameters
+  referral:
+    # Thresholds for complex case referral
+    complex_case_threshold:
+      live: 3  # Patients with 3+ comorbidities need referral
+      distribution: normal
+      mean: 3
+      sd: 0.5
+
+    elderly_threshold:
+      live: 75  # Patients 75+ may need specialized care
+      distribution: normal
+      mean: 75
+      sd: 2
+
+    # Referral acceptance modifiers
+    high_complexity_penalty:
+      live: 0.7  # 30% reduction in acceptance for very complex cases
+      distribution: beta
+      alpha: 70
+      beta: 30
+
+  # Capacity constraint impact parameters
+  constraints:
+    # Delay impact per unit of capacity overutilization
+    delay_per_capacity_unit:
+      live: 2.0  # 2 months delay per unit over capacity
+      distribution: normal
+      mean: 2.0
+      sd: 0.3
+
+    # Quality impact per unit of capacity overutilization
+    quality_impact_per_capacity_unit:
+      live: 0.05  # 5% quality reduction per unit over capacity
+      distribution: normal
+      mean: 0.05
+      sd: 0.01
+
+    # Cost impact per unit of capacity overutilization
+    cost_impact_per_capacity_unit:
+      live: 0.1  # 10% cost increase per unit over capacity
+      distribution: normal
+      mean: 0.1
+      sd: 0.02
+
+  # Hospital-specific capacity modifiers
+  hospital_capacity:
+    # Public metropolitan hospitals
+    public_metro_capacity_modifier:
+      live: 1.2  # 20% more capacity than baseline
+      distribution: normal
+      mean: 1.2
+      sd: 0.1
+
+    # Public regional hospitals
+    public_regional_capacity_modifier:
+      live: 0.8  # 20% less capacity than baseline
+      distribution: normal
+      mean: 0.8
+      sd: 0.1
+
+    # Private metropolitan hospitals
+    private_metro_capacity_modifier:
+      live: 1.1  # 10% more capacity than baseline
+      distribution: normal
+      mean: 1.1
+      sd: 0.1
+
+    # Private regional hospitals
+    private_regional_capacity_modifier:
+      live: 0.6  # 40% less capacity than baseline
+      distribution: normal
+      mean: 0.6
+      sd: 0.1
+
+  # Referral acceptance rates by hospital type
+  referral_acceptance:
+    public_metro_acceptance:
+      live: 0.9  # High acceptance rate
+      distribution: beta
+      alpha: 90
+      beta: 10
+
+    public_regional_acceptance:
+      live: 0.7  # Moderate acceptance rate
+      distribution: beta
+      alpha: 70
+      beta: 30
+
+    private_metro_acceptance:
+      live: 0.6  # Selective acceptance
+      distribution: beta
+      alpha: 60
+      beta: 40
+
+    private_regional_acceptance:
+      live: 0.4  # Low acceptance rate
+      distribution: beta
+      alpha: 40
+      beta: 60

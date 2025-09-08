@@ -6,9 +6,9 @@
 
 This document outlines the prioritized improvement plan for the AUS-OA microsimulation model, building upon the s## Current Status
 
-**Active Priority:** Priority 2 - Phase 2 Clinical Enhancements (CONTINUING)
-**Next Milestone:** Complete Resource Allocation implementation
-**Estimated Completion:** 2025-09-23ful completion of Phase 1A. The plan is structured by priority levels with estimated timelines and concrete deliverables.
+**Active Priority:** Priority 3 - Advanced Analytics Framework (READY TO START)
+**Next Milestone:** Begin Probabilistic Sensitivity Analysis implementation
+**Estimated Completion:** 2025-09-30ful completion of Phase 1A. The plan is structured by priority levels with estimated timelines and concrete deliverables.
 
 ---
 
@@ -101,11 +101,15 @@ This document outlines the prioritized improvement plan for the AUS-OA microsimu
   - [x] Integrate pathways module with simulation
   - [x] Test pathways module functionality
   - [x] Implement equity and access analysis
-- [ ] **Resource Allocation**
-  - [ ] Model hospital capacity by type
-  - [ ] Add regional variations
-  - [ ] Implement referral patterns
-  - [ ] Validate against real-world data
+- [x] **Resource Allocation**
+  - [x] Model hospital capacity by type
+  - [x] Add regional variations
+  - [x] Implement referral patterns
+  - [x] Validate against real-world data
+  - [x] Create resource allocation module (resource_allocation_module.R)
+  - [x] Add resource allocation coefficients to configuration
+  - [x] Integrate resource allocation module with simulation
+  - [x] Test resource allocation module functionality
 
 ---
 
