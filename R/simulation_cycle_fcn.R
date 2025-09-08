@@ -158,6 +158,19 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   am_new <- dvt_integration_result$am_new
   dvt_summary <- dvt_integration_result$dvt_summary
 
+  # % Public-Private Healthcare Pathways Integration
+  # Model differences between public and private healthcare pathways
+  source(here::here("R", "public_private_pathways_integration.R"))
+  source(here::here("R", "public_private_pathways_module.R"))
+
+  # Integrate public-private pathways module with simulation cycle
+  pathways_integration_result <- integrate_public_private_pathways_module(am_curr, am_new, live_coeffs, cycle.coefficents$cycle_number)
+
+  # Extract updated matrices and pathways summary
+  am_curr <- pathways_integration_result$am_curr
+  am_new <- pathways_integration_result$am_new
+  pathways_summary <- pathways_integration_result$integration_summary
+
   # % TKA inpatient rehabiliation
 
   # Ensure all required coefficients are present, defaulting to 0 if missing
@@ -279,7 +292,8 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
     summ_tka_risk = summ_tka_risk,
     pji_summary = pji_summary,
     dvt_summary = dvt_summary,
-    waiting_list_summary = waiting_list_summary
+    waiting_list_summary = waiting_list_summary,
+    pathways_summary = pathways_summary
   )
 
   return(export_data)

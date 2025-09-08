@@ -750,3 +750,163 @@ waiting_list:
       distribution: normal
       mean: 1.3
       sd: 0.1
+
+# Public vs Private Healthcare Pathways Parameters
+# Parameters for modeling differences between public and private healthcare pathways
+# in the Australian healthcare system
+
+public_private_pathways:
+  # Outcome modifiers by pathway
+  outcomes:
+    # Public pathway quality modifier (relative to baseline)
+    public_quality_modifier:
+      live: 0.98  # Slightly lower quality due to standardization
+      distribution: normal
+      mean: 0.98
+      sd: 0.02
+
+    # Private pathway quality modifier (relative to baseline)
+    private_quality_modifier:
+      live: 1.05  # Slightly higher quality due to choice and facilities
+      distribution: normal
+      mean: 1.05
+      sd: 0.03
+
+    # Public pathway access modifier
+    public_access_modifier:
+      live: 0.95  # Slightly reduced access due to waits
+      distribution: normal
+      mean: 0.95
+      sd: 0.02
+
+    # Private pathway access modifier
+    private_access_modifier:
+      live: 1.1  # Better access due to shorter waits
+      distribution: normal
+      mean: 1.1
+      sd: 0.05
+
+  # Treatment-specific effects by pathway
+  treatment:
+    # Public pathway TKA success rate modifier
+    public_tka_success:
+      live: 0.97  # Slightly lower success due to standardization
+      distribution: normal
+      mean: 0.97
+      sd: 0.02
+
+    # Private pathway TKA success rate modifier
+    private_tka_success:
+      live: 1.03  # Slightly higher success due to better facilities
+      distribution: normal
+      mean: 1.03
+      sd: 0.02
+
+    # Public pathway complication risk modifier
+    public_complication_risk:
+      live: 1.02  # Slightly higher risk due to standardization
+      distribution: normal
+      mean: 1.02
+      sd: 0.02
+
+    # Private pathway complication risk modifier
+    private_complication_risk:
+      live: 0.95  # Lower risk due to better facilities
+      distribution: normal
+      mean: 0.95
+      sd: 0.03
+
+    # Public pathway recovery time modifier
+    public_recovery_time:
+      live: 1.05  # Slightly longer recovery
+      distribution: normal
+      mean: 1.05
+      sd: 0.03
+
+    # Private pathway recovery time modifier
+    private_recovery_time:
+      live: 0.95  # Slightly faster recovery
+      distribution: normal
+      mean: 0.95
+      sd: 0.03
+
+  # Cost parameters by pathway
+  costs:
+    # Public pathway base TKA cost (AUD)
+    public_base_tka_cost:
+      live: 25000  # Base cost for public TKA
+      distribution: normal
+      mean: 25000
+      sd: 2000
+
+    # Private pathway base TKA cost (AUD)
+    private_base_tka_cost:
+      live: 35000  # Higher base cost for private TKA
+      distribution: normal
+      mean: 35000
+      sd: 3000
+
+    # Public pathway additional costs
+    public_additional_cost:
+      live: 5000  # Additional costs (complications, follow-up)
+      distribution: normal
+      mean: 5000
+      sd: 500
+
+    # Private pathway additional costs
+    private_additional_cost:
+      live: 8000  # Higher additional costs
+      distribution: normal
+      mean: 8000
+      sd: 800
+
+    # Private pathway gap cost (out-of-pocket)
+    private_gap_cost:
+      live: 3000  # Additional out-of-pocket costs
+      distribution: normal
+      mean: 3000
+      sd: 500
+
+    # Complex case cost multiplier
+    complex_case_multiplier:
+      live: 1.5  # 50% increase for complex cases
+      distribution: normal
+      mean: 1.5
+      sd: 0.1
+
+  # Patient satisfaction and experience parameters
+  satisfaction:
+    # Public pathway base satisfaction
+    public_base_satisfaction:
+      live: 0.75  # Good but not excellent satisfaction
+      distribution: beta
+      alpha: 75
+      beta: 25
+
+    # Private pathway base satisfaction
+    private_base_satisfaction:
+      live: 0.85  # Higher satisfaction due to choice
+      distribution: beta
+      alpha: 85
+      beta: 15
+
+    # Public pathway wait time satisfaction
+    public_wait_satisfaction:
+      live: 0.65  # Lower due to longer waits
+      distribution: beta
+      alpha: 65
+      beta: 35
+
+    # Private pathway wait time satisfaction
+    private_wait_satisfaction:
+      live: 0.85  # Higher due to shorter waits
+      distribution: beta
+      alpha: 85
+      beta: 15
+
+    # Wait time satisfaction penalty per month
+    wait_time_penalty:
+      live: 0.02  # 2% satisfaction decrease per month wait
+      distribution: normal
+      mean: 0.02
+      sd: 0.005

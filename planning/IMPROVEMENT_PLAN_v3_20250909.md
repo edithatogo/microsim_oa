@@ -7,8 +7,8 @@
 This document outlines the prioritized improvement plan for the AUS-OA microsimulation model, building upon the s## Current Status
 
 **Active Priority:** Priority 2 - Phase 2 Clinical Enhancements (CONTINUING)
-**Next Milestone:** Complete Health System Capacity Module implementation
-**Estimated Completion:** 2025-09-16ful completion of Phase 1A. The plan is structured by priority levels with estimated timelines and concrete deliverables.
+**Next Milestone:** Complete Resource Allocation implementation
+**Estimated Completion:** 2025-09-23ful completion of Phase 1A. The plan is structured by priority levels with estimated timelines and concrete deliverables.
 
 ---
 
@@ -90,11 +90,17 @@ This document outlines the prioritized improvement plan for the AUS-OA microsimu
   - [x] Create waiting list module (waiting_list_module.R)
   - [x] Add waiting list coefficients to configuration
   - [x] Integrate waiting list module with simulation
-- [ ] **Public vs Private Pathways**
-  - [ ] Differentiate care pathways
-  - [ ] Model cost differences
-  - [ ] Add outcome variations
-  - [ ] Implement pathway selection logic
+- [x] **Public vs Private Pathways**
+  - [x] Research care pathway differences
+  - [x] Differentiate care pathways
+  - [x] Model cost differences
+  - [x] Add outcome variations
+  - [x] Implement pathway selection logic
+  - [x] Create public-private pathways module (public_private_pathways_module.R)
+  - [x] Add pathways coefficients to configuration
+  - [x] Integrate pathways module with simulation
+  - [x] Test pathways module functionality
+  - [x] Implement equity and access analysis
 - [ ] **Resource Allocation**
   - [ ] Model hospital capacity by type
   - [ ] Add regional variations
