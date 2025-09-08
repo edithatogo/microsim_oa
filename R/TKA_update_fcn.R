@@ -14,17 +14,7 @@
 #' @param default_implant_type The default implant type to use if not specified
 #'
 #' @return A list containing the updated attribute matrices and a summary of TKA
-#'   risk. The function now also models post-operative complications including
-#'   PJI (Periprosthetic Joint Infection) and DVT (Deep Vein Thrombosis) with
-#'   associated impacts on utility/QALY.
-#' @section TKA Complications:
-#' The function includes sophisticated modeling of post-operative complications:
-#' \itemize{
-#'   \item \strong{PJI (Periprosthetic Joint Infection)}: Risk factors include age, BMI, and comorbidities
-#'   \item \strong{DVT (Deep Vein Thrombosis)}: Risk factors include age and obesity
-#'   \item \strong{Utility Impacts}: Complications reduce SF-6D utility scores appropriately
-#'   \item \strong{Modular Design}: Complications are calculated using \code{\link{calculate_tka_complications}}
-#' }
+#'   risk.
 #' @importFrom dplyr group_by summarise left_join n
 #' @importFrom stats runif
 #' @importFrom readr read_csv
@@ -232,10 +222,6 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
   am_new$tka1 <- am_curr$tka1 + (am_curr$tkai * (1 - am_curr$tka1))
   # if a tka is recorded and there is a prior tka (ie am_curr$tka1 == 1), then record tka2
   am_new$tka2 <- am_curr$tka2 + (am_curr$tkai * am_curr$tka1)
-
-  # --- TKA Complications: PJI and DVT ---
-  # Use modular complication calculation function
-  am_new <- calculate_tka_complications(am_curr, am_new, cycle.coefficents)
 
   # this operates as a counter, effectively years since the TKA
   am_new$agetka1 <- am_curr$agetka1 + am_curr$tka1
