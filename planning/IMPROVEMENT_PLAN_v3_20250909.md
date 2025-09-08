@@ -1,0 +1,244 @@
+# AUS-OA Model v3.0 Improvement Plan
+
+**File Version:** 1
+**Date:** 2025-09-09
+**Status:** Active Implementation
+
+This document outlines the prioritized improvement plan for the AUS-OA microsimulation model, building upon the s## Current Status
+
+**Active Priority:** Priority 1 - Environment & Infrastructure Fixes
+**Next Milestone:** Complete renv restoration and package validation
+**Estimated Completion:** 2025-09-11ful completion of Phase 1A. The plan is structured by priority levels with estimated timelines and concrete deliverables.
+
+---
+
+## Priority 1: Environment & Infrastructure Fixes (Immediate - 1-2 days)
+
+**Objective:** Restore project stability and ensure reliable development environment.
+
+### 1.1 Fix renv Environment
+
+- [x] **Restore renv environment** - Run `renv::restore()` to install all required packages
+- [x] **Verify package availability** - Check that critical packages (devtools, testthat, arrow) are installed
+- [ ] **Update renv.lock** - Ensure lockfile reflects current dependencies
+- [ ] **Test package loading** - Verify all imports work correctly
+- [ ] **Handle arrow package** - Resolve segfault issue during arrow installation (known issue on some systems)
+
+### 1.2 Commit Pending Changes
+
+- [x] **Review uncommitted changes** - Examine modifications in httpuv submodule and config script
+- [ ] **Determine change necessity** - Assess if changes should be committed or reverted
+- [ ] **Clean working directory** - Ensure clean git status for reliable development
+- [ ] **Update .gitignore** - Add any necessary exclusions for build artifacts
+
+### 1.3 Validate Package Integrity
+
+- [ ] **Run package checks** - Execute `devtools::check()` to identify issues
+- [ ] **Execute test suite** - Run `devtools::test()` to verify functionality
+- [ ] **Update documentation** - Run `devtools::document()` for roxygen2
+- [ ] **Fix any identified issues** - Address warnings/errors from checks
+
+---
+
+## Priority 2: Phase 2 Clinical Enhancements (1-2 weeks)
+
+**Objective:** Enhance clinical realism and policy relevance through advanced modeling.
+
+### 2.1 Advanced Complication Modeling
+
+- [ ] **PJI (Periprosthetic Joint Infection) Module**
+  - [ ] Research clinical pathways and treatment stages
+  - [ ] Implement infection risk algorithms
+  - [ ] Add treatment cost calculations
+  - [ ] Integrate QALY impacts
+- [ ] **DVT (Deep Vein Thrombosis) Module**
+  - [ ] Model prophylaxis strategies
+  - [ ] Implement risk assessment algorithms
+  - [ ] Add complication costs and outcomes
+  - [ ] Validate against clinical literature
+- [ ] **Revision Surgery Cascade**
+  - [ ] Model implant-specific failure rates
+  - [ ] Implement revision pathways
+  - [ ] Add cumulative cost tracking
+  - [ ] Update survival curves
+
+### 2.2 Health System Capacity Module
+
+- [ ] **Waiting List Dynamics**
+  - [ ] Implement prioritization algorithms
+  - [ ] Model queue management
+  - [ ] Add capacity constraints
+  - [ ] Simulate wait time impacts
+- [ ] **Public vs Private Pathways**
+  - [ ] Differentiate care pathways
+  - [ ] Model cost differences
+  - [ ] Add outcome variations
+  - [ ] Implement pathway selection logic
+- [ ] **Resource Allocation**
+  - [ ] Model hospital capacity by type
+  - [ ] Add regional variations
+  - [ ] Implement referral patterns
+  - [ ] Validate against real-world data
+
+---
+
+## Priority 3: Advanced Analytics Framework (2-3 weeks)
+
+**Objective:** Implement sophisticated analytical capabilities for robust health technology assessment.
+
+### 3.1 Probabilistic Sensitivity Analysis (PSA)
+
+- [ ] **Monte Carlo Framework**
+  - [ ] Implement parameter uncertainty distributions
+  - [ ] Create sampling algorithms
+  - [ ] Add convergence diagnostics
+  - [ ] Validate statistical properties
+- [ ] **Cost-Effectiveness Acceptability Curves (CEAC)**
+  - [ ] Implement CEAC calculation
+  - [ ] Add visualization functions
+  - [ ] Create summary statistics
+  - [ ] Validate against literature
+- [ ] **Uncertainty Analysis**
+  - [ ] Implement tornado diagrams
+  - [ ] Add parameter influence analysis
+  - [ ] Create uncertainty reporting
+  - [ ] Document methodology
+
+### 3.2 Machine Learning Integration
+
+- [ ] **GBM for OA Progression**
+  - [ ] Prepare training data
+  - [ ] Implement GBM model
+  - [ ] Add feature engineering
+  - [ ] Validate predictive performance
+- [ ] **Explainable AI (XAI)**
+  - [ ] Implement feature importance analysis
+  - [ ] Add partial dependence plots
+  - [ ] Create model interpretation tools
+  - [ ] Document explainability methods
+- [ ] **Model Validation Framework**
+  - [ ] Implement cross-validation
+  - [ ] Add performance metrics
+  - [ ] Create validation reports
+  - [ ] Compare with existing models
+
+---
+
+## Priority 4: User Experience & Dissemination (2-4 weeks)
+
+**Objective:** Make the model accessible to diverse stakeholders through modern interfaces.
+
+### 4.1 Shiny Web Application
+
+- [ ] **Core Application Structure**
+  - [ ] Set up Shiny framework
+  - [ ] Create main application layout
+  - [ ] Implement navigation structure
+  - [ ] Add responsive design
+- [ ] **Scenario Setup Wizard**
+  - [ ] Create guided configuration interface
+  - [ ] Add parameter validation
+  - [ ] Implement scenario saving/loading
+  - [ ] Add help documentation
+- [ ] **Results Visualization**
+  - [ ] Implement interactive plots
+  - [ ] Add results tables
+  - [ ] Create summary dashboards
+  - [ ] Add export functionality
+
+### 4.2 Enhanced Reporting Suite
+
+- [ ] **Automated Report Generation**
+  - [ ] Create RMarkdown templates
+  - [ ] Implement parameterized reports
+  - [ ] Add custom formatting
+  - [ ] Create executive summaries
+- [ ] **Interactive Dashboards**
+  - [ ] Implement plotly visualizations
+  - [ ] Add drill-down capabilities
+  - [ ] Create comparison tools
+  - [ ] Add filtering options
+- [ ] **Stakeholder-Specific Outputs**
+  - [ ] Create technical appendices
+  - [ ] Add policy briefs
+  - [ ] Implement customizable reports
+  - [ ] Add automated distribution
+
+---
+
+## Priority 5: Advanced Features (3-6 weeks)
+
+**Objective:** Expand analytical scope to capture broader societal impacts.
+
+### 5.1 Social & Economic Expansion
+
+- [ ] **Informal Care Costs**
+  - [ ] Research carer burden methodologies
+  - [ ] Implement care hour calculations
+  - [ ] Add productivity loss modeling
+  - [ ] Integrate carer QALY impacts
+- [ ] **Residential Aged Care Integration**
+  - [ ] Model transition pathways
+  - [ ] Add aged care costs
+  - [ ] Implement admission algorithms
+  - [ ] Validate against population data
+- [ ] **Equity Analysis**
+  - [ ] Add socioeconomic variables
+  - [ ] Implement remoteness measures
+  - [ ] Create equity metrics
+  - [ ] Add stratified analysis
+
+### 5.2 Performance & Scalability
+
+- [ ] **Rcpp Optimization**
+  - [ ] Profile computational bottlenecks
+  - [ ] Implement C++ functions
+  - [ ] Benchmark performance gains
+  - [ ] Validate numerical accuracy
+- [ ] **Parallel Processing**
+  - [ ] Implement parallel simulation
+  - [ ] Add cluster computing support
+  - [ ] Optimize memory usage
+  - [ ] Create performance reports
+- [ ] **Cloud Deployment**
+  - [ ] Create Docker containers
+  - [ ] Implement cloud configuration
+  - [ ] Add deployment scripts
+  - [ ] Create usage documentation
+
+---
+
+## Implementation Strategy
+
+### Phase Execution Order
+
+1. **Start with Priority 1** - Fix environment issues first
+2. **Priority 2** - Build clinical credibility
+3. **Priority 3** - Add analytical sophistication
+4. **Priority 4** - Improve accessibility
+5. **Priority 5** - Expand scope
+
+### Quality Assurance
+
+- [ ] Maintain >80% test coverage
+- [ ] Implement performance benchmarking
+- [ ] Regular security audits
+- [ ] Documentation updates with each feature
+- [ ] Stakeholder validation at key milestones
+
+### Success Metrics
+
+- [ ] All package checks pass without warnings
+- [ ] Test suite runs successfully
+- [ ] Documentation is current and comprehensive
+- [ ] Performance benchmarks meet targets
+- [ ] User acceptance testing passes
+
+---
+
+## Current Status
+
+**Active Priority:** Priority 1 - Environment & Infrastructure Fixes
+**Next Milestone:** Complete package validation and handle arrow issue
+**Estimated Completion:** 2025-09-11
+**Progress Update:** Critical packages (devtools, testthat, data.table, dplyr, yaml) successfully installed. Arrow package has segfault issue - investigating alternatives.
