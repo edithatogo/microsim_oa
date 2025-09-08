@@ -7,7 +7,7 @@
 This document outlines the prioritized improvement plan for the AUS-OA microsimulation model, building upon the s## Current Status
 
 **Active Priority:** Priority 2 - Phase 2 Clinical Enhancements (CONTINUING)
-**Next Milestone:** Begin Health System Capacity Module implementation
+**Next Milestone:** Complete Health System Capacity Module implementation
 **Estimated Completion:** 2025-09-16ful completion of Phase 1A. The plan is structured by priority levels with estimated timelines and concrete deliverables.
 
 ---
@@ -81,11 +81,15 @@ This document outlines the prioritized improvement plan for the AUS-OA microsimu
 
 ### 2.2 Health System Capacity Module
 
-- [ ] **Waiting List Dynamics**
-  - [ ] Implement prioritization algorithms
-  - [ ] Model queue management
-  - [ ] Add capacity constraints
-  - [ ] Simulate wait time impacts
+- [x] **Waiting List Dynamics**
+  - [x] Research prioritization algorithms and queue management
+  - [x] Implement prioritization algorithms
+  - [x] Model queue management
+  - [x] Add capacity constraints
+  - [x] Simulate wait time impacts
+  - [x] Create waiting list module (waiting_list_module.R)
+  - [x] Add waiting list coefficients to configuration
+  - [x] Integrate waiting list module with simulation
 - [ ] **Public vs Private Pathways**
   - [ ] Differentiate care pathways
   - [ ] Model cost differences

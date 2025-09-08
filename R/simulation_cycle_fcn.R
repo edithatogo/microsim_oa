@@ -105,6 +105,19 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   ############################## update TKA status (TKA, complications, revision, inpatient rehab)
   # % TKA
 
+  # % Waiting List Dynamics - Advanced Queue Management Integration
+  # Model patient prioritization, capacity constraints, and wait time impacts
+  source(here::here("R", "waiting_list_integration.R"))
+  source(here::here("R", "waiting_list_module.R"))
+
+  # Integrate waiting list module with simulation cycle
+  waiting_list_integration_result <- integrate_waiting_list_module(am_curr, am_new, live_coeffs)
+
+  # Extract updated matrices and waiting list summary
+  am_curr <- waiting_list_integration_result$am_curr
+  am_new <- waiting_list_integration_result$am_new
+  waiting_list_summary <- waiting_list_integration_result$waiting_list_summary
+
   TKA_update_data <- TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL,
                                    implant_survival_data = NULL, default_implant_type = "standard")
 
@@ -265,7 +278,8 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
     am_new = am_new,
     summ_tka_risk = summ_tka_risk,
     pji_summary = pji_summary,
-    dvt_summary = dvt_summary
+    dvt_summary = dvt_summary,
+    waiting_list_summary = waiting_list_summary
   )
 
   return(export_data)
