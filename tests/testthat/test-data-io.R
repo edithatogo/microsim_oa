@@ -40,5 +40,4 @@ test_that("TKA function accepts implant survival parameters", {
   params <- names(formals(TKA_update_fcn))
   expect_true("implant_survival_data" %in% params)
   expect_true("default_implant_type" %in% params)
-})</content>
-<parameter name="filePath">\\wsl.localhost\Ubuntu\home\doughnut\github\aus_oa_public\tests\testthat\test-data-io.R
+})

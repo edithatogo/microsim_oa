@@ -9,6 +9,7 @@
 #'   cycle.
 #' @param cycle.coefficents A list or data.frame of model coefficients.
 #' @param TKR_cust A data.frame with customisation factors for TKA coefficients.
+#' @param summary_TKR_observed_diff A data.frame containing observed TKR summary statistics for calibration.
 #' @param implant_survival_data A data.frame containing implant-specific survival
 #'   curves with columns: implant_type, time_years, survival_probability
 #' @param default_implant_type The default implant type to use if not specified

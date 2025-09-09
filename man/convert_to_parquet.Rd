@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_io_utils.R
 \name{convert_to_parquet}
 \alias{convert_to_parquet}
-\title{Data I/O Utilities for AUS-OA Model}
+\title{Convert CSV/Excel files to Parquet format}
 \usage{
 convert_to_parquet(input_path, output_path = NULL, sheet = NULL)
 }
@@ -17,6 +17,5 @@ convert_to_parquet(input_path, output_path = NULL, sheet = NULL)
 Path to the created Parquet file
 }
 \description{
-This module provides utilities for efficient data I/O operations
-using the Arrow/Parquet format for improved performance.
+Convert CSV/Excel files to Parquet format
 }

@@ -137,7 +137,8 @@ calculate_costs_fcn <- function(am_new, costs_config) {
 
   informal_care_cost <- get_cost_sum(costs_config$costs$informal_care, "societal")
 
-  am_new[, cycle_cost_societal := cycle_cost_societal + productivity_cost + informal_care_cost]
+  am_new[, cycle_cost_societal := cycle_cost_societal + productivity_cost]
+  am_new[oa == 1 & dead == 0, cycle_cost_societal := cycle_cost_societal + informal_care_cost]
 
   # 6. TKA Complication Cost
   healthcare_complication_cost <-

@@ -29,6 +29,10 @@ This project has evolved significantly from its original version. Here's a summa
 | - Multi-perspective Costing                  |        ❌        |       ✅        |
 | - QALY Calculation (SF-6D)                   |        ❌        |       ✅        |
 | **PROMs Integration**                        |        ❌        |       ✅        |
+| **External Data Integration**                |        ❌        |       ✅        |
+| - Public OA Dataset Integration (50+ datasets)|        ❌        |       ✅        |
+| - Model Calibration with Real-World Data     |        ❌        |       ✅        |
+| - Validation Against External Benchmarks     |        ❌        |       ✅        |
 
 ### Technical Features
 
@@ -44,6 +48,12 @@ This project has evolved significantly from its original version. Here's a summa
 | - `renv` for Reproducible Environments       |        ❌        |       ✅        |
 | **Performance**                              |                  |                 |
 | - Parallel Processing                        |        ❌        |       ✅        |
+| **Documentation & Research Support**         |                  |                 |
+| - Comprehensive Dataset Documentation        |        ❌        |       ✅        |
+| - Integration Examples & Tutorials           |        ❌        |       ✅        |
+| - Research Citation & Attribution            |        ❌        |       ✅        |
+
+📋 **For detailed feature descriptions and technical specifications, see [`docs/FEATURE_MATRIX_V4.md`](docs/FEATURE_MATRIX_V4.md)**
 
 ## Getting Started
 
@@ -99,6 +109,43 @@ This project uses a structured development approach:
     options(ausoa.warn_zero_length_hr_mort = TRUE)
     ```
     This can help diagnose missing coefficients or filtered data situations in custom runs.
+
+## Public Datasets for Model Development
+
+AUS-OA supports integration with publicly available osteoarthritis datasets for model calibration, validation, and expansion. The following documentation provides guidance on using external data sources:
+
+### Dataset Documentation Overview
+- **`docs/DATASET_DOCUMENTATION_OVERVIEW.md`**: Complete overview of all dataset documentation and integration resources
+- **`docs/OA_DATASETS_QUICK_GUIDE.md`**: Quick reference guide to the most accessible OA datasets
+- **`docs/PUBLIC_OA_DATASETS.md`**: Comprehensive catalog of 50+ public OA datasets
+- **`docs/OA_DATASETS_SUMMARY.md`**: Summary table of all datasets with key characteristics
+- **`docs/DATA_INTEGRATION_EXAMPLES.md`**: Practical examples of integrating datasets with AUS-OA
+
+### Key Datasets for Immediate Use
+1. **Osteoarthritis Initiative (OAI)**: Primary clinical calibration dataset
+2. **NHANES**: Population-level validation data
+3. **ClinicalTrials.gov**: Treatment effectiveness data
+4. **UK Biobank**: Genetic epidemiology data
+5. **GWAS Catalog**: Genetic risk factors
+
+### Getting Started with External Data
+```r
+# Load and integrate external OA dataset
+library(ausoa)
+external_data <- read.csv("path/to/oa_dataset.csv")
+
+# Map to AUS-OA format
+aus_oa_data <- map_external_data(external_data)
+
+# Run simulation with external data
+results <- run_simulation(
+  population = aus_oa_data,
+  cycles = 10,
+  config = load_config()
+)
+```
+
+For detailed integration examples and data format specifications, see the dataset documentation in the `docs/` directory.
 
 ## Citation
 

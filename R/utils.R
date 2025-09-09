@@ -18,20 +18,20 @@ get_param_value <- function(param_name, config_path = here::here("config", "simu
   }
   return(value)
 }
-# Update BMI for one cycle (Optimized with data.table)
+#' Update BMI for one cycle (Optimized with data.table)
 #
 # This function updates the Body Mass Index (BMI) for each individual in the
 # attribute matrix for a single simulation cycle. This version is optimized
 # for performance using the data.table package.
 #
-# @param am_curr A data.table representing the attribute matrix for the current
-#   cycle.
-# @param cycle_coefficients A list containing the regression coefficients.
-# @param bmi_customisations A data.frame containing calibration factors.
-#
-# @return The updated attribute matrix (a copy) with a new 'd_bmi' column.
-# @importFrom data.table := .SD .N .I as.data.table
-# @export
+#' @param am_curr A data.table representing the attribute matrix for the current
+#'   cycle.
+#' @param cycle_coefficients A list containing the regression coefficients.
+#' @param bmi_customisations A data.frame containing calibration factors.
+#'
+#' @return The updated attribute matrix (a copy) with a new 'd_bmi' column.
+#' @importFrom data.table := .SD .N .I as.data.table
+#' @export
 bmi_mod_fcn <- function(am_curr, cycle_coefficients, bmi_customisations) {
   # Ensure am_curr is a data.table and create a copy to avoid side effects
   dt <- data.table::copy(as.data.table(am_curr))

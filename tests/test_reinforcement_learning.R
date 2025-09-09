@@ -1,0 +1,490 @@
+#' Test Suite for Reinforcement Learning Module
+#'
+#' This test suite validates the reinforcement learning functionality including:
+#' - Treatment environment definition
+#' - Q-learning and SARSA algorithms
+#' - Multi-objective optimization
+#' - Policy evaluation and personalization
+
+library(testthat)
+library(mockery)
+
+# Note: Reinforcement learning functions should be available through the ausoa package
+# No need to source files directly
+
+#' Test Reinforcement Learning Framework Initialization
+test_that("Reinforcement learning framework initializes correctly", {
+  config <- initialize_reinforcement_learning(list())
+
+  expect_type(config, "list")
+  expect_true("environment" %in% names(config))
+  expect_true("algorithm" %in% names(config))
+  expect_true("training" %in% names(config))
+  expect_true("multi_objective" %in% names(config))
+
+  # Check environment settings
+  expect_true("states" %in% names(config$environment))
+  expect_true("actions" %in% names(config$environment))
+  expect_true("rewards" %in% names(config$environment))
+
+  # Check algorithm settings
+  expect_equal(config$algorithm$type, "q_learning")
+  expect_equal(config$algorithm$alpha, 0.1)
+  expect_equal(config$algorithm$gamma, 0.9)
+  expect_equal(config$algorithm$epsilon, 0.1)
+})
+
+#' Test Treatment Environment Definition
+test_that("Treatment environment is defined correctly", {
+  # Create mock patient data
+  set.seed(123)
+  n <- 100
+  mock_data <- data.frame(
+    age = rnorm(n, 65, 10),
+    bmi = rnorm(n, 28, 5),
+    kl_grade = sample(0:4, n, replace = TRUE),
+    pain_score = rnorm(n, 5, 2),
+    treatment_outcome = rbinom(n, 1, 0.6)
+  )
+
+  config <- initialize_reinforcement_learning(list())
+
+  # Test environment definition
+  environment <- define_treatment_environment(mock_data, config)
+
+  expect_type(environment, "list")
+  expect_true("states" %in% names(environment))
+  expect_true("actions" %in% names(environment))
+  expect_true("transition_function" %in% names(environment))
+  expect_true("reward_function" %in% names(environment))
+  expect_true("initial_state_dist" %in% names(environment))
+
+  # Check dimensions
+  expect_equal(length(environment$states), 4)  # early, moderate, severe, post-surgery
+  expect_equal(length(environment$actions), 6)  # 6 treatment options
+
+  # Check transition function dimensions
+  expect_equal(dim(environment$transition_function), c(4, 6, 4))
+
+  # Check reward function dimensions
+  expect_equal(dim(environment$reward_function), c(4, 6))
+})
+
+#' Test Q-Learning Algorithm
+test_that("Q-learning algorithm works", {
+  # Create mock environment
+  config <- initialize_reinforcement_learning(list())
+
+  mock_environment <- list(
+    states = config$environment$states,
+    actions = config$environment$actions,
+    transition_function = array(runif(4*6*4), dim = c(4, 6, 4)),
+    reward_function = matrix(rnorm(4*6, mean = 5), nrow = 4, ncol = 6),
+    initial_state_dist = c(0.3, 0.4, 0.2, 0.1)
+  )
+
+  # Normalize transition probabilities
+  for (i in 1:4) {
+    for (j in 1:6) {
+      mock_environment$transition_function[i, j, ] <- mock_environment$transition_function[i, j, ] /
+        sum(mock_environment$transition_function[i, j, ])
+    }
+  }
+
+  # Test Q-learning (with reduced episodes for testing)
+  config$training$episodes <- 50
+  ql_result <- q_learning_treatment(mock_environment, config)
+
+  expect_type(ql_result, "list")
+  expect_true("Q_table" %in% names(ql_result))
+  expect_true("policy" %in% names(ql_result))
+  expect_true("rewards_history" %in% names(ql_result))
+  expect_true("states" %in% names(ql_result))
+  expect_true("actions" %in% names(ql_result))
+
+  # Check Q-table dimensions
+  expect_equal(dim(ql_result$Q_table), c(4, 6))
+
+  # Check policy length
+  expect_equal(length(ql_result$policy), 4)
+
+  # Check rewards history length
+  expect_equal(length(ql_result$rewards_history), 50)
+})
+
+#' Test SARSA Algorithm
+test_that("SARSA algorithm works", {
+  # Create mock environment
+  config <- initialize_reinforcement_learning(list())
+
+  mock_environment <- list(
+    states = config$environment$states,
+    actions = config$environment$actions,
+    transition_function = array(runif(4*6*4), dim = c(4, 6, 4)),
+    reward_function = matrix(rnorm(4*6, mean = 5), nrow = 4, ncol = 6),
+    initial_state_dist = c(0.3, 0.4, 0.2, 0.1)
+  )
+
+  # Normalize transition probabilities
+  for (i in 1:4) {
+    for (j in 1:6) {
+      mock_environment$transition_function[i, j, ] <- mock_environment$transition_function[i, j, ] /
+        sum(mock_environment$transition_function[i, j, ])
+    }
+  }
+
+  # Test SARSA (with reduced episodes for testing)
+  config$training$episodes <- 30
+  sarsa_result <- sarsa_treatment(mock_environment, config)
+
+  expect_type(sarsa_result, "list")
+  expect_true("Q_table" %in% names(sarsa_result))
+  expect_true("policy" %in% names(sarsa_result))
+  expect_true("rewards_history" %in% names(sarsa_result))
+  expect_true("algorithm" %in% names(sarsa_result))
+
+  # Check Q-table dimensions
+  expect_equal(dim(sarsa_result$Q_table), c(4, 6))
+
+  # Check that algorithm is identified as SARSA
+  expect_equal(sarsa_result$algorithm, "SARSA")
+})
+
+#' Test Multi-Objective Optimization
+test_that("Multi-objective optimization works", {
+  # Create mock environment
+  config <- initialize_reinforcement_learning(list())
+
+  mock_environment <- list(
+    states = config$environment$states,
+    actions = config$environment$actions,
+    transition_function = array(runif(4*6*4), dim = c(4, 6, 4)),
+    reward_function = matrix(rnorm(4*6, mean = 5), nrow = 4, ncol = 6),
+    initial_state_dist = c(0.3, 0.4, 0.2, 0.1)
+  )
+
+  # Normalize transition probabilities
+  for (i in 1:4) {
+    for (j in 1:6) {
+      mock_environment$transition_function[i, j, ] <- mock_environment$transition_function[i, j, ] /
+        sum(mock_environment$transition_function[i, j, ])
+    }
+  }
+
+  # Test multi-objective optimization (with reduced parameters for testing)
+  config$training$episodes <- 20
+  config$multi_objective$pareto_front_size <- 5
+
+  mo_result <- multi_objective_optimization(mock_environment, config)
+
+  expect_type(mo_result, "list")
+  expect_true("pareto_front" %in% names(mo_result))
+  expect_true("pareto_optimal" %in% names(mo_result))
+  expect_true("objectives" %in% names(mo_result))
+  expect_true("n_solutions" %in% names(mo_result))
+
+  # Check that we have the expected number of solutions
+  expect_equal(mo_result$n_solutions, 5)
+  expect_equal(length(mo_result$pareto_front), 5)
+})
+
+#' Test Policy Performance Evaluation
+test_that("Policy performance evaluation works", {
+  # Create mock policy and environment
+  config <- initialize_reinforcement_learning(list())
+
+  mock_policy <- list(
+    policy = c(1, 2, 3, 4),  # Simple policy
+    Q_table = matrix(rnorm(4*6), nrow = 4, ncol = 6)
+  )
+
+  mock_environment <- list(
+    states = config$environment$states,
+    actions = config$environment$actions,
+    transition_function = array(runif(4*6*4), dim = c(4, 6, 4)),
+    reward_function = matrix(rnorm(4*6, mean = 5), nrow = 4, ncol = 6),
+    initial_state_dist = c(0.3, 0.4, 0.2, 0.1)
+  )
+
+  # Normalize transition probabilities
+  for (i in 1:4) {
+    for (j in 1:6) {
+      mock_environment$transition_function[i, j, ] <- mock_environment$transition_function[i, j, ] /
+        sum(mock_environment$transition_function[i, j, ])
+    }
+  }
+
+  # Test performance evaluation
+  performance <- evaluate_policy_performance(mock_policy, mock_environment, config)
+
+  expect_type(performance, "list")
+  expect_true("total_rewards" %in% names(performance))
+  expect_true("mean_reward" %in% names(performance))
+  expect_true("reward_sd" %in% names(performance))
+  expect_true("state_distributions" %in% names(performance))
+  expect_true("action_distributions" %in% names(performance))
+
+  # Check dimensions
+  expect_equal(length(performance$total_rewards), 100)  # n_episodes
+  expect_equal(dim(performance$state_distributions), c(100, 4))
+  expect_equal(dim(performance$action_distributions), c(100, 6))
+
+  # Check that mean reward is numeric
+  expect_true(is.numeric(performance$mean_reward))
+})
+
+#' Test Weighted Reward Function Creation
+test_that("Weighted reward function creation works", {
+  # Create mock environment
+  config <- initialize_reinforcement_learning(list())
+
+  mock_environment <- list(
+    states = config$environment$states,
+    actions = config$environment$actions,
+    reward_function = matrix(rnorm(4*6, mean = 5), nrow = 4, ncol = 6)
+  )
+
+  # Test weighted reward creation
+  weights <- c(0.4, 0.3, 0.2, 0.1)
+  weighted_rewards <- create_weighted_reward_function(mock_environment, config, weights)
+
+  expect_type(weighted_rewards, "matrix")
+  expect_equal(dim(weighted_rewards), c(4, 6))
+  expect_true(all(is.numeric(weighted_rewards)))
+})
+
+#' Test Solution Quality Evaluation
+test_that("Solution quality evaluation works", {
+  # Create mock RL result and environment
+  config <- initialize_reinforcement_learning(list())
+
+  mock_rl_result <- list(
+    policy = c(1, 2, 3, 4)
+  )
+
+  mock_environment <- list(
+    states = config$environment$states,
+    actions = config$environment$actions,
+    transition_function = array(runif(4*6*4), dim = c(4, 6, 4)),
+    reward_function = matrix(rnorm(4*6, mean = 5), nrow = 4, ncol = 6),
+    initial_state_dist = c(0.3, 0.4, 0.2, 0.1)
+  )
+
+  # Normalize transition probabilities
+  for (i in 1:4) {
+    for (j in 1:6) {
+      mock_environment$transition_function[i, j, ] <- mock_environment$transition_function[i, j, ] /
+        sum(mock_environment$transition_function[i, j, ])
+    }
+  }
+
+  # Test solution quality evaluation
+  quality <- evaluate_solution_quality(mock_rl_result, mock_environment, config)
+
+  expect_type(quality, "numeric")
+  expect_equal(length(quality), length(config$multi_objective$objectives))
+  expect_true(all(names(quality) %in% config$multi_objective$objectives))
+})
+
+#' Test Pareto Optimal Finding
+test_that("Pareto optimal solution finding works", {
+  # Create mock solutions
+  mock_solutions <- list(
+    list(objectives = c(0.8, 0.6, 0.7, 0.5)),
+    list(objectives = c(0.6, 0.8, 0.5, 0.7)),
+    list(objectives = c(0.7, 0.7, 0.6, 0.6)),
+    list(objectives = c(0.5, 0.5, 0.8, 0.8)),  # Dominated
+    list(objectives = c(0.9, 0.4, 0.8, 0.3))   # Non-dominated
+  )
+
+  config <- initialize_reinforcement_learning(list())
+
+  # Test Pareto optimal finding
+  pareto_optimal <- find_pareto_optimal(mock_solutions, config)
+
+  expect_type(pareto_optimal, "list")
+  expect_true(length(pareto_optimal) > 0)
+  expect_true(length(pareto_optimal) <= length(mock_solutions))
+})
+
+#' Test Personalized Policy Learning
+test_that("Personalized policy learning works", {
+  # Create mock patient data
+  set.seed(456)
+  n <- 60
+  mock_data <- data.frame(
+    age = rnorm(n, 65, 10),
+    bmi = rnorm(n, 28, 5),
+    kl_grade = sample(0:4, n, replace = TRUE),
+    comorbidities = rbinom(n, 1, 0.3),
+    patient_id = 1:n
+  )
+
+  config <- initialize_reinforcement_learning(list())
+
+  # Create mock environment
+  mock_environment <- list(
+    states = config$environment$states,
+    actions = config$environment$actions
+  )
+
+  # Test personalized policy learning
+  personalized_result <- personalized_policy_learning(mock_data, mock_environment, config)
+
+  expect_type(personalized_result, "list")
+  expect_true("cluster_policies" %in% names(personalized_result))
+  expect_true("patient_clusters" %in% names(personalized_result))
+  expect_true("personalization_features" %in% names(personalized_result))
+
+  # Check that we have policies for 3 clusters
+  expect_equal(length(personalized_result$cluster_policies), 3)
+
+  # Check personalization features
+  expect_true("age" %in% personalized_result$personalization_features)
+  expect_true("bmi" %in% personalized_result$personalization_features)
+})
+
+#' Test Reinforcement Learning Report Generation
+test_that("Reinforcement learning report generation works", {
+  # Create mock RL results
+  config <- initialize_reinforcement_learning(list())
+
+  mock_results <- list(
+    policy = c(1, 2, 3, 4),
+    states = config$environment$states,
+    actions = config$environment$actions,
+    performance = list(
+      mean_reward = 15.5,
+      reward_sd = 3.2,
+      total_rewards = rnorm(100, 15.5, 3.2)
+    ),
+    pareto_optimal = list(list(), list()),  # Mock Pareto solutions
+    objectives = config$multi_objective$objectives
+  )
+
+  # Test report generation
+  report_path <- generate_rl_report(mock_results, tempdir())
+
+  expect_true(file.exists(report_path))
+  expect_true(grepl("\\.html$", report_path))
+
+  # Check that report contains expected content
+  report_content <- readLines(report_path)
+  expect_true(any(grepl("Reinforcement Learning Treatment Optimization Report", report_content)))
+  expect_true(any(grepl("Optimal Treatment Policy", report_content)))
+  expect_true(any(grepl("Policy Performance", report_content)))
+})
+
+#' Test Transition Function Creation
+test_that("Transition function creation works", {
+  # Create mock patient data
+  set.seed(789)
+  n <- 50
+  mock_data <- data.frame(
+    age = rnorm(n, 65, 10),
+    treatment_outcome = rbinom(n, 1, 0.6)
+  )
+
+  config <- initialize_reinforcement_learning(list())
+
+  # Test transition function creation
+  transitions <- create_transition_function(mock_data, config)
+
+  expect_type(transitions, "array")
+  expect_equal(dim(transitions), c(4, 6, 4))  # states x actions x next_states
+
+  # Check that probabilities sum to 1 for each state-action pair
+  for (i in 1:4) {
+    for (j in 1:6) {
+      prob_sum <- sum(transitions[i, j, ])
+      expect_true(abs(prob_sum - 1) < 1e-10)
+    }
+  }
+})
+
+#' Test Reward Function Creation
+test_that("Reward function creation works", {
+  # Create mock patient data
+  set.seed(101)
+  n <- 30
+  mock_data <- data.frame(
+    treatment_outcome = rbinom(n, 1, 0.6)
+  )
+
+  config <- initialize_reinforcement_learning(list())
+
+  # Test reward function creation
+  rewards <- create_reward_function(mock_data, config)
+
+  expect_type(rewards, "matrix")
+  expect_equal(dim(rewards), c(4, 6))  # states x actions
+  expect_true(all(is.numeric(rewards)))
+})
+
+#' Test Initial State Distribution Creation
+test_that("Initial state distribution creation works", {
+  # Create mock patient data
+  set.seed(202)
+  n <- 40
+  mock_data <- data.frame(
+    kl_grade = sample(0:4, n, replace = TRUE)
+  )
+
+  # Test initial state distribution
+  initial_dist <- create_initial_state_distribution(mock_data)
+
+  expect_type(initial_dist, "numeric")
+  expect_equal(length(initial_dist), 4)
+  expect_equal(sum(initial_dist), 1)
+  expect_true(all(initial_dist >= 0))
+  expect_true(all(names(initial_dist) %in% c("early_oa", "moderate_oa", "severe_oa", "post_surgery")))
+})
+
+#' Test Package Loading
+test_that("Reinforcement learning packages can be loaded", {
+  # This test will only run if packages are available
+  skip_if_not_installed("ReinforcementLearning")
+
+  # Test package loading function
+  expect_error(load_reinforcement_learning_packages(), NA)
+})
+
+#' Integration Test: Full RL Workflow
+test_that("Full reinforcement learning workflow integration works", {
+  # Create comprehensive mock data
+  set.seed(303)
+  n <- 80
+  mock_data <- data.frame(
+    age = rnorm(n, 65, 10),
+    bmi = rnorm(n, 28, 5),
+    kl_grade = sample(0:4, n, replace = TRUE),
+    comorbidities = rbinom(n, 1, 0.3),
+    pain_score = rnorm(n, 5, 2),
+    treatment_outcome = rbinom(n, 1, 0.6),
+    patient_id = 1:n
+  )
+
+  config <- initialize_reinforcement_learning(list())
+
+  # Test workflow steps
+  expect_type(config, "list")
+
+  # Test environment definition
+  environment <- define_treatment_environment(mock_data, config)
+  expect_type(environment, "list")
+
+  # Test Q-learning with reduced episodes
+  config$training$episodes <- 25
+  ql_result <- q_learning_treatment(environment, config)
+  expect_type(ql_result, "list")
+
+  # Test policy evaluation
+  performance <- evaluate_policy_performance(ql_result, environment, config)
+  expect_type(performance, "list")
+  expect_true(is.numeric(performance$mean_reward))
+})
+
+# Run all tests
+if (interactive()) {
+  test_dir(".")
+}

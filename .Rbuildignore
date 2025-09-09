@@ -32,5 +32,6 @@
 ^notes$
 ^project_management$
 ^\.vscode$
+^\.env$
 ^\.env\.example$
 ^test_regex\.R$

@@ -1,0 +1,182 @@
+---
+title: "Getting Started with AUS-OA"
+author: "AUS-OA Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with AUS-OA}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Getting Started with AUS-OA
+
+AUS-OA is a dynamic discrete-time microsimulation model of osteoarthritis and its treatment in Australia. This vignette provides a basic introduction to using the package.
+
+## Installation
+
+You can install the development version from GitHub:
+
+```r
+# install.packages("devtools")
+devtools::install_github("edithatogo/microsim_oa")
+```
+
+## Basic Usage
+
+### Loading the Package
+
+```{r load-package}
+library(ausoa)
+```
+
+### Loading Configuration
+
+The package uses YAML configuration files for model parameters:
+
+```{r load-config}
+# Load default configuration
+config <- load_config()
+```
+
+### Running a Simple Simulation
+
+Here's a basic example of running the osteoarthritis simulation:
+
+```{r simple-simulation, eval=FALSE}
+# This is a simplified example - actual usage would require
+# setting up population data and parameters
+
+# Load initial population data
+# initial_pop <- readRDS("path/to/population.rds")
+
+# Run simulation for a few cycles
+# results <- run_simulation(
+#   population = initial_pop,
+#   cycles = 10,
+#   config = config
+# )
+```
+
+## Key Functions
+
+### Cost Calculation
+
+Calculate healthcare and societal costs for OA patients:
+
+```{r cost-example, eval=FALSE}
+# Example cost calculation
+costs <- calculate_costs_fcn(
+  am_new = population_data,
+  costs_config = config$costs
+)
+```
+
+### QALY Calculation
+
+Calculate quality-adjusted life years:
+
+```{r qaly-example, eval=FALSE}
+# Calculate QALYs using SF-6D
+qaly_results <- calculate_qaly(
+  population_data,
+  config = config
+)
+```
+
+### Policy Analysis
+
+Apply policy interventions:
+
+```{r policy-example, eval=FALSE}
+# Apply BMI modification intervention
+modified_pop <- apply_bmi_modification(
+  population_data,
+  intervention_config = config$interventions
+)
+```
+
+## Model Components
+
+The AUS-OA model includes several key components:
+
+1. **Disease Progression**: Models OA development and progression using KL grades
+2. **Treatment Pathways**: Models TKA surgery and revision procedures
+3. **Cost Analysis**: Multi-perspective costing (healthcare, patient, societal)
+4. **Health Outcomes**: QALY calculation using SF-6D utility scores
+5. **Policy Evaluation**: Framework for testing interventions and policy changes
+
+## Configuration
+
+The model is highly configurable through YAML files. Key configuration areas include:
+
+- Disease parameters (progression rates, risk factors)
+- Treatment parameters (surgery rates, complication risks)
+- Cost parameters (healthcare costs, productivity losses)
+- Intervention parameters (policy levers, treatment effects)
+
+## Output Analysis
+
+The package provides several functions for analyzing simulation results:
+
+```{r analysis-example, eval=FALSE}
+# Generate summary statistics
+summary_stats <- OA_summary_fcn(population_data)
+
+# Plot trends
+f_plot_trend_overall(summary_stats, "prevalence")
+f_plot_trend_age_sex(summary_stats, "costs")
+```
+
+## Advanced Features
+
+### Waiting List Modeling
+
+The package includes advanced waiting list dynamics:
+
+```{r waiting-list-example, eval=FALSE}
+# Integrate waiting list module
+results <- integrate_waiting_list_module(
+  am_curr = current_population,
+  am_new = next_population,
+  cycle_coefficients = config$coefficients
+)
+```
+
+### Probabilistic Sensitivity Analysis
+
+Perform uncertainty analysis:
+
+```{r psa-example, eval=FALSE}
+# Run PSA
+psa_results <- run_psa_analysis(
+  base_config = config,
+  n_simulations = 1000
+)
+```
+
+## Getting Help
+
+For more detailed documentation, see:
+
+- `?ausoa` - Package overview
+- `?calculate_costs_fcn` - Cost calculation details
+- `?OA_summary_fcn` - Output analysis functions
+
+For bug reports and feature requests, please visit:
+https://github.com/edithatogo/microsim_oa/issues
+
+## References
+
+Australian Orthopaedic Association. (2023). Hip and Knee Arthroplasty Annual Report.
+
+Prichett, L., et al. (2022). "Cost-effectiveness of total knee arthroplasty in Australia." *Journal of Arthroplasty*.
+
+For more information about the model methodology and validation, see the package documentation and the GitHub repository.

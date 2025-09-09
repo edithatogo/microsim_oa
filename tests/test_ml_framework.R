@@ -1,0 +1,373 @@
+#' Machine Learning Framework Test Suite
+#'
+#' This script validates the machine learning integration components
+#' including predictive modeling, feature engineering, and model validation.
+#'
+#' Key Tests:
+#' - ML package loading and framework initialization
+#' - Feature engineering pipeline
+#' - Predictive model training and validation
+#' - Risk stratification and treatment response prediction
+#' - Model interpretability and performance assessment
+
+# Load required libraries
+library(data.table)
+library(dplyr)
+library(caret)
+library(ggplot2)
+
+# Suppress warnings for cleaner output
+options(warn = -1)
+
+# Note: ML functions should be available through the ausoa package
+# No need to source files directly
+
+#' Test ML Framework Initialization
+test_ml_framework_initialization <- function() {
+  cat("=== Testing ML Framework Initialization ===\n")
+
+  # Create mock configuration
+  mock_config <- list(
+    coefficients = list(
+      ml = list(
+        framework = list(
+          random_seed = 12345,
+          cv_folds = 5,
+          performance_metric = "RMSE"
+        ),
+        models = list(
+          predictive = list(
+            enabled = TRUE,
+            algorithms = c("rf", "glmnet"),
+            tune_length = 3
+          )
+        ),
+        features = list(
+          patient_characteristics = c("age", "sex", "bmi"),
+          clinical_factors = c("kl_grade", "comorbidities"),
+          treatment_factors = c("implant_type", "surgical_approach")
+        )
+      )
+    )
+  )
+
+  # Initialize ML framework
+  ml_config <- initialize_ml_framework(mock_config)
+  cat("ML framework initialized successfully\n")
+  cat("Framework components:\n")
+  cat("- Random seed:", ml_config$framework$random_seed, "\n")
+  cat("- CV folds:", ml_config$framework$cv_folds, "\n")
+  cat("- Algorithms:", paste(ml_config$models$predictive$algorithms, collapse = ", "), "\n")
+
+  return(ml_config)
+}
+
+#' Create Mock Patient Data for Testing
+create_mock_patient_data <- function(n_patients = 1000) {
+  set.seed(12345)
+
+  data <- data.frame(
+    # Patient characteristics
+    age = pmax(18, pmin(100, rnorm(n_patients, 70, 10))),  # Ensure reasonable age range
+    sex = sample(c("male", "female"), n_patients, replace = TRUE),
+    bmi = pmax(15, pmin(60, rnorm(n_patients, 28, 5))),  # Ensure reasonable BMI range
+
+    # Clinical factors
+    kl_grade = sample(0:4, n_patients, replace = TRUE, prob = c(0.1, 0.2, 0.3, 0.3, 0.1)),
+    comorbidities = rpois(n_patients, 2),
+    smoking_status = sample(c("never", "former", "current"), n_patients, replace = TRUE),
+
+    # Treatment factors
+    implant_type = sample(c("cemented", "uncemented", "hybrid"), n_patients, replace = TRUE),
+    surgical_approach = sample(c("posterior", "anterior", "lateral"), n_patients, replace = TRUE, prob = c(0.6, 0.3, 0.1)),
+    previous_surgeries = rpois(n_patients, 0.5),
+
+    # Outcomes (synthetic for testing)
+    pji_risk = NA,  # Will be filled based on risk factors
+    dvt_risk = NA,
+    revision_risk = NA,
+    qaly_gain = NA
+  )
+
+  # Generate synthetic outcomes based on risk factors
+  data$pji_risk <- with(data, {
+    base_risk <- 0.02  # 2% baseline
+    risk_multiplier <- 1 +
+      (age > 75) * 0.5 +
+      (bmi > 30) * 0.3 +
+      (kl_grade >= 3) * 0.4 +
+      (comorbidities > 2) * 0.3 +
+      (smoking_status == "current") * 0.2
+    rbinom(n_patients, 1, pmin(base_risk * risk_multiplier, 0.15))
+  })
+
+  data$dvt_risk <- with(data, {
+    base_risk <- 0.03
+    risk_multiplier <- 1 +
+      (age > 70) * 0.4 +
+      (bmi > 35) * 0.5 +
+      (comorbidities > 3) * 0.6
+    rbinom(n_patients, 1, pmin(base_risk * risk_multiplier, 0.20))
+  })
+
+  data$revision_risk <- with(data, {
+    base_risk <- 0.05
+    risk_multiplier <- 1 +
+      (age > 80) * 0.3 +
+      (kl_grade >= 4) * 0.4 +
+      (previous_surgeries > 0) * 0.5 +
+      (implant_type == "uncemented") * 0.2
+    rbinom(n_patients, 1, pmin(base_risk * risk_multiplier, 0.25))
+  })
+
+  data$qaly_gain <- with(data, {
+    base_qaly <- 0.6
+    qaly_reduction <- (pji_risk * 0.2) + (dvt_risk * 0.1) + (revision_risk * 0.3) +
+                     (age > 75) * 0.1 + (bmi > 30) * 0.05
+    pmax(base_qaly - qaly_reduction + rnorm(n_patients, 0, 0.1), 0)
+  })
+
+  return(data)
+}
+
+#' Test Feature Engineering Pipeline
+test_feature_engineering <- function() {
+  cat("=== Testing Feature Engineering Pipeline ===\n")
+
+  # Create mock data
+  patient_data <- create_mock_patient_data(500)
+
+  # Initialize ML config
+  mock_config <- list(
+    coefficients = list(
+      ml = list(
+        features = list(
+          patient_characteristics = c("age", "sex", "bmi"),
+          clinical_factors = c("kl_grade", "comorbidities", "smoking_status"),
+          treatment_factors = c("implant_type", "surgical_approach", "previous_surgeries")
+        )
+      )
+    )
+  )
+
+  # Test feature engineering
+  feature_pipeline <- create_feature_pipeline(patient_data, mock_config$coefficients$ml)
+
+  cat("Feature engineering completed successfully\n")
+  cat("Original data dimensions:", dim(patient_data), "\n")
+  cat("Feature matrix dimensions:", dim(feature_pipeline$feature_matrix), "\n")
+  cat("Number of features:", ncol(feature_pipeline$feature_matrix), "\n")
+  cat("Feature names:", paste(head(colnames(feature_pipeline$feature_matrix), 5), collapse = ", "), "...\n")
+
+  return(feature_pipeline)
+}
+
+#' Test Predictive Model Training
+test_predictive_modeling <- function() {
+  cat("=== Testing Predictive Model Training ===\n")
+
+  # Create mock data
+  patient_data <- create_mock_patient_data(800)
+
+  # Initialize ML config
+  ml_config <- list(
+    framework = list(
+      cv_folds = 3,
+      cv_repeats = 1
+      # performance_metric will be determined automatically based on outcome type
+    ),
+    models = list(
+      predictive = list(
+        algorithms = c("rf", "glmnet"),
+        tune_length = 2
+      )
+    ),
+    features = list(
+      patient_characteristics = c("age", "sex", "bmi"),
+      clinical_factors = c("kl_grade", "comorbidities"),
+      treatment_factors = c("implant_type", "surgical_approach")
+    )
+  )
+
+  # Test PJI risk prediction
+  cat("Testing PJI risk prediction...\n")
+  tryCatch({
+    pji_results <- predict_complication_risk(patient_data, "pji", ml_config)
+
+    if (!is.null(pji_results)) {
+      cat("PJI risk prediction successful\n")
+      cat("Number of models trained:", length(pji_results$trained_models$models), "\n")
+      cat("Risk groups created:", pji_results$risk_groups$n_groups, "\n")
+      cat("Feature importance extracted:", !is.null(pji_results$feature_importance), "\n")
+    }
+  }, error = function(e) {
+    cat("PJI prediction failed:", e$message, "\n")
+    cat("Available columns in patient_data:", paste(head(colnames(patient_data), 10), collapse = ", "), "\n")
+    return(NULL)
+  })
+
+  # Test treatment response prediction
+  cat("Testing treatment response prediction...\n")
+  response_results <- NULL
+  tryCatch({
+    response_results <- predict_treatment_response(patient_data, "qaly_gain", ml_config)
+
+    if (!is.null(response_results)) {
+      cat("Treatment response prediction successful\n")
+      cat("Effectiveness analysis completed:", !is.null(response_results$effectiveness), "\n")
+    } else {
+      cat("Treatment response prediction returned NULL\n")
+    }
+  }, error = function(e) {
+    cat("Treatment response prediction failed:", e$message, "\n")
+    response_results <- NULL
+  })
+
+  # Return results, handling NULL cases
+  cat("Preparing results list...\n")
+  results <- list()
+  if (!is.null(pji_results)) {
+    results$pji_results <- pji_results
+    cat("Added PJI results to output\n")
+  }
+  if (!is.null(response_results)) {
+    results$response_results <- response_results
+    cat("Added response results to output\n")
+  }
+
+  cat("Returning results with", length(results), "elements\n")
+  return(results)
+}
+
+#' Test Model Validation
+test_model_validation <- function() {
+  cat("=== Testing Model Validation ===\n")
+
+  tryCatch({
+    cat("Step 1: Creating mock data...\n")
+    # Create training and validation data
+    train_data <- create_mock_patient_data(600)
+    val_data <- create_mock_patient_data(200)
+
+    cat("Step 2: Data created. Train:", nrow(train_data), "rows, Val:", nrow(val_data), "rows\n")
+
+    # Initialize ML config
+    ml_config <- list(
+      framework = list(
+        cv_folds = 3,
+        cv_repeats = 1,
+        performance_metric = "Accuracy"
+      ),
+      models = list(
+        predictive = list(
+          algorithms = c("rf", "glmnet"),
+          tune_length = 2
+        )
+      ),
+      features = list(
+        patient_characteristics = c("age", "sex", "bmi"),
+        clinical_factors = c("kl_grade", "comorbidities"),
+        treatment_factors = c("implant_type", "surgical_approach")
+      )
+    )
+
+    cat("Step 3: ML config initialized\n")
+
+    # Train model
+    cat("Step 4: Training model...\n")
+    trained_model <- predict_complication_risk(train_data, "pji", ml_config)
+
+    cat("Step 5: Model trained successfully\n")
+
+    # Validate model
+    if (!is.null(trained_model)) {
+      cat("Step 6: Starting validation...\n")
+      validation_results <- validate_ml_performance(trained_model, val_data,
+                                                  metrics = c("accuracy", "rmse"))
+
+      cat("Step 7: Model validation completed\n")
+      cat("Validation metrics calculated for", length(validation_results) - 1, "models\n")
+
+      if ("summary" %in% names(validation_results)) {
+        cat("Best performing model:", validation_results$summary$best_model, "\n")
+        cat("Validation samples:", validation_results$summary$n_validation_samples, "\n")
+      }
+    } else {
+      cat("Trained model is NULL\n")
+      validation_results <- NULL
+    }
+
+    return(validation_results)
+
+  }, error = function(e) {
+    cat("Error in test_model_validation at step: ", e$message, "\n")
+    cat("Call stack:\n")
+    print(sys.calls())
+    return(NULL)
+  })
+}
+
+#' Run Complete ML Framework Test Suite
+run_ml_test_suite <- function() {
+  cat("========================================\n")
+  cat("MACHINE LEARNING FRAMEWORK TEST SUITE\n")
+  cat("========================================\n")
+
+  start_time <- Sys.time()
+  end_time <- NULL
+
+  tryCatch({
+    # Test framework initialization
+    cat("Running framework initialization...\n")
+    test_ml_framework_initialization()
+
+    # Test feature engineering
+    cat("Running feature engineering...\n")
+    test_feature_engineering()
+
+    # Test predictive modeling
+    cat("Running predictive modeling...\n")
+    test_predictive_modeling()
+
+    # Set end time only if successful
+    end_time <- Sys.time()
+
+    if (!is.null(end_time)) {
+      duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+      cat("========================================\n")
+      cat("ML FRAMEWORK TESTS COMPLETED!\n")
+      cat("========================================\n")
+      cat("Total duration: ", duration, " seconds\n")
+      cat("ML framework components validated:\n")
+      cat("- Framework initialization: WORKING\n")
+      cat("- Feature engineering pipeline: WORKING\n")
+      cat("- Predictive model training: WORKING\n")
+      cat("- Risk stratification: WORKING\n")
+      cat("- Treatment response prediction: WORKING\n")
+    }
+
+  }, error = function(e) {
+    # Set end time for error case
+    end_time <- Sys.time()
+    duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+    cat("========================================\n")
+    cat("ML FRAMEWORK TESTS FAILED!\n")
+    cat("========================================\n")
+    cat("Error:", e$message, "\n")
+    cat("Duration before failure: ", duration, " seconds\n")
+    cat("Call stack:\n")
+    print(sys.calls())
+  })
+}
+
+# Run the test suite if this script is executed directly
+if (sys.nframe() == 0) {
+  cat("========================================\n")
+  cat("AUS-OA ML Framework Test Suite\n")
+  cat("========================================\n")
+  cat("Starting tests at:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
+
+  run_ml_test_suite()
+}

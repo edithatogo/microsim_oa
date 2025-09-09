@@ -1,13 +1,18 @@
 Package: ausoa
 Title: A Microsimulation Model of Osteoarthritis in Australia
-Version: 2.0.0
-Author: AUS-OA Team
-Maintainer: AUS-OA Team <noreply@example.com>
+Version: 2.0.1
+Authors@R: c(
+    person("AUS-OA", "Team", role = c("aut", "cre"), email = "dylan.mordaunt@vuw.ac.nz")
+  )
+Maintainer: Dylan Mordaunt <dylan.mordaunt@vuw.ac.nz>
 Description: A dynamic discrete time microsimulation model of osteoarthritis and its treatment in Australia.
 License: GPL-3 + file LICENSE
+URL: https://github.com/edithatogo/microsim_oa
+BugReports: https://github.com/edithatogo/microsim_oa/issues
+Depends: R (>= 4.0.0)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
     dplyr,
     forcats,
@@ -34,5 +39,12 @@ Suggests:
     knitr,
     rmarkdown,
     rcmdcheck,
-    devtools
+    devtools,
+    HDInterval,
+    pdp,
+    caret,
+    mockery,
+    pROC,
+    ragg,
+    arrow
 Config/testthat/edition: 3

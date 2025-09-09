@@ -1,0 +1,424 @@
+#' Test Suite for Advanced Analytics Module
+#'
+#' This test suite validates the advanced analytics functionality including:
+#' - Patient clustering and stratification
+#' - Dimensionality reduction techniques
+#' - Advanced feature selection
+#' - Pattern recognition in treatment trajectories
+
+library(testthat)
+library(mockery)
+
+# Note: Advanced analytics functions should be available through the ausoa package
+# No need to source files directly
+
+#' Test Advanced Analytics Framework Initialization
+test_that("Advanced analytics framework initializes correctly", {
+  config <- initialize_advanced_analytics(list())
+
+  expect_type(config, "list")
+  expect_true("clustering" %in% names(config))
+  expect_true("dim_reduction" %in% names(config))
+  expect_true("feature_selection" %in% names(config))
+  expect_true("pattern_recognition" %in% names(config))
+
+  # Check clustering settings
+  expect_true("kmeans" %in% config$clustering$methods)
+  expect_true("hierarchical" %in% config$clustering$methods)
+  expect_equal(length(config$clustering$n_clusters_range), 9)  # 2:10
+
+  # Check dimensionality reduction settings
+  expect_true("pca" %in% config$dim_reduction$methods)
+  expect_true("umap" %in% config$dim_reduction$methods)
+  expect_true("tsne" %in% config$dim_reduction$methods)
+})
+
+#' Test Patient Clustering - K-means
+test_that("K-means patient clustering works", {
+  # Create mock patient data
+  set.seed(123)
+  n <- 100
+  mock_data <- data.frame(
+    age = rnorm(n, 65, 10),
+    bmi = rnorm(n, 28, 5),
+    kl_grade = sample(0:4, n, replace = TRUE),
+    pain_score = rnorm(n, 5, 2),
+    function_score = rnorm(n, 60, 15),
+    comorbidity_score = rnorm(n, 2, 1)
+  )
+
+  config <- initialize_advanced_analytics(list())
+
+  # Test k-means clustering
+  clustering_result <- perform_patient_clustering(mock_data, config, method = "kmeans")
+
+  expect_type(clustering_result, "list")
+  expect_true("clusters" %in% names(clustering_result))
+  expect_true("optimal_k" %in% names(clustering_result))
+  expect_true("validation" %in% names(clustering_result))
+  expect_true("characteristics" %in% names(clustering_result))
+
+  # Check that clusters are assigned
+  expect_equal(length(clustering_result$clusters), n)
+  expect_true(all(clustering_result$clusters > 0))
+  expect_true(clustering_result$optimal_k >= 2)
+  expect_true(clustering_result$optimal_k <= 10)
+})
+
+#' Test Patient Clustering - Hierarchical
+test_that("Hierarchical patient clustering works", {
+  # Create mock patient data
+  set.seed(456)
+  n <- 50
+  mock_data <- data.frame(
+    age = rnorm(n, 65, 10),
+    bmi = rnorm(n, 28, 5),
+    kl_grade = sample(0:4, n, replace = TRUE),
+    pain_score = rnorm(n, 5, 2),
+    function_score = rnorm(n, 60, 15)
+  )
+
+  config <- initialize_advanced_analytics(list())
+
+  # Test hierarchical clustering
+  clustering_result <- perform_patient_clustering(mock_data, config, method = "hierarchical")
+
+  expect_type(clustering_result, "list")
+  expect_true("clusters" %in% names(clustering_result))
+  expect_true("model" %in% names(clustering_result))
+  expect_true("dist_matrix" %in% names(clustering_result))
+  expect_equal(length(clustering_result$clusters), n)
+})
+
+#' Test Dimensionality Reduction - PCA
+test_that("PCA dimensionality reduction works", {
+  # Create mock data
+  set.seed(789)
+  n <- 100
+  p <- 10
+  mock_data <- matrix(rnorm(n * p), nrow = n, ncol = p)
+  mock_data <- as.data.frame(mock_data)
+  colnames(mock_data) <- paste0("feature_", 1:p)
+
+  config <- initialize_advanced_analytics(list())
+
+  # Test PCA
+  pca_result <- perform_dimensionality_reduction(mock_data, config, method = "pca", n_components = 3)
+
+  expect_type(pca_result, "list")
+  expect_equal(pca_result$method, "pca")
+  expect_equal(ncol(pca_result$reduced_data), 3)
+  expect_equal(nrow(pca_result$reduced_data), n)
+  expect_true("explained_variance" %in% names(pca_result))
+  expect_true("loadings" %in% names(pca_result))
+})
+
+#' Test Dimensionality Reduction - UMAP
+test_that("UMAP dimensionality reduction works", {
+  # Create mock data
+  set.seed(101)
+  n <- 50
+  p <- 8
+  mock_data <- matrix(rnorm(n * p), nrow = n, ncol = p)
+  mock_data <- as.data.frame(mock_data)
+  colnames(mock_data) <- paste0("feature_", 1:p)
+
+  config <- initialize_advanced_analytics(list())
+
+  # Skip if umap package not available
+  skip_if_not_installed("umap")
+
+  # Test UMAP
+  umap_result <- perform_dimensionality_reduction(mock_data, config, method = "umap", n_components = 2)
+
+  expect_type(umap_result, "list")
+  expect_equal(umap_result$method, "umap")
+  expect_equal(ncol(umap_result$reduced_data), 2)
+  expect_equal(nrow(umap_result$reduced_data), n)
+})
+
+#' Test Advanced Feature Selection - Boruta
+test_that("Boruta feature selection works", {
+  # Create mock data
+  set.seed(202)
+  n <- 100
+  p <- 10
+  mock_features <- matrix(rnorm(n * p), nrow = n, ncol = p)
+  mock_features <- as.data.frame(mock_features)
+  colnames(mock_features) <- paste0("feature_", 1:p)
+
+  # Create target with some relationship to features
+  mock_target <- mock_features$feature_1 + mock_features$feature_2 + rnorm(n, 0, 0.5)
+
+  config <- initialize_advanced_analytics(list())
+
+  # Skip if Boruta package not available
+  skip_if_not_installed("Boruta")
+
+  # Test Boruta feature selection
+  feature_result <- perform_advanced_feature_selection(
+    mock_features, mock_target, config, method = "boruta"
+  )
+
+  expect_type(feature_result, "list")
+  expect_equal(feature_result$method, "boruta")
+  expect_true("selected_features" %in% names(feature_result))
+  expect_true("important_features" %in% names(feature_result))
+  expect_true(is.character(feature_result$selected_features) ||
+              length(feature_result$selected_features) == 0)
+})
+
+#' Test Advanced Feature Selection - Information Gain
+test_that("Information gain feature selection works", {
+  # Create mock data
+  set.seed(303)
+  n <- 100
+  p <- 8
+  mock_features <- matrix(rnorm(n * p), nrow = n, ncol = p)
+  mock_features <- as.data.frame(mock_features)
+  colnames(mock_features) <- paste0("feature_", 1:p)
+
+  # Create binary target
+  mock_target <- factor(sample(c("low", "high"), n, replace = TRUE))
+
+  config <- initialize_advanced_analytics(list())
+
+  # Skip if FSelectorRcpp package not available
+  skip_if_not_installed("FSelectorRcpp")
+
+  # Test information gain feature selection
+  feature_result <- perform_advanced_feature_selection(
+    mock_features, mock_target, config, method = "information_gain"
+  )
+
+  expect_type(feature_result, "list")
+  expect_equal(feature_result$method, "information_gain")
+  expect_true("selected_features" %in% names(feature_result))
+  expect_true(is.character(feature_result$selected_features))
+})
+
+#' Test Pattern Recognition in Trajectories
+test_that("Pattern recognition in treatment trajectories works", {
+  # Create mock longitudinal data
+  set.seed(404)
+  n_patients <- 20
+  max_timepoints <- 12
+
+  mock_longitudinal <- data.frame()
+
+  for (patient in 1:n_patients) {
+    n_timepoints <- sample(3:max_timepoints, 1)
+    time_points <- sort(sample(1:24, n_timepoints))
+
+    # Generate different trajectory patterns
+    pattern_type <- sample(c("stable", "progression", "improvement", "fluctuation"), 1)
+
+    if (pattern_type == "stable") {
+      outcome <- rep(runif(1, 0.4, 0.6), n_timepoints) + rnorm(n_timepoints, 0, 0.05)
+    } else if (pattern_type == "progression") {
+      outcome <- seq(runif(1, 0.3, 0.5), runif(1, 0.6, 0.8), length.out = n_timepoints) + rnorm(n_timepoints, 0, 0.1)
+    } else if (pattern_type == "improvement") {
+      outcome <- seq(runif(1, 0.6, 0.8), runif(1, 0.3, 0.5), length.out = n_timepoints) + rnorm(n_timepoints, 0, 0.1)
+    } else {  # fluctuation
+      outcome <- runif(1, 0.4, 0.6) + sin(time_points/3) * 0.2 + rnorm(n_timepoints, 0, 0.1)
+    }
+
+    patient_data <- data.frame(
+      patient_id = rep(patient, n_timepoints),
+      time = time_points,
+      outcome = outcome
+    )
+
+    mock_longitudinal <- rbind(mock_longitudinal, patient_data)
+  }
+
+  config <- initialize_advanced_analytics(list())
+
+  # Test pattern recognition
+  pattern_result <- recognize_treatment_patterns(mock_longitudinal, config)
+
+  expect_type(pattern_result, "list")
+  expect_true("patient_patterns" %in% names(pattern_result))
+  expect_true("common_patterns" %in% names(pattern_result))
+  expect_true("trajectory_clusters" %in% names(pattern_result))
+
+  # Check that patterns were analyzed for each patient
+  expect_equal(length(pattern_result$patient_patterns), n_patients)
+  expect_true(all(sapply(pattern_result$patient_patterns, function(p) "pattern_type" %in% names(p))))
+})
+
+#' Test Individual Trajectory Analysis
+test_that("Individual patient trajectory analysis works", {
+  # Create mock patient data
+  set.seed(505)
+  n_timepoints <- 8
+  time_points <- 1:n_timepoints
+  outcome <- 0.7 - 0.02 * time_points + rnorm(n_timepoints, 0, 0.05)  # Slight improvement
+
+  patient_data <- data.frame(
+    patient_id = rep(1, n_timepoints),
+    time = time_points,
+    outcome = outcome
+  )
+
+  config <- initialize_advanced_analytics(list())
+
+  # Test trajectory analysis
+  trajectory <- analyze_patient_trajectory(patient_data, config)
+
+  expect_type(trajectory, "list")
+  expect_true("length" %in% names(trajectory))
+  expect_true("pattern_type" %in% names(trajectory))
+  expect_true("characteristics" %in% names(trajectory))
+  expect_equal(trajectory$length, n_timepoints)
+  expect_true(trajectory$pattern_type %in% c("stable", "progression", "improvement", "fluctuation", "insufficient_data"))
+})
+
+#' Test Trajectory Pattern Classification
+test_that("Trajectory pattern classification works", {
+  config <- initialize_advanced_analytics(list())
+
+  # Test stable pattern
+  stable_outcome <- rep(0.5, 10) + rnorm(10, 0, 0.02)
+  stable_time <- 1:10
+  stable_pattern <- classify_trajectory_pattern(stable_outcome, stable_time, config)
+  expect_equal(stable_pattern, "stable")
+
+  # Test progression pattern
+  progression_outcome <- seq(0.3, 0.8, length.out = 10)
+  progression_time <- 1:10
+  progression_pattern <- classify_trajectory_pattern(progression_outcome, progression_time, config)
+  expect_equal(progression_pattern, "progression")
+
+  # Test improvement pattern
+  improvement_outcome <- seq(0.8, 0.3, length.out = 10)
+  improvement_time <- 1:10
+  improvement_pattern <- classify_trajectory_pattern(improvement_outcome, improvement_time, config)
+  expect_equal(improvement_pattern, "improvement")
+})
+
+#' Test Clustering Validation
+test_that("Clustering validation metrics work", {
+  # Create mock data and clusters
+  set.seed(606)
+  n <- 50
+  data <- matrix(rnorm(n * 3), nrow = n, ncol = 3)
+  clusters <- sample(1:3, n, replace = TRUE)
+
+  config <- initialize_advanced_analytics(list())
+
+  # Test validation
+  validation <- validate_clustering(data, clusters, config)
+
+  expect_type(validation, "list")
+  expect_true("silhouette_score" %in% names(validation))
+  expect_true("calinski_harabasz" %in% names(validation))
+  expect_true("davies_bouldin" %in% names(validation))
+  expect_true(is.numeric(validation$silhouette_score) || is.na(validation$silhouette_score))
+})
+
+#' Test Optimal Cluster Number Finding
+test_that("Optimal cluster number finding works", {
+  # Create mock data
+  set.seed(707)
+  n <- 60
+  data <- matrix(rnorm(n * 4), nrow = n, ncol = 4)
+
+  # Test silhouette method
+  optimal_k_sil <- find_optimal_clusters_silhouette(data, 2:6)
+  expect_true(optimal_k_sil >= 2)
+  expect_true(optimal_k_sil <= 6)
+
+  # Test elbow method with mock WSS
+  wss <- c(100, 80, 60, 45, 35, 30, 28)
+  k_range <- 2:8
+  optimal_k_elbow <- find_optimal_clusters_elbow(wss, k_range)
+  expect_true(optimal_k_elbow >= 2)
+  expect_true(optimal_k_elbow <= 8)
+})
+
+#' Test Advanced Analytics Report Generation
+test_that("Advanced analytics report generation works", {
+  # Create mock analytics results
+  mock_results <- list(
+    clustering = list(
+      method = "kmeans",
+      optimal_k = 3,
+      validation = list(silhouette_score = 0.65),
+      characteristics = list(
+        cluster_1 = list(size = 30, proportion = 0.3),
+        cluster_2 = list(size = 35, proportion = 0.35),
+        cluster_3 = list(size = 35, proportion = 0.35)
+      )
+    ),
+    patterns = list(
+      common_patterns = list(
+        pattern_distribution = c(stable = 40, progression = 30, improvement = 20, fluctuation = 10)
+      )
+    )
+  )
+
+  # Test report generation
+  report_path <- generate_advanced_analytics_report(mock_results, tempdir())
+
+  expect_true(file.exists(report_path))
+  expect_true(grepl("\\.html$", report_path))
+
+  # Check that report contains expected content
+  report_content <- readLines(report_path)
+  expect_true(any(grepl("Advanced Analytics Report", report_content)))
+  expect_true(any(grepl("Patient Clustering Results", report_content)))
+})
+
+#' Test Package Loading
+test_that("Advanced analytics packages can be loaded", {
+  # This test will only run if packages are available
+  skip_if_not_installed("cluster")
+
+  # Test package loading function
+  expect_error(load_advanced_analytics_packages(), NA)
+})
+
+#' Integration Test: Full Advanced Analytics Workflow
+test_that("Full advanced analytics workflow integration works", {
+  # Create comprehensive mock data
+  set.seed(808)
+  n <- 80
+  mock_data <- data.frame(
+    age = rnorm(n, 65, 10),
+    bmi = rnorm(n, 28, 5),
+    kl_grade = sample(0:4, n, replace = TRUE),
+    pain_score = rnorm(n, 5, 2),
+    function_score = rnorm(n, 60, 15),
+    comorbidity_score = rnorm(n, 2, 1),
+    treatment_response = rnorm(n, 0.6, 0.2)
+  )
+
+  config <- initialize_advanced_analytics(list())
+
+  # Test workflow steps
+  expect_type(config, "list")
+
+  # Test clustering
+  clustering_result <- perform_patient_clustering(mock_data, config, method = "kmeans")
+  expect_type(clustering_result, "list")
+  expect_true("clusters" %in% names(clustering_result))
+
+  # Test dimensionality reduction
+  dim_result <- perform_dimensionality_reduction(mock_data, config, method = "pca", n_components = 2)
+  expect_type(dim_result, "list")
+  expect_equal(ncol(dim_result$reduced_data), 2)
+
+  # Test feature selection
+  skip_if_not_installed("FSelectorRcpp")
+  feature_result <- perform_advanced_feature_selection(
+    mock_data[, 1:5], mock_data$treatment_response, config, method = "information_gain"
+  )
+  expect_type(feature_result, "list")
+  expect_true("selected_features" %in% names(feature_result))
+})
+
+# Run all tests
+if (interactive()) {
+  test_dir(".")
+}

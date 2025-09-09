@@ -294,5 +294,4 @@ waiting_list_module <- function(am_curr, am_new, waiting_list_params) {
   return(result)
 }
 
-#' Helper function for default values
 `%||%` <- function(x, y) if (is.null(x)) y else x

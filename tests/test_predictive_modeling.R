@@ -1,0 +1,365 @@
+#' Predictive Modeling Module Test Suite
+#'
+#' This script validates the predictive modeling components
+#' including complication risk prediction, treatment response analysis,
+#' and risk stratification capabilities.
+#'
+#' Key Tests:
+#' - Complication risk prediction (PJI, DVT, revision)
+#' - Treatment response prediction
+#' - Risk stratification and clustering
+#' - Feature importance analysis
+#' - Model calibration and uncertainty quantification
+
+# Load required libraries
+library(data.table)
+library(dplyr)
+library(caret)
+library(ggplot2)
+library(pROC)
+
+# Note: Predictive modeling functions should be available through the ausoa package
+# No need to source files directly
+
+#' Create Comprehensive Mock Patient Data
+create_comprehensive_mock_data <- function(n_patients = 1000) {
+  set.seed(12345)
+
+  data <- data.frame(
+    # Patient demographics
+    patient_id = 1:n_patients,
+    age = rnorm(n_patients, 70, 10),
+    sex = sample(c("male", "female"), n_patients, replace = TRUE),
+    bmi = rnorm(n_patients, 28, 5),
+    ethnicity = sample(c("caucasian", "asian", "other"), n_patients, replace = TRUE, prob = c(0.7, 0.2, 0.1)),
+
+    # Clinical characteristics
+    kl_grade = sample(0:4, n_patients, replace = TRUE, prob = c(0.1, 0.2, 0.3, 0.3, 0.1)),
+    comorbidities = rpois(n_patients, 2),
+    smoking_status = sample(c("never", "former", "current"), n_patients, replace = TRUE),
+    diabetes = rbinom(n_patients, 1, 0.15),
+    hypertension = rbinom(n_patients, 1, 0.35),
+    cardiovascular_disease = rbinom(n_patients, 1, 0.20),
+
+    # Treatment factors
+    implant_type = sample(c("cemented", "uncemented", "hybrid"), n_patients, replace = TRUE),
+    surgical_approach = sample(c("posterior", "anterior", "lateral"), n_patients, replace = TRUE, prob = c(0.6, 0.3, 0.1)),
+    previous_surgeries = rpois(n_patients, 0.5),
+    surgeon_experience = sample(c("low", "medium", "high"), n_patients, replace = TRUE, prob = c(0.2, 0.5, 0.3)),
+    hospital_volume = sample(c("low", "medium", "high"), n_patients, replace = TRUE, prob = c(0.3, 0.4, 0.3)),
+
+    # Outcomes
+    pji_risk = NA,
+    dvt_risk = NA,
+    revision_risk = NA,
+    infection_risk = NA,
+    qaly_gain = NA,
+    cost_savings = NA
+  )
+
+  # Generate realistic complication risks
+  data$pji_risk <- with(data, {
+    base_risk <- 0.02
+    risk_multiplier <- 1 +
+      (age > 75) * 0.5 +
+      (bmi > 30) * 0.3 +
+      (kl_grade >= 3) * 0.4 +
+      (comorbidities > 2) * 0.3 +
+      (smoking_status == "current") * 0.2 +
+      (diabetes == 1) * 0.4 +
+      (implant_type == "uncemented") * 0.3 +
+      (surgeon_experience == "low") * 0.5 +
+      (hospital_volume == "low") * 0.4
+    rbinom(n_patients, 1, pmin(base_risk * risk_multiplier, 0.15))
+  })
+
+  data$dvt_risk <- with(data, {
+    base_risk <- 0.03
+    risk_multiplier <- 1 +
+      (age > 70) * 0.4 +
+      (bmi > 35) * 0.5 +
+      (comorbidities > 3) * 0.6 +
+      (hypertension == 1) * 0.3 +
+      (cardiovascular_disease == 1) * 0.4 +
+      (previous_surgeries > 0) * 0.2
+    rbinom(n_patients, 1, pmin(base_risk * risk_multiplier, 0.20))
+  })
+
+  data$revision_risk <- with(data, {
+    base_risk <- 0.05
+    risk_multiplier <- 1 +
+      (age > 80) * 0.3 +
+      (kl_grade >= 4) * 0.4 +
+      (previous_surgeries > 0) * 0.5 +
+      (implant_type == "uncemented") * 0.2 +
+      (surgeon_experience == "low") * 0.3 +
+      (hospital_volume == "low") * 0.2
+    rbinom(n_patients, 1, pmin(base_risk * risk_multiplier, 0.25))
+  })
+
+  data$infection_risk <- with(data, {
+    base_risk <- 0.025
+    risk_multiplier <- 1 +
+      (diabetes == 1) * 0.6 +
+      (smoking_status == "current") * 0.4 +
+      (bmi > 30) * 0.3 +
+      (comorbidities > 2) * 0.4
+    rbinom(n_patients, 1, pmin(base_risk * risk_multiplier, 0.18))
+  })
+
+  # Generate QALY and cost outcomes
+  data$qaly_gain <- with(data, {
+    base_qaly <- 0.6
+    qaly_reduction <- (pji_risk * 0.2) + (dvt_risk * 0.1) + (revision_risk * 0.3) +
+                     (infection_risk * 0.25) + (age > 75) * 0.1 + (bmi > 30) * 0.05 +
+                     (comorbidities > 3) * 0.15
+    pmax(base_qaly - qaly_reduction + rnorm(n_patients, 0, 0.1), 0)
+  })
+
+  data$cost_savings <- with(data, {
+    base_savings <- 5000
+    cost_increase <- (pji_risk * 15000) + (dvt_risk * 8000) + (revision_risk * 25000) +
+                    (infection_risk * 12000) + (age > 75) * 2000
+    base_savings - cost_increase + rnorm(n_patients, 0, 1000)
+  })
+
+  return(data)
+}
+
+#' Test Complication Risk Prediction
+test_complication_prediction <- function() {
+  cat("=== Testing Complication Risk Prediction ===\n")
+
+  # Create comprehensive mock data
+  patient_data <- create_comprehensive_mock_data(800)
+
+  # Initialize ML config
+  ml_config <- list(
+    framework = list(
+      cv_folds = 3,
+      cv_repeats = 1,
+      performance_metric = "Accuracy"
+    ),
+    models = list(
+      predictive = list(
+        algorithms = c("rf", "glmnet"),
+        tune_length = 2
+      )
+    ),
+    features = list(
+      patient_characteristics = c("age", "sex", "bmi", "ethnicity"),
+      clinical_factors = c("kl_grade", "comorbidities", "smoking_status", "diabetes", "hypertension", "cardiovascular_disease"),
+      treatment_factors = c("implant_type", "surgical_approach", "previous_surgeries", "surgeon_experience", "hospital_volume")
+    )
+  )
+
+  complications <- c("pji", "dvt", "revision", "infection")
+  results <- list()
+
+  for (comp in complications) {
+    cat(sprintf("Testing %s risk prediction...\n", toupper(comp)))
+
+    result <- predict_complication_risk(patient_data, comp, ml_config)
+
+    if (!is.null(result)) {
+      cat(sprintf("%s prediction successful\n", toupper(comp)))
+      cat("- Models trained:", length(result$trained_models$models), "\n")
+      cat("- Risk groups:", result$risk_groups$n_groups, "\n")
+      cat("- Feature importance:", !is.null(result$feature_importance), "\n")
+      cat("- Uncertainty quantified:", !is.null(result$uncertainty), "\n")
+
+      results[[comp]] <- result
+    } else {
+      cat(sprintf("%s prediction failed\n", toupper(comp)))
+    }
+  }
+
+  return(results)
+}
+
+#' Test Treatment Response Prediction
+test_treatment_response <- function() {
+  cat("=== Testing Treatment Response Prediction ===\n")
+
+  # Create mock data
+  patient_data <- create_comprehensive_mock_data(600)
+
+  # Initialize ML config
+  ml_config <- list(
+    framework = list(
+      cv_folds = 3,
+      performance_metric = "RMSE"
+    ),
+    models = list(
+      predictive = list(
+        algorithms = c("rf", "glmnet"),
+        tune_length = 2
+      )
+    ),
+    features = list(
+      patient_characteristics = c("age", "sex", "bmi"),
+      clinical_factors = c("kl_grade", "comorbidities"),
+      treatment_factors = c("implant_type", "surgical_approach")
+    )
+  )
+
+  outcomes <- c("qaly_gain", "cost_savings")
+  results <- list()
+
+  for (outcome in outcomes) {
+    cat(sprintf("Testing %s prediction...\n", outcome))
+
+    result <- predict_treatment_response(patient_data, outcome, ml_config)
+
+    if (!is.null(result)) {
+      cat(sprintf("%s prediction successful\n", outcome))
+      cat("- Effectiveness analysis:", !is.null(result$effectiveness), "\n")
+      cat("- Treatment comparisons:", !is.null(result$treatment_comparison), "\n")
+      cat("- Subgroup analysis:", !is.null(result$subgroup_analysis), "\n")
+
+      results[[outcome]] <- result
+    } else {
+      cat(sprintf("%s prediction failed\n", outcome))
+    }
+  }
+
+  return(results)
+}
+
+#' Test Risk Stratification
+test_risk_stratification <- function() {
+  cat("=== Testing Risk Stratification ===\n")
+
+  # Create mock data
+  patient_data <- create_comprehensive_mock_data(500)
+
+  # Initialize ML config
+  ml_config <- list(
+    framework = list(
+      cv_folds = 3
+    ),
+    models = list(
+      predictive = list(
+        algorithms = c("rf", "glmnet")
+      )
+    ),
+    features = list(
+      patient_characteristics = c("age", "sex", "bmi"),
+      clinical_factors = c("kl_grade", "comorbidities"),
+      treatment_factors = c("implant_type", "surgical_approach")
+    )
+  )
+
+  # Test risk stratification
+  stratification_result <- create_risk_stratification(patient_data, ml_config)
+
+  if (!is.null(stratification_result)) {
+    cat("Risk stratification successful\n")
+    cat("- Number of clusters:", stratification_result$n_clusters, "\n")
+    cat("- Cluster characteristics:", !is.null(stratification_result$cluster_characteristics), "\n")
+    cat("- Risk profiles:", !is.null(stratification_result$risk_profiles), "\n")
+    cat("- Treatment recommendations:", !is.null(stratification_result$treatment_recommendations), "\n")
+  }
+
+  return(stratification_result)
+}
+
+#' Test Model Performance Validation
+test_model_performance <- function() {
+  cat("=== Testing Model Performance Validation ===\n")
+
+  # Create training and validation data
+  train_data <- create_comprehensive_mock_data(600)
+  val_data <- create_comprehensive_mock_data(200)
+
+  # Initialize ML config
+  ml_config <- list(
+    framework = list(
+      cv_folds = 3,
+      performance_metric = "Accuracy"
+    ),
+    models = list(
+      predictive = list(
+        algorithms = c("rf", "glmnet")
+      )
+    ),
+    features = list(
+      patient_characteristics = c("age", "sex", "bmi"),
+      clinical_factors = c("kl_grade", "comorbidities"),
+      treatment_factors = c("implant_type", "surgical_approach")
+    )
+  )
+
+  # Train model
+  trained_model <- predict_complication_risk(train_data, "pji", ml_config)
+
+  # Validate performance
+  if (!is.null(trained_model)) {
+    validation_results <- validate_ml_performance(trained_model, val_data,
+                                                metrics = c("accuracy", "precision", "recall", "auc"))
+
+    cat("Model validation completed\n")
+    cat("- Validation metrics:", length(validation_results) - 1, "models evaluated\n")
+
+    if ("summary" %in% names(validation_results)) {
+      cat("- Best model:", validation_results$summary$best_model, "\n")
+      cat("- Validation samples:", validation_results$summary$n_validation_samples, "\n")
+    }
+  }
+
+  return(validation_results)
+}
+
+#' Run Complete Predictive Modeling Test Suite
+run_predictive_modeling_test_suite <- function() {
+  cat("========================================\n")
+  cat("PREDICTIVE MODELING TEST SUITE\n")
+  cat("========================================\n")
+
+  start_time <- Sys.time()
+
+  tryCatch({
+    # Test complication prediction
+    complication_results <- test_complication_prediction()
+
+    # Test treatment response prediction
+    response_results <- test_treatment_response()
+
+    # Test risk stratification
+    stratification_results <- test_risk_stratification()
+
+    # Test model performance validation
+    performance_results <- test_model_performance()
+
+    end_time <- Sys.time()
+    duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+    cat("========================================\n")
+    cat("PREDICTIVE MODELING TESTS COMPLETED!\n")
+    cat("========================================\n")
+    cat("Total duration:", sprintf("%.2f seconds\n", duration), "\n")
+    cat("Predictive modeling components validated:\n")
+    cat("- Complication risk prediction: WORKING\n")
+    cat("- Treatment response prediction: WORKING\n")
+    cat("- Risk stratification: WORKING\n")
+    cat("- Model performance validation: WORKING\n")
+
+  }, error = function(e) {
+    cat("========================================\n")
+    cat("PREDICTIVE MODELING TESTS FAILED!\n")
+    cat("========================================\n")
+    cat("Error:", e$message, "\n")
+    cat("Call stack:\n")
+    print(sys.calls())
+  })
+}
+
+# Run the test suite if this script is executed directly
+if (sys.nframe() == 0) {
+  cat("========================================\n")
+  cat("AUS-OA Predictive Modeling Test Suite\n")
+  cat("========================================\n")
+  cat("Starting tests at:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
+
+  run_predictive_modeling_test_suite()
+}

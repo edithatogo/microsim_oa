@@ -1,13 +1,7 @@
-#' Data I/O Utilities for AUS-OA Model
-#'
-#' This module provides utilities for efficient data I/O operations
-#' using the Arrow/Parquet format for improved performance.
-#'
-#' @import arrow
-#' @import readxl
-#' @import readr
-#' @import here
-#' @export
+# Data I/O Utilities for AUS-OA Model
+#
+# This module provides utilities for efficient data I/O operations
+# using the Arrow/Parquet format for improved performance.
 
 #' Convert CSV/Excel files to Parquet format
 #'

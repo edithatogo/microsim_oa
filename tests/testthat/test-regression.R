@@ -37,6 +37,24 @@ test_that("Simulation produces consistent outputs", {
       early_intercept = list(live = 0.1),
       late_intercept = list(live = 0.1),
       log_time = list(live = 0.1)
+    ),
+    waiting_list = list(
+      prioritization_scheme = list(live = "clinical"),
+      capacity = list(
+        total_capacity = list(live = 1000),
+        public_proportion = list(live = 0.7)
+      ),
+      wait_time_impacts = list(
+        qaly_loss_per_month = list(live = 0.01),
+        additional_cost_per_month = list(live = 100),
+        oa_progression_prob_per_month = list(live = 0.05)
+      ),
+      pathways = list(
+        private_base_prob = list(live = 0.3),
+        socioeconomic_weight = list(live = 0.4),
+        urgency_weight = list(live = 0.3),
+        private_cost_multiplier = list(live = 2.0)
+      )
     )
   )
 

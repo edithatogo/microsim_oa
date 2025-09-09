@@ -1064,3 +1064,145 @@ resource_allocation:
       distribution: beta
       alpha: 40
       beta: 60
+
+# Probabilistic Sensitivity Analysis (PSA) Parameters
+# Parameters for controlling Monte Carlo PSA framework and convergence diagnostics
+
+psa:
+  # Monte Carlo simulation settings
+  monte_carlo:
+    # Default number of PSA samples
+    default_n_samples:
+      live: 1000  # Standard number of parameter sets
+      distribution: NA  # Not sampled, fixed value
+
+    # Minimum samples for convergence assessment
+    min_samples_convergence:
+      live: 500  # Minimum samples needed for basic convergence
+      distribution: NA
+
+    # Target samples for full convergence
+    target_samples_convergence:
+      live: 2000  # Target samples for robust convergence
+      distribution: NA
+
+    # Random seed for reproducibility
+    default_seed:
+      live: 12345  # Default seed for PSA runs
+      distribution: NA
+
+  # Convergence diagnostics parameters
+  convergence:
+    # Confidence interval width for convergence assessment
+    ci_width_threshold:
+      live: 0.05  # 5% relative width for CI convergence
+      distribution: beta
+      alpha: 50
+      beta: 950
+
+    # Relative standard error threshold
+    relative_se_threshold:
+      live: 0.02  # 2% relative standard error
+      distribution: beta
+      alpha: 20
+      beta: 980
+
+    # Half-width ratio for cost-effectiveness acceptability
+    half_width_ratio_threshold:
+      live: 0.1  # 10% half-width ratio
+      distribution: beta
+      alpha: 100
+      beta: 900
+
+    # Number of batches for batch means convergence
+    n_batches_convergence:
+      live: 10  # Number of batches for convergence testing
+      distribution: NA
+
+  # Parameter uncertainty settings
+  uncertainty:
+    # Default uncertainty level for parameters without explicit distributions
+    default_uncertainty_level:
+      live: 0.1  # 10% uncertainty
+      distribution: beta
+      alpha: 100
+      beta: 900
+
+    # Minimum uncertainty level
+    min_uncertainty_level:
+      live: 0.01  # 1% minimum uncertainty
+      distribution: beta
+      alpha: 10
+      beta: 990
+
+    # Maximum uncertainty level
+    max_uncertainty_level:
+      live: 0.5  # 50% maximum uncertainty
+      distribution: beta
+      alpha: 500
+      beta: 500
+
+  # Cost-effectiveness analysis parameters
+  cost_effectiveness:
+    # Willingness-to-pay threshold (AUD per QALY)
+    wtp_threshold:
+      live: 50000  # Standard WTP threshold
+      distribution: gamma
+      shape: 10
+      rate: 0.0002
+
+    # Alternative WTP thresholds for sensitivity
+    wtp_alternatives:
+      low:
+        live: 25000  # Low WTP threshold
+        distribution: gamma
+        shape: 5
+        rate: 0.0002
+      high:
+        live: 100000  # High WTP threshold
+        distribution: gamma
+        shape: 20
+        rate: 0.0002
+
+  # Reporting and output parameters
+  reporting:
+    # Confidence level for uncertainty intervals
+    confidence_level:
+      live: 0.95  # 95% confidence intervals
+      distribution: beta
+      alpha: 95
+      beta: 5
+
+    # Number of bootstrap replicates for CEAC
+    bootstrap_replicates:
+      live: 1000  # Bootstrap samples for CEAC
+      distribution: NA
+
+    # Significance level for hypothesis testing
+    significance_level:
+      live: 0.05  # 5% significance level
+      distribution: beta
+      alpha: 5
+      beta: 95
+
+  # Computational efficiency parameters
+  computation:
+    # Maximum parallel workers
+    max_parallel_workers:
+      live: 4  # Maximum parallel processes
+      distribution: NA
+
+    # Memory limit per simulation (MB)
+    memory_limit_mb:
+      live: 2000  # 2GB memory limit
+      distribution: NA
+
+    # Timeout per simulation (seconds)
+    simulation_timeout_seconds:
+      live: 300  # 5 minute timeout
+      distribution: NA
+
+    # Checkpoint frequency (save every N simulations)
+    checkpoint_frequency:
+      live: 100  # Save progress every 100 simulations
+      distribution: NA
