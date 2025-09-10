@@ -32,6 +32,7 @@ load_advanced_analytics_packages <- function() {
 #'
 #' @param config Configuration list
 #' @return Advanced analytics configuration
+#' @export
 initialize_advanced_analytics <- function(config) {
   analytics_config <- list()
 

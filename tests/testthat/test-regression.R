@@ -1,7 +1,6 @@
 library(testthat)
 library(data.table)
-
-
+library(ausoa)
 
 test_that("Simulation produces consistent outputs", {
   # This test runs a short, deterministic simulation and compares its output

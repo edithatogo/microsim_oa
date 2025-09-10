@@ -1,0 +1,139 @@
+﻿name: Quality Metrics
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  quality-metrics:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::covr
+            any::goodpractice
+            any::lintr
+            any::cyclocomp
+            any::pkgdown
+            any::spelling
+            any::devtools
+            any::roxygen2
+      
+      - name: Generate quality metrics report
+        run: |
+          Rscript -e "
+            library(covr)
+            library(goodpractice)
+            library(lintr)
+            library(cyclocomp)
+            library(spelling)
+            
+            # Initialize metrics collection
+            metrics <- list()
+            
+            # Code coverage
+            try({
+              coverage <- package_coverage()
+              metrics <- percent_coverage(coverage)
+              cat(sprintf('Code Coverage: %.1f%%\n', metrics))
+            })
+            
+            # Good practice score
+            try({
+              gp_results <- gp()
+              metrics <- gp_results
+              cat(sprintf('Good Practice Score: %.1f/100\n', metrics))
+            })
+            
+            # Linting results
+            try({
+              lint_results <- lint_package()
+              metrics <- length(lint_results)
+              cat(sprintf('Lint Warnings: %d\n', metrics))
+            })
+            
+            # Cyclomatic complexity
+            try({
+              files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+              complexities <- sapply(files, cyclocomp)
+              metrics <- mean(complexities)
+              metrics <- max(complexities)
+              cat(sprintf('Average Complexity: %.1f\n', metrics))
+              cat(sprintf('Max Complexity: %d\n', metrics))
+            })
+            
+            # Documentation completeness
+            try({
+              man_files <- list.files('man/', pattern = '*.Rd')
+              r_files <- list.files('R/', pattern = '*.R')
+              metrics <- length(man_files) / length(r_files)
+              cat(sprintf('Documentation Ratio: %.2f\n', metrics))
+            })
+            
+            # Spell check
+            try({
+              spell_results <- spell_check_package()
+              metrics <- length(spell_results)
+              cat(sprintf('Spelling Errors: %d\n', metrics))
+            })
+            
+            # Save metrics
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(metrics, 'output/quality_metrics.rds')
+            
+            # Generate summary report
+            cat('\n=== Quality Metrics Summary ===\n')
+            for (metric in names(metrics)) {
+              cat(sprintf('%s: %s\n', metric, format(metrics[[metric]], digits = 3)))
+            }
+          "
+        shell: bash
+      
+      - name: Upload quality metrics
+        uses: actions/upload-artifact@main
+        with:
+          name: quality-metrics
+          path: output/quality_metrics.rds
+      
+      - name: Update quality metrics badge
+        run: |
+          # Read current metrics
+          if [ -f "output/quality_metrics.rds" ]; then
+            Rscript -e "
+              metrics <- readRDS('output/quality_metrics.rds')
+              
+              # Calculate overall quality score (0-100)
+              coverage_score <- min(metrics, 100) * 0.3
+              gp_score <- metrics * 0.3
+              lint_score <- max(0, 100 - metrics * 2) * 0.2
+              complexity_score <- max(0, 100 - (metrics - 10) * 2) * 0.2
+              
+              overall_score <- coverage_score + gp_score + lint_score + complexity_score
+              
+              # Determine badge color
+              color <- if (overall_score >= 90) 'brightgreen' 
+                      else if (overall_score >= 75) 'yellow' 
+                      else if (overall_score >= 60) 'orange' 
+                      else 'red'
+              
+              cat(sprintf('Quality Score: %.1f/100\n', overall_score))
+              cat(sprintf('Badge Color: %s\n', color))
+              
+              # Save for badge generation
+              saveRDS(list(score = overall_score, color = color), 'output/quality_badge.rds')
+            "
+          fi
+        shell: bash

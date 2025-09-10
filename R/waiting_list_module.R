@@ -95,9 +95,9 @@ model_queue_management <- function(am_curr, capacity_constraints) {
     am_curr$queue_position[waiting_patients] <- am_curr$priority_rank[waiting_patients]
 
     # Calculate available capacity (surgeries per cycle)
-    total_capacity <- capacity_constraints$total_capacity$live
-    public_capacity <- total_capacity * capacity_constraints$public_proportion$live
-    private_capacity <- total_capacity * (1 - capacity_constraints$public_proportion$live)
+    total_capacity <- capacity_constraints$total_capacity
+    public_capacity <- total_capacity * capacity_constraints$public_proportion
+    private_capacity <- total_capacity * (1 - capacity_constraints$public_proportion)
 
     # Determine how many patients can be treated this cycle
     n_waiting <- length(waiting_patients)
@@ -154,15 +154,15 @@ calculate_wait_time_impacts <- function(am_curr, wait_time_coefficients) {
 
     # QALY loss due to delayed treatment
     # Based on pain and function deterioration during wait
-    qaly_loss_per_month <- wait_time_coefficients$qaly_loss_per_month$live
+    qaly_loss_per_month <- wait_time_coefficients$qaly_loss_per_month
     am_curr$wait_time_qaly_loss[delayed_patients] <- wait_months * qaly_loss_per_month
 
     # Additional healthcare costs during wait period
-    cost_per_month <- wait_time_coefficients$additional_cost_per_month$live
+    cost_per_month <- wait_time_coefficients$additional_cost_per_month
     am_curr$wait_time_cost[delayed_patients] <- wait_months * cost_per_month
 
     # Risk of OA progression during wait
-    progression_prob <- wait_time_coefficients$oa_progression_prob_per_month$live
+    progression_prob <- wait_time_coefficients$oa_progression_prob_per_month
     progression_risk <- 1 - (1 - progression_prob)^wait_months
 
     progression_rand <- runif(length(delayed_patients))
@@ -211,16 +211,16 @@ model_pathway_selection <- function(am_curr, pathway_coefficients) {
       urgency_factor <- am_curr$urgency_score[i]
 
       # Combined probability of choosing private care
-      private_prob <- pathway_coefficients$private_base_prob$live +
-                     socioeconomic_score * pathway_coefficients$socioeconomic_weight$live -
-                     urgency_factor * pathway_coefficients$urgency_weight$live
+      private_prob <- pathway_coefficients$private_base_prob +
+                     socioeconomic_score * pathway_coefficients$socioeconomic_weight -
+                     urgency_factor * pathway_coefficients$urgency_weight
 
       private_prob <- max(0, min(1, private_prob))  # Bound between 0 and 1
 
       # Random selection
       if (runif(1) < private_prob) {
         am_curr$care_pathway[i] <- "private"
-        am_curr$pathway_cost_multiplier[i] <- pathway_coefficients$private_cost_multiplier$live
+        am_curr$pathway_cost_multiplier[i] <- pathway_coefficients$private_cost_multiplier
       } else {
         am_curr$care_pathway[i] <- "public"
         am_curr$pathway_cost_multiplier[i] <- 1.0

@@ -10,21 +10,21 @@
 integrate_waiting_list_module <- function(am_curr, am_new, cycle_coefficients) {
   # Extract waiting list parameters from coefficients
   waiting_list_params <- list(
-    prioritization_scheme = cycle_coefficients$waiting_list$prioritization_scheme$live,
+    prioritization_scheme = cycle_coefficients$waiting_list$prioritization_scheme,
     capacity = list(
-      total_capacity = cycle_coefficients$waiting_list$capacity$total_capacity$live,
-      public_proportion = cycle_coefficients$waiting_list$capacity$public_proportion$live
+      total_capacity = cycle_coefficients$waiting_list$capacity$total_capacity,
+      public_proportion = cycle_coefficients$waiting_list$capacity$public_proportion
     ),
     wait_time_impacts = list(
-      qaly_loss_per_month = cycle_coefficients$waiting_list$wait_time_impacts$qaly_loss_per_month$live,
-      additional_cost_per_month = cycle_coefficients$waiting_list$wait_time_impacts$additional_cost_per_month$live,
-      oa_progression_prob_per_month = cycle_coefficients$waiting_list$wait_time_impacts$oa_progression_prob_per_month$live
+      qaly_loss_per_month = cycle_coefficients$waiting_list$wait_time_impacts$qaly_loss_per_month,
+      additional_cost_per_month = cycle_coefficients$waiting_list$wait_time_impacts$additional_cost_per_month,
+      oa_progression_prob_per_month = cycle_coefficients$waiting_list$wait_time_impacts$oa_progression_prob_per_month
     ),
     pathways = list(
-      private_base_prob = cycle_coefficients$waiting_list$pathways$private_base_prob$live,
-      socioeconomic_weight = cycle_coefficients$waiting_list$pathways$socioeconomic_weight$live,
-      urgency_weight = cycle_coefficients$waiting_list$pathways$urgency_weight$live,
-      private_cost_multiplier = cycle_coefficients$waiting_list$pathways$private_cost_multiplier$live
+      private_base_prob = cycle_coefficients$waiting_list$pathways$private_base_prob,
+      socioeconomic_weight = cycle_coefficients$waiting_list$pathways$socioeconomic_weight,
+      urgency_weight = cycle_coefficients$waiting_list$pathways$urgency_weight,
+      private_cost_multiplier = cycle_coefficients$waiting_list$pathways$private_cost_multiplier
     )
   )
 

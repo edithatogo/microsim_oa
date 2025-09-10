@@ -50,20 +50,44 @@ load_config <- function(config_path = "config") {
 #' @importFrom stats rnorm
 #' @export
 get_params <- function(config, analysis_type = "live") {
+  # Helper function to recursively extract 'live' values
+  extract_live <- function(x) {
+    if (is.list(x)) {
+      if ("live" %in% names(x)) {
+        return(x$live)
+      } else {
+        return(lapply(x, extract_live))
+      }
+    } else {
+      return(x)
+    }
+  }
+
+  # Helper function for PSA sampling
+  extract_psa <- function(x) {
+    if (is.list(x)) {
+      if ("live" %in% names(x)) {
+        if ("distribution" %in% names(x) && x$distribution == "normal") {
+          return(rnorm(1, mean = x$live, sd = x$std_error))
+        } else {
+          return(x$live)
+        }
+      } else {
+        return(lapply(x, extract_psa))
+      }
+    } else {
+      return(x)
+    }
+  }
+
   params <- list()
 
   if (analysis_type == "live") {
     # Extract the 'live' value from each parameter
-    params <- purrr::map_depth(config, 2, ~ .x$live)
+    params <- extract_live(config)
   } else if (analysis_type == "psa") {
     # Sample from the specified distribution for each parameter
-    params <- purrr::map_depth(config, 2, ~ {
-      if ("distribution" %in% names(.x) && .x$distribution == "normal") {
-        rnorm(1, mean = .x$live, sd = .x$std_error)
-      } else {
-        .x$live
-      }
-    })
+    params <- extract_psa(config)
   } else {
     stop("Invalid analysis type specified.")
   }

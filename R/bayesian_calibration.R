@@ -33,6 +33,7 @@ load_bayesian_packages <- function() {
 #'
 #' @param config Configuration list
 #' @return Bayesian framework configuration
+#' @export
 initialize_bayesian_framework <- function(config) {
   bayesian_config <- list()
 

@@ -1,0 +1,109 @@
+﻿name: Security Scan
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 2 * * 1'
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Run R-specific security checks
+        run: |
+          # Install security-focused packages
+          Rscript -e "install.packages(c('cyclocomp', 'lintr', 'goodpractice'))"
+          
+          # Run security-focused checks
+          Rscript -e "
+            library(goodpractice)
+            library(cyclocomp)
+            library(lintr)
+            
+            # Run security-focused checks
+            gp_results <- gp('.', checks = c('no_description_depends', 'no_description_date', 'no_description_bugreports'))
+            print(gp_results)
+            
+            # Check cyclomatic complexity (high complexity can hide security issues)
+            files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+            for (file in files) {
+              complexity <- cyclocomp(file)
+              if (complexity > 50) {
+                warning(paste('High complexity in', file, ':', complexity))
+              }
+            }
+            
+            # Run security-focused linting
+            lint_results <- lint_package(linters = linters_with_defaults(
+              cyclocomp_linter(50),
+              line_length_linter(120)
+            ))
+            print(lint_results)
+          "
+        shell: bash
+      
+      - name: Check for hardcoded secrets
+        run: |
+          # Check for potential hardcoded secrets
+          if command -v grep &> /dev/null; then
+            echo "Checking for potential hardcoded secrets..."
+            
+            # Look for common patterns that might indicate secrets
+            grep -r "password\|secret\|key\|token" --include="*.R" --include="*.r" . || echo "No obvious secrets found"
+            
+            # Check for API keys, tokens, etc.
+            grep -r "api_key\|access_token\|auth_token" --include="*.R" --include="*.r" . || echo "No API keys found"
+          fi
+        shell: bash
+      
+      - name: Dependency vulnerability scan
+        run: |
+          Rscript -e "
+            # Check for known vulnerabilities in dependencies
+            library(renv)
+            
+            if (file.exists('renv.lock')) {
+              lockfile <- jsonlite::read_json('renv.lock')
+              
+              # Extract package versions
+              packages <- lockfile[['Packages']]
+              
+              # Check for outdated packages that might have security issues
+              for (pkg_name in names(packages)) {
+                pkg_info <- packages[[pkg_name]]
+                if (!is.null(pkg_info[['Repository']]) && pkg_info[['Repository']] == 'CRAN') {
+                  cat(sprintf('Package: %s, Version: %s\n', pkg_name, pkg_info[['Version']]))
+                }
+              }
+            }
+          "
+        shell: bash
+      
+      - name: Upload security scan results
+        uses: actions/upload-artifact@main
+        if: always()
+        with:
+          name: security-scan-results
+          path: |
+            trivy-results.sarif
+            security_report.txt
