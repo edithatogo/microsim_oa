@@ -1,0 +1,127 @@
+﻿name: R-CMD-check
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  R-CMD-check:
+    runs-on: ${matrix.config.os}
+    
+    name: ${matrix.config.os} (${matrix.config.r})
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: macOS-latest, r: 'release'}
+          - {os: windows-latest, r: 'release'}
+          - {os: ubuntu-latest, r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest, r: 'release'}
+          - {os: ubuntu-latest, r: 'oldrel-1'}
+          - {os: ubuntu-latest, r: 'oldrel-2'}
+          - {os: ubuntu-latest, r: 'oldrel-3'}
+          - {os: ubuntu-latest, r: 'oldrel-4'}
+    
+    env:
+      GITHUB_PAT: ${secrets.GITHUB_TOKEN}
+      R_KEEP_PKG_SOURCE: yes
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${matrix.config.r}
+          http-user-agent: ${matrix.config.http-user-agent}
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+      
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+      
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl
+      
+      - name: Cache R packages
+        uses: actions/cache@v3
+        with:
+          path: ${env.R_LIBS_USER}
+          key: ${runner.os}-${matrix.config.r}-1-${hashFiles('**/DESCRIPTION')}
+          restore-keys: ${runner.os}-${matrix.config.r}-1-
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::covr
+            any::bench
+            any::profvis
+            any::testthat
+            any::devtools
+            any::roxygen2
+            any::pkgdown
+            any::lintr
+            any::styler
+            any::goodpractice
+            any::rhub
+      
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual", "--as-cran")'
+          error-on: '"note"'
+          check-dir: '"check"'
+      
+      - name: Run lintr
+        run: |
+          lintr::lint_package()
+        shell: Rscript {0}
+      
+      - name: Run performance benchmarks
+        run: |
+          if (file.exists("tests/testthat/test-performance.R")) {
+            source("tests/testthat/test-performance.R")
+          }
+        shell: Rscript {0}
+      
+      - name: Test coverage
+        run: |
+          covr::codecov(
+            type = "all",
+            quiet = FALSE,
+            clean = TRUE
+          )
+        shell: Rscript {0}
+      
+      - name: Run quality metrics
+        run: |
+          goodpractice::gp()
+          devtools::check_man()
+          devtools::check_vignettes()
+          spelling::spell_check_package()
+        shell: Rscript {0}
+      
+      - name: Upload check results
+        if: failure()
+        uses: actions/upload-artifact@main
+        with:
+          name: ${runner.os}-r${matrix.config.r}-results
+          path: check
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
