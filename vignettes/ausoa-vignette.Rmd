@@ -42,8 +42,9 @@ library(ausoa)
 The package uses YAML configuration files for model parameters:
 
 ```{r load-config}
-# Load default configuration
-config <- load_config()
+# Load default configuration from package
+config_path <- system.file("config", package = "ausoa")
+config <- load_config(config_path)
 ```
 
 ### Running a Simple Simulation

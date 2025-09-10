@@ -44,7 +44,6 @@ Suggests:
     pdp,
     caret,
     mockery,
-    pROC,
-    ragg,
-    arrow
+    pROC
+VignetteBuilder: knitr
 Config/testthat/edition: 3

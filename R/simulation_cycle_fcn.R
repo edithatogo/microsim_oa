@@ -130,16 +130,22 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % TKA complication - Advanced PJI Module Integration
   # Replace basic complication modeling with advanced PJI module
-  source(here::here("R", "pji_integration.R"))
-  source(here::here("R", "pji_module.R"))
+  # Only integrate PJI module if PJI coefficients are available
+  if (!is.null(live_coeffs$pji_risk)) {
+    source(here::here("R", "pji_integration.R"))
+    source(here::here("R", "pji_module.R"))
 
-  # Integrate PJI module with simulation cycle
-  pji_integration_result <- integrate_pji_module(am_curr, am_new, live_coeffs)
+    # Integrate PJI module with simulation cycle
+    pji_integration_result <- integrate_pji_module(am_curr, am_new, live_coeffs)
 
-  # Extract updated matrices and PJI summary
-  am_curr <- pji_integration_result$am_curr
-  am_new <- pji_integration_result$am_new
-  pji_summary <- pji_integration_result$pji_summary
+    # Extract updated matrices and PJI summary
+    am_curr <- pji_integration_result$am_curr
+    am_new <- pji_integration_result$am_new
+    pji_summary <- pji_integration_result$pji_summary
+  } else {
+    # Use basic complication modeling if PJI module not available
+    pji_summary <- list(total_cost = 0, total_qaly_impact = 0, incident_cases = 0)
+  }
 
   # Keep backward compatibility with existing comp variable
   # PJI cases are now represented in the comp variable
@@ -160,16 +166,22 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % Public-Private Healthcare Pathways Integration
   # Model differences between public and private healthcare pathways
-  source(here::here("R", "public_private_pathways_integration.R"))
-  source(here::here("R", "public_private_pathways_module.R"))
+  # Only integrate pathways module if pathways coefficients are available
+  if (!is.null(live_coeffs$pathways)) {
+    source(here::here("R", "public_private_pathways_integration.R"))
+    source(here::here("R", "public_private_pathways_module.R"))
 
-  # Integrate public-private pathways module with simulation cycle
-  pathways_integration_result <- integrate_public_private_pathways_module(am_curr, am_new, live_coeffs, cycle.coefficents$cycle_number)
+    # Integrate public-private pathways module with simulation cycle
+    pathways_integration_result <- integrate_public_private_pathways_module(am_curr, am_new, live_coeffs, cycle.coefficents$cycle_number)
 
-  # Extract updated matrices and pathways summary
-  am_curr <- pathways_integration_result$am_curr
-  am_new <- pathways_integration_result$am_new
-  pathways_summary <- pathways_integration_result$integration_summary
+    # Extract updated matrices and pathways summary
+    am_curr <- pathways_integration_result$am_curr
+    am_new <- pathways_integration_result$am_new
+    pathways_summary <- pathways_integration_result$integration_summary
+  } else {
+    # Use basic pathways modeling if advanced module not available
+    pathways_summary <- list(total_cost_impact = 0, total_qaly_impact = 0, pathway_distribution = list())
+  }
 
   # % Resource Allocation Integration
   # Model hospital capacity, regional variations, and referral patterns

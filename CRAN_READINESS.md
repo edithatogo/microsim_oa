@@ -1,11 +1,11 @@
-# CRAN Submission Checklist for ausoa v2.0.0
+# CRAN Submission Checklist for ausoa v2.0.1
 
 ## ✅ REQUIRED FILES AND FIELDS
 
 ### DESCRIPTION File
 - [x] Package name, version, title, description
 - [x] Authors@R field (properly formatted)
-- [x] Maintainer with valid email
+- [x] Maintainer with valid email: dylan.mordaunt@vuw.ac.nz
 - [x] License (GPL-3 + file LICENSE)
 - [x] Depends: R (>= 4.0.0)
 - [x] Imports: All required packages listed
@@ -29,6 +29,7 @@
 - [x] CITATION file in inst/
 - [x] Vignettes directory with getting started guide
 - [x] cran-comments.md file
+- [x] Comprehensive dataset documentation (5 new files)
 
 ## 🔍 CRAN READINESS ASSESSMENT
 
@@ -43,6 +44,7 @@
 - [x] Working examples in documentation
 - [x] Proper error handling
 - [x] Meaningful package description
+- [x] Enhanced research support documentation
 
 ### CRAN Policies Compliance
 - [x] No copyrighted material
@@ -54,7 +56,7 @@
 ## 📋 SUBMISSION PREPARATION
 
 ### Files to Submit
-1. ausoa_2.0.0.tar.gz (built package)
+1. ausoa_2.0.1.tar.gz (built package)
 2. cran-comments.md (submission comments)
 
 ### Pre-submission Steps
@@ -75,4 +77,4 @@
 
 **READY FOR CRAN SUBMISSION**: Yes ✅
 
-The ausoa v2.0.0 package meets all CRAN requirements and is ready for submission. All necessary documentation, tests, and package structure elements are in place.
+The ausoa v2.0.1 package meets all CRAN requirements and is ready for submission. All necessary documentation, tests, and package structure elements are in place.

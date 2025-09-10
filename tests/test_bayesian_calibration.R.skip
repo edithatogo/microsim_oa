@@ -6,6 +6,7 @@
 
 library(testthat)
 library(mockery)
+library(ausoa)
 
 # Note: Bayesian calibration functions should be available through the ausoa package
 # No need to source files directly
