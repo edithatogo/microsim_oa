@@ -1,0 +1,35 @@
+﻿linters: with_defaults(
+  # Code style
+  line_length_linter(120),
+  trailing_whitespace_linter(),
+  trailing_blank_lines_linter(),
+  
+  # Best practices
+  cyclocomp_linter(50),
+  object_usage_linter(),
+  unused_import_linter(),
+  
+  # Security
+  no_tab_linter(),
+  no_single_quotes_linter(),
+  
+  # Performance
+  vector_logic_linter(),
+  
+  # Documentation
+  todo_comment_linter(),
+  
+  # Custom exclusions for specific files
+  exclusions: list(
+    "R/zzz.R" = list(
+      line_length_linter = NULL,
+      cyclocomp_linter = NULL
+    ),
+    "tests/testthat/" = list(
+      line_length_linter = NULL,
+      cyclocomp_linter = NULL
+    )
+  )
+)
+
+encoding: "UTF-8"

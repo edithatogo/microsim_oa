@@ -107,16 +107,21 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % Waiting List Dynamics - Advanced Queue Management Integration
   # Model patient prioritization, capacity constraints, and wait time impacts
-  source(here::here("R", "waiting_list_integration.R"))
-  source(here::here("R", "waiting_list_module.R"))
+  # Only integrate waiting list module if waiting list coefficients are available
+  if (!is.null(live_coeffs$waiting_list)) {
+    # Functions are loaded via package namespace, no need to source
 
-  # Integrate waiting list module with simulation cycle
-  waiting_list_integration_result <- integrate_waiting_list_module(am_curr, am_new, live_coeffs)
+    # Integrate waiting list module with simulation cycle
+    waiting_list_integration_result <- integrate_waiting_list_module(am_curr, am_new, live_coeffs)
 
-  # Extract updated matrices and waiting list summary
-  am_curr <- waiting_list_integration_result$am_curr
-  am_new <- waiting_list_integration_result$am_new
-  waiting_list_summary <- waiting_list_integration_result$waiting_list_summary
+    # Extract updated matrices and waiting list summary
+    am_curr <- waiting_list_integration_result$am_curr
+    am_new <- waiting_list_integration_result$am_new
+    waiting_list_summary <- waiting_list_integration_result$waiting_list_summary
+  } else {
+    # Use basic waiting list modeling if advanced module not available
+    waiting_list_summary <- list(total_waiting = 0, average_wait_time = 0, capacity_utilization = 0)
+  }
 
   TKA_update_data <- TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL,
                                    implant_survival_data = NULL, default_implant_type = "standard")
@@ -132,8 +137,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # Replace basic complication modeling with advanced PJI module
   # Only integrate PJI module if PJI coefficients are available
   if (!is.null(live_coeffs$pji_risk)) {
-    source(here::here("R", "pji_integration.R"))
-    source(here::here("R", "pji_module.R"))
+    # Functions are loaded via package namespace, no need to source
 
     # Integrate PJI module with simulation cycle
     pji_integration_result <- integrate_pji_module(am_curr, am_new, live_coeffs)
@@ -153,8 +157,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % TKA DVT complication - Advanced DVT Module Integration
   # Integrate DVT module with simulation cycle
-  source(here::here("R", "dvt_integration.R"))
-  source(here::here("R", "dvt_module.R"))
+  # Functions are loaded via package namespace, no need to source
 
   # Integrate DVT module with simulation cycle
   dvt_integration_result <- integrate_dvt_module(am_curr, am_new, live_coeffs)
@@ -168,8 +171,7 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   # Model differences between public and private healthcare pathways
   # Only integrate pathways module if pathways coefficients are available
   if (!is.null(live_coeffs$pathways)) {
-    source(here::here("R", "public_private_pathways_integration.R"))
-    source(here::here("R", "public_private_pathways_module.R"))
+    # Functions are loaded via package namespace, no need to source
 
     # Integrate public-private pathways module with simulation cycle
     pathways_integration_result <- integrate_public_private_pathways_module(am_curr, am_new, live_coeffs, cycle.coefficents$cycle_number)
@@ -185,16 +187,21 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   # % Resource Allocation Integration
   # Model hospital capacity, regional variations, and referral patterns
-  source(here::here("R", "resource_allocation_integration.R"))
-  source(here::here("R", "resource_allocation_module.R"))
+  # Only integrate resource allocation module if resource coefficients are available
+  if (!is.null(live_coeffs$resource_allocation)) {
+    # Functions are loaded via package namespace, no need to source
 
-  # Integrate resource allocation module with simulation cycle
-  resource_integration_result <- integrate_resource_allocation_module(am_curr, am_new, live_coeffs, cycle.coefficents$cycle_number)
+    # Integrate resource allocation module with simulation cycle
+    resource_integration_result <- integrate_resource_allocation_module(am_curr, am_new, live_coeffs, cycle.coefficents$cycle_number)
 
-  # Extract updated matrices and resource allocation summary
-  am_curr <- resource_integration_result$am_curr
-  am_new <- resource_integration_result$am_new
-  resource_summary <- resource_integration_result$resource_summary
+    # Extract updated matrices and resource allocation summary
+    am_curr <- resource_integration_result$am_curr
+    am_new <- resource_integration_result$am_new
+    resource_summary <- resource_integration_result$resource_summary
+  } else {
+    # Use basic resource modeling if advanced module not available
+    resource_summary <- list(total_cost_impact = 0, total_qaly_impact = 0, capacity_utilization = list())
+  }
 
   # % TKA inpatient rehabiliation
 

@@ -1,11 +1,11 @@
-Package: ausoa
+﻿Package: ausoa
 Title: A Microsimulation Model of Osteoarthritis in Australia
 Version: 2.0.1
 Authors@R: c(
     person("AUS-OA", "Team", role = c("aut", "cre"), email = "dylan.mordaunt@vuw.ac.nz")
   )
 Maintainer: Dylan Mordaunt <dylan.mordaunt@vuw.ac.nz>
-Description: A dynamic discrete time microsimulation model of osteoarthritis and its treatment in Australia.
+Description: A dynamic discrete time microsimulation model of osteoarthritis and its treatment in Australia.    
 License: GPL-3 + file LICENSE
 URL: https://github.com/edithatogo/microsim_oa
 BugReports: https://github.com/edithatogo/microsim_oa/issues
@@ -44,6 +44,14 @@ Suggests:
     pdp,
     caret,
     mockery,
-    pROC
+    pROC,
+    bench,
+    goodpractice,
+    profvis,
+    rhub,
+    spelling,
+    cyclocomp,
+    pkgdepends,
+    cranlogs
 VignetteBuilder: knitr
 Config/testthat/edition: 3
