@@ -1,0 +1,257 @@
+﻿name: Advanced Code Analysis
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  code-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::covr
+            any::goodpractice
+            any::lintr
+            any::cyclocomp
+            any::pkgdepends
+            any::cranlogs
+            any::DT
+      
+      - name: Advanced static analysis
+        run: |
+          Rscript -e "
+            library(covr)
+            library(goodpractice)
+            library(lintr)
+            library(cyclocomp)
+            
+            cat('=== ADVANCED CODE ANALYSIS ===\n')
+            
+            # 1. Code duplication analysis
+            cat('Analyzing code duplication...\n')
+            r_files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+            
+            # Simple duplication detection (lines > 3)
+            all_lines <- lapply(r_files, readLines)
+            names(all_lines) <- basename(r_files)
+            
+            # Find duplicate code blocks
+            duplicates <- list()
+            for (i in 1:(length(all_lines) - 1)) {
+              for (j in (i + 1):length(all_lines)) {
+                file1 <- names(all_lines)[i]
+                file2 <- names(all_lines)[j]
+                
+                # Compare line by line for potential duplicates
+                lines1 <- all_lines[[i]]
+                lines2 <- all_lines[[j]]
+                
+                for (start1 in 1:(length(lines1) - 3)) {
+                  for (start2 in 1:(length(lines2) - 3)) {
+                    # Check for 4+ line matches
+                    match_length <- 0
+                    for (k in 0:10) {  # Check up to 10 lines
+                      if (start1 + k <= length(lines1) && start2 + k <= length(lines2)) {
+                        if (trimws(lines1[start1 + k]) == trimws(lines2[start2 + k])) {
+                          match_length <- match_length + 1
+                        } else {
+                          break
+                        }
+                      }
+                    }
+                    
+                    if (match_length >= 4) {
+                      key <- paste(sort(c(file1, file2)), collapse = '_')
+                      if (!key %in% names(duplicates)) {
+                        duplicates[[key]] <- list(
+                          files = c(file1, file2),
+                          lines = match_length,
+                          location1 = start1,
+                          location2 = start2
+                        )
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            
+            if (length(duplicates) > 0) {
+              cat('Potential code duplications found:\n')
+              for (dup in duplicates) {
+                cat(sprintf('  %s and %s: %d similar lines\n', 
+                          dup[1], dup[2], dup))
+              }
+            } else {
+              cat('No significant code duplications detected\n')
+            }
+            
+            # 2. Function complexity hotspots
+            cat('\nAnalyzing function complexity hotspots...\n')
+            complexity_report <- list()
+            
+            for (file in r_files) {
+              content <- readLines(file, warn = FALSE)
+              
+              # Find function definitions
+              func_lines <- grep('<- *function', content)
+              
+              for (line_num in func_lines) {
+                func_name <- trimws(sub('.*([a-zA-Z_][a-zA-Z0-9_]*)\\s*<-.*', '\\\\1', content[line_num]))
+                
+                if (!is.na(func_name) && nchar(func_name) > 0) {
+                  # Extract function body (approximate)
+                  func_end <- if (line_num < length(content)) {
+                    # Find matching closing brace (simplified)
+                    brace_count <- 1
+                    for (i in (line_num + 1):length(content)) {
+                      if (grepl('{', content[i])) brace_count <- brace_count + 1
+                      if (grepl('}', content[i])) brace_count <- brace_count - 1
+                      if (brace_count == 0) break
+                    }
+                    min(i, length(content))
+                  } else length(content)
+                  
+                  func_content <- content[line_num:func_end]
+                  func_complexity <- cyclocomp(func_content)
+                  
+                  complexity_report[[length(complexity_report) + 1]] <- list(
+                    function_name = func_name,
+                    file = basename(file),
+                    complexity = func_complexity,
+                    lines = length(func_content)
+                  )
+                }
+              }
+            }
+            
+            # Sort by complexity
+            complexity_df <- do.call(rbind, lapply(complexity_report, as.data.frame))
+            if (nrow(complexity_df) > 0) {
+              complexity_df <- complexity_df[order(complexity_df, decreasing = TRUE), ]
+              
+              cat('Most complex functions:\n')
+              for (i in 1:min(5, nrow(complexity_df))) {
+                row <- complexity_df[i, ]
+                status <- if (row > 15) ' HIGH' 
+                         else if (row > 10) ' MEDIUM' 
+                         else ' LOW'
+                cat(sprintf('  %s %s (%s): complexity %d, %d lines\n',
+                          status, row, row, row, row))
+              }
+            }
+            
+            # 3. Code maintainability index
+            cat('\nCalculating code maintainability metrics...\n')
+            
+            maintainability_scores <- list()
+            
+            for (file in r_files) {
+              content <- readLines(file, warn = FALSE)
+              
+              # Basic metrics
+              lines_of_code <- length(content)
+              comment_lines <- sum(grepl('^\\s*#', content))
+              empty_lines <- sum(grepl('^\\s*$', content))
+              code_lines <- lines_of_code - comment_lines - empty_lines
+              
+              # Function count
+              function_count <- length(grep('<- *function', content))
+              
+              # Average function length
+              avg_func_length <- if (function_count > 0) code_lines / function_count else 0
+              
+              # Maintainability score (simplified formula)
+              # Higher score = more maintainable
+              comment_ratio <- comment_lines / max(code_lines, 1)
+              complexity_penalty <- mean(sapply(complexity_report, function(x) 
+                if (x == basename(file)) x else 0))
+              
+              maintainability <- 100 - (avg_func_length * 0.1) - (complexity_penalty * 2) + (comment_ratio * 20)
+              maintainability <- max(0, min(100, maintainability))
+              
+              maintainability_scores[[basename(file)]] <- list(
+                lines_of_code = lines_of_code,
+                code_lines = code_lines,
+                comment_lines = comment_lines,
+                functions = function_count,
+                avg_function_length = avg_func_length,
+                comment_ratio = comment_ratio,
+                maintainability_score = maintainability
+              )
+            }
+            
+            # Display maintainability scores
+            cat('Code maintainability scores:\n')
+            for (file in names(maintainability_scores)) {
+              score <- maintainability_scores[[file]]
+              grade <- if (score >= 80) 'A' 
+                      else if (score >= 60) 'B'
+                      else if (score >= 40) 'C'
+                      else 'D'
+              cat(sprintf('  %s: %.1f (%s) - %d lines, %d functions\n',
+                        file, score, grade, 
+                        score, score))
+            }
+            
+            # 4. Dependency analysis
+            cat('\nAnalyzing dependency health...\n')
+            
+            # Check for outdated packages
+            try({
+              deps <- pkgdepends::pkg_deps(".")
+              if (nrow(deps) > 0) {
+                # Check for packages that might be outdated
+                old_packages <- deps[deps < "1.0.0" & deps == "cran", ]
+                if (nrow(old_packages) > 0) {
+                  cat('Potentially outdated dependencies:\n')
+                  for (i in 1:nrow(old_packages)) {
+                    cat(sprintf('  %s: %s\n', old_packages[i], old_packages[i]))
+                  }
+                }
+                
+                # Check for heavy dependencies
+                heavy_deps <- deps[deps > 50 * 1024 * 1024, ]  # >50MB
+                if (nrow(heavy_deps) > 0) {
+                  cat('Heavy dependencies (>50MB):\n')
+                  for (i in 1:nrow(heavy_deps)) {
+                    cat(sprintf('  %s: %.1fMB\n', heavy_deps[i], heavy_deps[i] / (1024*1024)))
+                  }
+                }
+              }
+            }, silent = TRUE)
+            
+            # Save analysis results
+            analysis_results <- list(
+              duplicates = duplicates,
+              complexity = complexity_report,
+              maintainability = maintainability_scores,
+              timestamp = Sys.time()
+            )
+            
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(analysis_results, 'output/advanced_code_analysis.rds')
+            
+            cat('\n=== ANALYSIS COMPLETE ===\n')
+            cat('Results saved to output/advanced_code_analysis.rds\n')
+          "
+      
+      - name: Upload analysis results
+        uses: actions/upload-artifact@main
+        with:
+          name: advanced-code-analysis
+          path: output/advanced_code_analysis.rds

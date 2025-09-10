@@ -1,0 +1,379 @@
+﻿name: Repository Analytics & Monitoring
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  repository-analytics:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for analytics
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::cranlogs
+            any::pkgdepends
+            any::devtools
+            any::cloc
+            any::git2r
+            any::lubridate
+            any::dplyr
+            any::ggplot2
+            any::rmarkdown
+      
+      - name: Comprehensive repository analytics
+        run: |
+          Rscript -e "
+            library(cranlogs)
+            library(pkgdepends)
+            library(devtools)
+            library(git2r)
+            library(lubridate)
+            library(dplyr)
+            library(ggplot2)
+            
+            cat('=== REPOSITORY ANALYTICS & MONITORING ===\n')
+            
+            # Initialize analytics report
+            analytics_report <- list()
+            
+            # 1. Git Repository Analytics
+            cat('Analyzing Git repository metrics...\n')
+            
+            try({
+              repo <- git2r::repository('.')
+              
+              # Commit history analysis
+              commits <- git2r::commits(repo, topological = TRUE, time = TRUE)
+              commit_data <- data.frame(
+                sha = sapply(commits, function(x) x),
+                author = sapply(commits, function(x) x),
+                email = sapply(commits, function(x) x),
+                time = as.POSIXct(sapply(commits, function(x) x), origin = '1970-01-01'),
+                message = sapply(commits, function(x) x)
+              )
+              
+              analytics_report <- list(
+                total_commits = nrow(commit_data),
+                unique_authors = length(unique(commit_data)),
+                date_range = range(commit_data),
+                commits_last_30_days = sum(commit_data >= (Sys.time() - days(30))),
+                commits_last_7_days = sum(commit_data >= (Sys.time() - days(7)))
+              )
+              
+              # Author contribution analysis
+              author_contributions <- commit_data %>%
+                group_by(author) %>%
+                summarise(
+                  commits = n(),
+                  first_commit = min(time),
+                  last_commit = max(time),
+                  days_active = as.numeric(difftime(max(time), min(time), units = 'days'))
+                ) %>%
+                arrange(desc(commits))
+              
+              analytics_report <- author_contributions
+              
+              cat(sprintf('Total commits: %d\n', analytics_report))
+              cat(sprintf('Active contributors: %d\n', analytics_report))
+              cat(sprintf('Commits (last 30 days): %d\n', analytics_report))
+              cat(sprintf('Commits (last 7 days): %d\n', analytics_report))
+              
+              # Top contributors
+              cat('Top contributors:\n')
+              top_contributors <- head(author_contributions, 5)
+              for (i in 1:nrow(top_contributors)) {
+                cat(sprintf('  %s: %d commits\n', 
+                          top_contributors[i], 
+                          top_contributors[i]))
+              }
+              
+            }, silent = TRUE)
+            
+            # 2. Codebase Size and Composition Analysis
+            cat('\nAnalyzing codebase composition...\n')
+            
+            try({
+              # Count lines of code by language
+              r_files <- list.files('R/', pattern = '*.R$', recursive = TRUE, full.names = TRUE)
+              test_files <- list.files('tests/', pattern = '*.R$', recursive = TRUE, full.names = TRUE)
+              vignette_files <- list.files('vignettes/', pattern = '*.Rmd$', recursive = TRUE, full.names = TRUE)
+              
+              count_lines <- function(files) {
+                if (length(files) == 0) return(0)
+                sum(sapply(files, function(f) {
+                  lines <- readLines(f, warn = FALSE)
+                  length(lines)
+                }))
+              }
+              
+              codebase_stats <- list(
+                r_code_lines = count_lines(r_files),
+                test_lines = count_lines(test_files),
+                vignette_lines = count_lines(vignette_files),
+                total_r_files = length(r_files),
+                total_test_files = length(test_files),
+                total_vignette_files = length(vignette_files)
+              )
+              
+              analytics_report <- codebase_stats
+              
+              cat(sprintf('R code lines: %d\n', codebase_stats))
+              cat(sprintf('Test lines: %d\n', codebase_stats))
+              cat(sprintf('Vignette lines: %d\n', codebase_stats))
+              cat(sprintf('Test/Code ratio: %.2f\n', codebase_stats / codebase_stats))
+              
+            }, silent = TRUE)
+            
+            # 3. Package Health and Maintenance Metrics
+            cat('\nAnalyzing package health metrics...\n')
+            
+            try({
+              desc <- desc::desc()
+              
+              package_health <- list(
+                version = desc(),
+                title = desc('Title'),
+                description = desc('Description'),
+                license = desc('License'),
+                authors = desc(),
+                dependencies = desc(),
+                last_updated = Sys.time()
+              )
+              
+              # Check for outdated dependencies
+              deps <- package_health
+              if (nrow(deps) > 0) {
+                # Simple check for version patterns (this is basic - real checks would use package repositories)
+                old_versions <- deps[grepl('^0\\\\.', deps) & deps == 'Imports', ]
+                package_health <- nrow(old_versions)
+              }
+              
+              analytics_report <- package_health
+              
+              cat(sprintf('Package version: %s\n', package_health))
+              cat(sprintf('License: %s\n', package_health))
+              cat(sprintf('Total dependencies: %d\n', nrow(package_health)))
+              cat(sprintf('Potentially outdated deps: %d\n', package_health %||% 0))
+              
+            }, silent = TRUE)
+            
+            # 4. Development Velocity Metrics
+            cat('\nAnalyzing development velocity...\n')
+            
+            try({
+              # Calculate development velocity based on commit patterns
+              if (exists('commit_data')) {
+                # Weekly commit activity
+                commit_data <- floor_date(commit_data, 'week')
+                weekly_commits <- commit_data %>%
+                  group_by(week) %>%
+                  summarise(commits = n()) %>%
+                  arrange(week)
+                
+                # Development velocity metrics
+                recent_weeks <- weekly_commits %>%
+                  filter(week >= (Sys.time() - weeks(12)))
+                
+                velocity_metrics <- list(
+                  avg_commits_per_week = mean(recent_weeks),
+                  total_commits_3_months = sum(recent_weeks),
+                  most_active_week = recent_weeks[which.max(recent_weeks)],
+                  max_commits_week = max(recent_weeks),
+                  consistency_score = 1 - (sd(recent_weeks) / mean(recent_weeks))
+                )
+                
+                analytics_report <- velocity_metrics
+                
+                cat(sprintf('Average commits/week (3 months): %.1f\n', velocity_metrics))
+                cat(sprintf('Total commits (3 months): %d\n', velocity_metrics))
+                cat(sprintf('Development consistency: %.2f\n', velocity_metrics))
+                
+                if (velocity_metrics > 0.7) {
+                  cat(' Consistent development activity\n')
+                } else {
+                  cat('  Inconsistent development activity\n')
+                }
+              }
+            }, silent = TRUE)
+            
+            # 5. Quality Trend Analysis
+            cat('\nAnalyzing quality trends...\n')
+            
+            try({
+              # Look for quality-related files and metrics
+              quality_indicators <- list(
+                has_tests = dir.exists('tests/') && length(list.files('tests/', pattern = '*.R$')) > 0,
+                has_linting = file.exists('.lintr'),
+                has_readme = file.exists('README.md'),
+                has_news = file.exists('NEWS.md'),
+                has_contributing = file.exists('CONTRIBUTING.md'),
+                has_code_of_conduct = file.exists('CODE_OF_CONDUCT.md'),
+                has_pkgdown = file.exists('_pkgdown.yml'),
+                has_github_actions = dir.exists('.github/workflows/'),
+                has_precommit = file.exists('.pre-commit-config.yaml')
+              )
+              
+              quality_score <- sum(unlist(quality_indicators)) / length(quality_indicators) * 100
+              
+              analytics_report <- quality_indicators
+              analytics_report <- quality_score
+              
+              cat(sprintf('Quality Score: %.1f/100\n', quality_score))
+              
+              missing_quality_items <- names(quality_indicators)[!unlist(quality_indicators)]
+              if (length(missing_quality_items) > 0) {
+                cat('Missing quality indicators:\n')
+                for (item in missing_quality_items) {
+                  cat(sprintf('   %s\n', item))
+                }
+              } else {
+                cat(' All quality indicators present\n')
+              }
+              
+            }, silent = TRUE)
+            
+            # 6. Repository Health Score
+            cat('\nCalculating repository health score...\n')
+            
+            try({
+              # Comprehensive health scoring
+              health_components <- list(
+                activity = if (!is.null(analytics_report)) {
+                  min(100, analytics_report * 5)
+                } else 50,
+                
+                contributors = if (!is.null(analytics_report)) {
+                  min(100, analytics_report * 20)
+                } else 50,
+                
+                test_coverage = if (!is.null(analytics_report)) {
+                  min(100, (analytics_report / 
+                           analytics_report) * 200)
+                } else 50,
+                
+                quality = analytics_report %||% 50,
+                
+                documentation = if (!is.null(analytics_report)) {
+                  min(100, (analytics_report / 
+                           analytics_report) * 100)
+                } else 50
+              )
+              
+              overall_health <- mean(unlist(health_components))
+              
+              analytics_report <- health_components
+              analytics_report <- overall_health
+              
+              cat(sprintf('Overall Repository Health: %.1f/100\n', overall_health))
+              
+              # Health grade
+              health_grade <- if (overall_health >= 90) 'A+' 
+                             else if (overall_health >= 80) 'A'
+                             else if (overall_health >= 70) 'B+'
+                             else if (overall_health >= 60) 'B'
+                             else if (overall_health >= 50) 'C+'
+                             else if (overall_health >= 40) 'C'
+                             else 'D'
+              
+              cat(sprintf('Repository Health Grade: %s\n', health_grade))
+              
+              # Component breakdown
+              cat('Health components:\n')
+              for (component in names(health_components)) {
+                score <- health_components[[component]]
+                cat(sprintf('  %s: %.1f/100\n', component, score))
+              }
+              
+            }, silent = TRUE)
+            
+            # 7. Generate Insights and Recommendations
+            cat('\nGenerating insights and recommendations...\n')
+            
+            insights <- list()
+            
+            # Activity insights
+            if (!is.null(analytics_report)) {
+              if (analytics_report < 5) {
+                insights <- 'Low recent activity - consider increasing development pace'
+              } else if (analytics_report > 20) {
+                insights <- 'High activity - ensure code reviews are thorough'
+              }
+            }
+            
+            # Contributor insights
+            if (!is.null(analytics_report) && analytics_report == 1) {
+                insights <- 'Single contributor - consider inviting more maintainers'
+            }
+            
+            # Test coverage insights
+            if (!is.null(analytics_report)) {
+              test_ratio <- analytics_report / analytics_report
+              if (test_ratio < 0.5) {
+                insights <- 'Low test/code ratio - increase test coverage'
+              } else if (test_ratio > 2) {
+                insights <- 'High test/code ratio - consider if tests are efficient'
+              }
+            }
+            
+            # Quality insights
+            if (!is.null(analytics_report) && analytics_report < 70) {
+                insights <- 'Quality score could be improved - add missing quality indicators'
+            }
+            
+            analytics_report <- insights
+            
+            # Display insights
+            if (length(insights) > 0) {
+              cat('Key insights:\n')
+              for (insight in insights) {
+                cat(sprintf('   %s\n', insight))
+              }
+            } else {
+              cat(' No major issues identified\n')
+            }
+            
+            # Save analytics report
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(analytics_report, 'output/repository_analytics.rds')
+            
+            cat('\n=== ANALYTICS COMPLETE ===\n')
+            cat('Results saved to output/repository_analytics.rds\n')
+            
+            # Summary dashboard
+            cat('\n=== REPOSITORY HEALTH DASHBOARD ===\n')
+            cat(sprintf('Health Score: %.1f/100 (%s)\n', 
+                      analytics_report %||% 0,
+                      health_grade %||% 'Unknown'))
+            cat(sprintf('Active Contributors: %d\n', 
+                      analytics_report %||% 0))
+            cat(sprintf('Commits (30 days): %d\n', 
+                      analytics_report %||% 0))
+            cat(sprintf('Test/Code Ratio: %.2f\n', 
+                      (analytics_report / 
+                       analytics_report) %||% 0))
+            cat(sprintf('Quality Score: %.1f/100\n', 
+                      analytics_report %||% 0))
+          "
+      
+      - name: Upload analytics results
+        uses: actions/upload-artifact@main
+        with:
+          name: repository-analytics
+          path: |
+            output/repository_analytics.rds

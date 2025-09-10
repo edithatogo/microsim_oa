@@ -1,0 +1,500 @@
+﻿name: Comprehensive Testing Dashboard
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      test_focus:
+        description: 'Focus area for testing'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - unit
+          - integration
+          - e2e
+          - performance
+          - security
+          - quality
+          - documentation
+
+jobs:
+  comprehensive-testing:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::testthat
+            any::covr
+            any::bench
+            any::profvis
+            any::goodpractice
+            any::lintr
+            any::cyclocomp
+            any::spelling
+            any::pkgdown
+            any::roxygen2
+            any::DT
+            any::rmarkdown
+            any::flexdashboard
+            any::plotly
+            any::ggplot2
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev
+      
+      - name: Run unit tests
+        run: |
+          Rscript -e "
+            library(testthat)
+            library(covr)
+            
+            cat('=== UNIT TESTING ===\n')
+            
+            # Run all tests
+            test_results <- test_dir('tests/testthat/', reporter = 'summary')
+            
+            # Calculate test metrics
+            passed <- sum(sapply(test_results, function(x) x))
+            failed <- sum(sapply(test_results, function(x) x))
+            skipped <- sum(sapply(test_results, function(x) x))
+            total <- passed + failed + skipped
+            
+            cat(sprintf('Tests: %d passed, %d failed, %d skipped (Total: %d)\n', 
+                      passed, failed, skipped, total))
+            
+            # Test coverage
+            coverage <- package_coverage(type = 'tests')
+            coverage_pct <- percent_coverage(coverage)
+            cat(sprintf('Code Coverage: %.2f%%\n', coverage_pct))
+            
+            # Save unit test results
+            unit_report <- list(
+              passed = passed,
+              failed = failed,
+              skipped = skipped,
+              total = total,
+              coverage = coverage_pct,
+              timestamp = Sys.time()
+            )
+            
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(unit_report, 'output/unit_test_report.rds')
+            
+            # Fail if critical tests fail
+            if (failed > 0) {
+              cat(' UNIT TESTS FAILED\n')
+              quit(status = 1)
+            } else {
+              cat(' UNIT TESTS PASSED\n')
+            }
+          "
+      
+      - name: Run integration tests
+        run: |
+          Rscript -e "
+            library(testthat)
+            
+            cat('=== INTEGRATION TESTING ===\n')
+            
+            # Run integration tests if they exist
+            integration_files <- list.files('tests/testthat/', pattern = 'integration', full.names = TRUE)
+            
+            if (length(integration_files) > 0) {
+              integration_results <- test_dir('tests/testthat/', 
+                                            pattern = 'integration',
+                                            reporter = 'summary')
+              
+              int_passed <- sum(sapply(integration_results, function(x) x))
+              int_failed <- sum(sapply(integration_results, function(x) x))
+              
+              cat(sprintf('Integration Tests: %d passed, %d failed\n', int_passed, int_failed))
+              
+              integration_report <- list(
+                passed = int_passed,
+                failed = int_failed,
+                total = int_passed + int_failed,
+                timestamp = Sys.time()
+              )
+              
+              saveRDS(integration_report, 'output/integration_test_report.rds')
+              
+              if (int_failed > 0) {
+                cat(' INTEGRATION TESTS FAILED\n')
+                quit(status = 1)
+              } else {
+                cat(' INTEGRATION TESTS PASSED\n')
+              }
+            } else {
+              cat('No integration tests found\n')
+              integration_report <- list(passed = 0, failed = 0, total = 0, timestamp = Sys.time())
+              saveRDS(integration_report, 'output/integration_test_report.rds')
+            }
+          "
+      
+      - name: Run E2E tests
+        run: |
+          Rscript -e "
+            cat('=== E2E TESTING ===\n')
+            
+            # Check if E2E tests exist
+            if (file.exists('tests/testthat/test-e2e.R')) {
+              library(testthat)
+              
+              e2e_results <- test_file('tests/testthat/test-e2e.R', reporter = 'summary')
+              
+              e2e_passed <- sum(sapply(e2e_results, function(x) x))
+              e2e_failed <- sum(sapply(e2e_results, function(x) x))
+              
+              cat(sprintf('E2E Tests: %d passed, %d failed\n', e2e_passed, e2e_failed))
+              
+              e2e_report <- list(
+                passed = e2e_passed,
+                failed = e2e_failed,
+                total = e2e_passed + e2e_failed,
+                timestamp = Sys.time()
+              )
+              
+              saveRDS(e2e_report, 'output/e2e_test_report.rds')
+              
+              if (e2e_failed > 0) {
+                cat(' E2E TESTS FAILED\n')
+                quit(status = 1)
+              } else {
+                cat(' E2E TESTS PASSED\n')
+              }
+            } else {
+              cat('No E2E tests found\n')
+              e2e_report <- list(passed = 0, failed = 0, total = 0, timestamp = Sys.time())
+              saveRDS(e2e_report, 'output/e2e_test_report.rds')
+            }
+          "
+      
+      - name: Run performance tests
+        run: |
+          Rscript -e "
+            library(bench)
+            library(profvis)
+            
+            cat('=== PERFORMANCE TESTING ===\n')
+            
+            # Quick performance check
+            if (exists('run_oa_simulation', mode = 'function')) {
+              devtools::load_all('.')
+              
+              # Small performance test
+              test_data <- data.frame(
+                age = rnorm(100, 65, 10),
+                bmi = rnorm(100, 28, 5),
+                comorbidities = sample(0:5, 100, replace = TRUE),
+                treatment = sample(c('conservative', 'surgical'), 100, replace = TRUE)
+              )
+              
+              perf_result <- bench::mark(
+                run_oa_simulation(test_data),
+                iterations = 3,
+                check = FALSE
+              )
+              
+              perf_time <- as.numeric(perf_result)
+              perf_mem <- as.numeric(perf_result) / 1024^2
+              
+              cat(sprintf('Performance: %.3fs, Memory: %.1fMB\n', perf_time, perf_mem))
+              
+              performance_report <- list(
+                execution_time = perf_time,
+                memory_usage = perf_mem,
+                timestamp = Sys.time()
+              )
+              
+              saveRDS(performance_report, 'output/performance_test_report.rds')
+              
+              # Performance thresholds
+              if (perf_time > 10) {  # More than 10 seconds
+                cat('  PERFORMANCE WARNING: Slow execution\n')
+              } else {
+                cat(' PERFORMANCE ACCEPTABLE\n')
+              }
+            } else {
+              cat('No performance tests available\n')
+              performance_report <- list(execution_time = NA, memory_usage = NA, timestamp = Sys.time())
+              saveRDS(performance_report, 'output/performance_test_report.rds')
+            }
+          "
+      
+      - name: Run security tests
+        run: |
+          Rscript -e "
+            cat('=== SECURITY TESTING ===\n')
+            
+            # Basic security checks
+            security_issues <- 0
+            
+            # Check for sensitive files
+            sensitive_files <- c('.env', 'secrets.json', 'config/secrets.yml')
+            found_sensitive <- sensitive_files[file.exists(sensitive_files)]
+            
+            if (length(found_sensitive) > 0) {
+              cat(sprintf('  Found sensitive files: %s\n', paste(found_sensitive, collapse = ', ')))
+              security_issues <- security_issues + length(found_sensitive)
+            }
+            
+            # Check for hardcoded secrets in R files
+            r_files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+            secret_patterns <- c('password.*=', 'secret.*=', 'key.*=', 'token.*=')
+            
+            for (file in r_files) {
+              content <- readLines(file, warn = FALSE)
+              for (pattern in secret_patterns) {
+                if (any(grepl(pattern, content, ignore.case = TRUE))) {
+                  cat(sprintf('  Potential hardcoded secret in %s\n', basename(file)))
+                  security_issues <- security_issues + 1
+                  break
+                }
+              }
+            }
+            
+            # Check for SQL injection vulnerabilities
+            sql_patterns <- c('paste.*SELECT', 'sprintf.*SELECT', 'dbGetQuery.*paste')
+            for (file in r_files) {
+              content <- readLines(file, warn = FALSE)
+              for (pattern in sql_patterns) {
+                if (any(grepl(pattern, content))) {
+                  cat(sprintf('  Potential SQL injection in %s\n', basename(file)))
+                  security_issues <- security_issues + 1
+                  break
+                }
+              }
+            }
+            
+            security_report <- list(
+              issues_found = security_issues,
+              sensitive_files = found_sensitive,
+              timestamp = Sys.time()
+            )
+            
+            saveRDS(security_report, 'output/security_test_report.rds')
+            
+            if (security_issues > 0) {
+              cat(sprintf('  SECURITY ISSUES FOUND: %d\n', security_issues))
+            } else {
+              cat(' SECURITY CHECKS PASSED\n')
+            }
+          "
+      
+      - name: Run quality checks
+        run: |
+          Rscript -e "
+            library(goodpractice)
+            library(lintr)
+            library(cyclocomp)
+            
+            cat('=== CODE QUALITY CHECKS ===\n')
+            
+            # Good practice score
+            gp_result <- goodpractice::gp()
+            gp_score <- gp_result
+            
+            cat(sprintf('Good Practice Score: %.1f/100\n', gp_score))
+            
+            # Linting
+            lint_results <- lint_package()
+            lint_issues <- length(lint_results)
+            
+            cat(sprintf('Lint Issues: %d\n', lint_issues))
+            
+            # Complexity
+            r_files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+            complexities <- sapply(r_files, function(f) {
+              tryCatch(cyclocomp(f), error = function(e) NA)
+            })
+            
+            avg_complexity <- mean(complexities, na.rm = TRUE)
+            max_complexity <- max(complexities, na.rm = TRUE)
+            
+            cat(sprintf('Average Complexity: %.1f\n', avg_complexity))
+            cat(sprintf('Maximum Complexity: %d\n', max_complexity))
+            
+            quality_report <- list(
+              goodpractice_score = gp_score,
+              lint_issues = lint_issues,
+              avg_complexity = avg_complexity,
+              max_complexity = max_complexity,
+              timestamp = Sys.time()
+            )
+            
+            saveRDS(quality_report, 'output/quality_test_report.rds')
+            
+            # Quality thresholds
+            quality_score <- (gp_score + max(0, 100 - lint_issues * 2) + 
+                            max(0, 100 - avg_complexity * 3)) / 3
+            
+            cat(sprintf('Overall Quality Score: %.1f/100\n', quality_score))
+            
+            if (quality_score < 70) {
+              cat('  QUALITY ISSUES DETECTED\n')
+            } else {
+              cat(' QUALITY CHECKS PASSED\n')
+            }
+          "
+      
+      - name: Generate comprehensive testing dashboard
+        run: |
+          Rscript -e "
+            library(rmarkdown)
+            library(ggplot2)
+            library(plotly)
+            
+            cat('=== GENERATING TESTING DASHBOARD ===\n')
+            
+            # Load all test reports
+            reports <- list()
+            report_files <- c(
+              'unit_test_report.rds',
+              'integration_test_report.rds', 
+              'e2e_test_report.rds',
+              'performance_test_report.rds',
+              'security_test_report.rds',
+              'quality_test_report.rds'
+            )
+            
+            for (file in report_files) {
+              if (file.exists(file.path('output', file))) {
+                reports[[gsub('_test_report.rds', '', file)]] <- readRDS(file.path('output', file))
+              }
+            }
+            
+            # Create dashboard data
+            dashboard_data <- data.frame(
+              category = names(reports),
+              status = sapply(reports, function(r) {
+                if ('failed' %in% names(r)) {
+                  if (r > 0) 'Failed' else 'Passed'
+                } else if ('issues_found' %in% names(r)) {
+                  if (r > 0) 'Issues' else 'Passed'
+                } else {
+                  'Completed'
+                }
+              }),
+              score = sapply(reports, function(r) {
+                if ('coverage' %in% names(r)) r
+                else if ('goodpractice_score' %in% names(r)) r
+                else if ('execution_time' %in% names(r)) max(0, 100 - r * 10)
+                else 100
+              }),
+              timestamp = sapply(reports, function(r) as.character(r))
+            )
+            
+            # Calculate overall score
+            overall_score <- mean(dashboard_data, na.rm = TRUE)
+            overall_status <- if (any(dashboard_data %in% c('Failed', 'Issues'))) 'Issues' else 'Passed'
+            
+            # Create summary report
+            summary_report <- list(
+              dashboard_data = dashboard_data,
+              overall_score = overall_score,
+              overall_status = overall_status,
+              timestamp = Sys.time()
+            )
+            
+            saveRDS(summary_report, 'output/comprehensive_testing_dashboard.rds')
+            
+            # Generate HTML dashboard
+            dashboard_html <- sprintf('
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Comprehensive Testing Dashboard</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { background: #f0f0f0; padding: 20px; border-radius: 5px; }
+                    .metric { display: inline-block; margin: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+                    .passed { background: #d4edda; border-color: #c3e6cb; }
+                    .failed { background: #f8d7da; border-color: #f5c6cb; }
+                    .issues { background: #fff3cd; border-color: #ffeaa7; }
+                    .score { font-size: 24px; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <div class=\"header\">
+                    <h1>Comprehensive Testing Dashboard</h1>
+                    <p>Generated on: %s</p>
+                    <div class=\"metric %s\">
+                        <div>Overall Status: %s</div>
+                        <div class=\"score\">%.1f/100</div>
+                    </div>
+                </div>
+                
+                <h2>Test Results by Category</h2>
+                %s
+                
+                <h2>Detailed Metrics</h2>
+                <ul>
+                    %s
+                </ul>
+            </body>
+            </html>
+            ', 
+            format(Sys.time(), '%Y-%m-%d %H:%M:%S'),
+            tolower(overall_status),
+            overall_status,
+            overall_score,
+            paste(sapply(1:nrow(dashboard_data), function(i) {
+              row <- dashboard_data[i, ]
+              sprintf('<div class=\"metric %s\">
+                        <div>%s</div>
+                        <div class=\"score\">%.1f</div>
+                        <div>%s</div>
+                      </div>', 
+                      tolower(row), row, row, row)
+            }), collapse = ''),
+            paste(sapply(names(reports), function(cat) {
+              r <- reports[[cat]]
+              details <- c()
+              if ('passed' %in% names(r)) details <- c(details, sprintf('Passed: %d', r))
+              if ('failed' %in% names(r)) details <- c(details, sprintf('Failed: %d', r))
+              if ('coverage' %in% names(r)) details <- c(details, sprintf('Coverage: %.1f%%', r))
+              if ('execution_time' %in% names(r)) details <- c(details, sprintf('Time: %.3fs', r))
+              if ('issues_found' %in% names(r)) details <- c(details, sprintf('Issues: %d', r))
+              sprintf('<li><strong>%s:</strong> %s</li>', cat, paste(details, collapse = ', '))
+            }), collapse = '')
+            )
+            
+            writeLines(dashboard_html, 'output/testing_dashboard.html')
+            
+            cat(' TESTING DASHBOARD GENERATED\n')
+            cat(sprintf('Overall Score: %.1f/100\n', overall_score))
+            cat(sprintf('Overall Status: %s\n', overall_status))
+            
+            # Summary by category
+            cat('\n=== SUMMARY BY CATEGORY ===\n')
+            for (i in 1:nrow(dashboard_data)) {
+              row <- dashboard_data[i, ]
+              cat(sprintf('%s: %.1f (%s)\n', row, row, row))
+            }
+          "
+      
+      - name: Upload comprehensive testing reports
+        uses: actions/upload-artifact@main
+        with:
+          name: comprehensive-testing-dashboard
+          path: |
+            output/*.rds
+            output/testing_dashboard.html

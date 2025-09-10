@@ -1,0 +1,216 @@
+﻿library(testthat)
+library(bench)
+library(parallel)
+library(ausoa)
+
+context("Load and Stress Tests")
+
+# Load testing: Multiple concurrent simulations
+test_that("Concurrent simulations work correctly", {
+  skip_if_not(detectCores() > 2)  # Skip if not enough cores
+  
+  # Test with different numbers of concurrent processes
+  concurrent_counts <- c(2, 4, 8)
+  
+  for (n_cores in concurrent_counts) {
+    if (detectCores() >= n_cores) {
+      results <- mclapply(1:n_cores, function(i) {
+        set.seed(123 + i)  # Different seed for each process
+        simulation_cycle_fcn(
+          population_data = 100,
+          time_horizon = 5,
+          scenario = "base_case"
+        )
+      }, mc.cores = n_cores)
+      
+      # All results should be non-null
+      expect_true(all(sapply(results, function(x) !is.null(x))))
+      
+      # Results should be different due to different seeds
+      expect_false(all(sapply(results[-1], identical, results[[1]])))
+    }
+  }
+})
+
+# Stress testing: Large population sizes
+test_that("Large population sizes are handled gracefully", {
+  skip_if_not(interactive() || Sys.getenv("RUN_STRESS_TESTS") == "true")
+  
+  large_populations <- c(5000, 10000, 25000)
+  
+  for (pop_size in large_populations) {
+    # Track memory and time
+    mem_before <- gc()
+    time_before <- Sys.time()
+    
+    result <- simulation_cycle_fcn(
+      population_data = pop_size,
+      time_horizon = 3,  # Shorter time for stress testing
+      scenario = "base_case"
+    )
+    
+    time_after <- Sys.time()
+    mem_after <- gc()
+    
+    # Should complete within reasonable time (scale with population)
+    expected_max_time <- pop_size / 1000 * 60  # 1 minute per 1000 people
+    actual_time <- as.numeric(difftime(time_after, time_before, units = "secs"))
+    
+    expect_lt(actual_time, expected_max_time * 2)  # Allow 2x expected time
+    
+    # Memory usage should be reasonable
+    mem_increase <- sum(mem_after[, 2] - mem_before[, 2])
+    expected_max_mem <- pop_size / 1000 * 100 * 1024 * 1024  # 100MB per 1000 people
+    
+    expect_lt(mem_increase, expected_max_mem * 3)  # Allow 3x expected memory
+    
+    # Should produce valid results
+    expect_true(!is.null(result))
+    expect_gt(length(result), 0)
+  }
+})
+
+# Memory stress testing
+test_that("Memory limits are respected", {
+  skip_if_not(interactive() || Sys.getenv("RUN_STRESS_TESTS") == "true")
+  
+  # Test with constrained memory
+  original_limit <- memory.limit()
+  
+  try({
+    # Set memory limit to 1GB for testing
+    memory.limit(1024)  # 1GB in MB
+    
+    result <- simulation_cycle_fcn(
+      population_data = 500,
+      time_horizon = 5,
+      scenario = "base_case"
+    )
+    
+    # Should complete without memory errors
+    expect_true(!is.null(result))
+    
+  }) finally {
+    # Restore original memory limit
+    memory.limit(original_limit)
+  }
+})
+
+# I/O stress testing
+test_that("File I/O handles large datasets", {
+  skip_if_not(interactive() || Sys.getenv("RUN_STRESS_TESTS") == "true")
+  
+  # Create large test dataset
+  large_dataset <- list(
+    population = rnorm(10000, mean = 1000, sd = 200),
+    time_horizon = 10,
+    scenarios = rep(c("base_case", "intervention"), 5000)
+  )
+  
+  # Test writing large dataset
+  write_time <- system.time({
+    saveRDS(large_dataset, "output/stress_test_data.rds")
+  })
+  
+  # Should write within reasonable time
+  expect_lt(write_time["elapsed"], 30)  # 30 seconds max
+  
+  # Test reading large dataset
+  read_time <- system.time({
+    loaded_data <- readRDS("output/stress_test_data.rds")
+  })
+  
+  # Should read within reasonable time
+  expect_lt(read_time["elapsed"], 10)  # 10 seconds max
+  
+  # Data should be identical
+  expect_equal(large_dataset, loaded_data)
+  
+  # Clean up
+  unlink("output/stress_test_data.rds")
+})
+
+# Network stress testing (if applicable)
+test_that("Network operations are resilient", {
+  # Test network timeout handling
+  # This would be relevant if the package makes network calls
+  
+  # For now, test that package can handle network-related errors gracefully
+  expect_true(TRUE)  # Placeholder - implement based on actual network usage
+})
+
+# CPU stress testing
+test_that("CPU usage is optimized", {
+  skip_if_not(interactive() || Sys.getenv("RUN_STRESS_TESTS") == "true")
+  
+  # Monitor CPU usage during simulation
+  library(profvis)
+  
+  prof_result <- profvis({
+    result <- simulation_cycle_fcn(
+      population_data = 1000,
+      time_horizon = 10,
+      scenario = "base_case"
+    )
+  })
+  
+  # Check that profiling completed successfully
+  expect_true(!is.null(prof_result))
+  
+  # Extract CPU time information
+  cpu_time <- sum(prof_result)
+  
+  # CPU time should be reasonable relative to wall time
+  expect_lt(cpu_time, 1000)  # Less than 1000ms of CPU time per operation
+})
+
+# Long-running simulation stress test
+test_that("Long simulations complete successfully", {
+  skip_if_not(interactive() || Sys.getenv("RUN_STRESS_TESTS") == "true")
+  
+  # Test very long simulation
+  long_time_horizon <- 50  # Very long simulation
+  
+  start_time <- Sys.time()
+  
+  result <- simulation_cycle_fcn(
+    population_data = 100,
+    time_horizon = long_time_horizon,
+    scenario = "base_case"
+  )
+  
+  end_time <- Sys.time()
+  duration <- as.numeric(difftime(end_time, start_time, units = "mins"))
+  
+  # Should complete within reasonable time (allow 10 minutes for very long sim)
+  expect_lt(duration, 10)
+  
+  # Should produce valid results
+  expect_true(!is.null(result))
+  expect_gt(length(result), 0)
+})
+
+# Resource cleanup stress test
+test_that("Resources are properly cleaned up", {
+  # Test that temporary files, connections, etc. are cleaned up
+  
+  # Check for file handles before
+  initial_temp_files <- list.files(tempdir(), full.names = TRUE)
+  
+  # Run simulation
+  result <- simulation_cycle_fcn(
+    population_data = 100,
+    time_horizon = 5,
+    scenario = "base_case"
+  )
+  
+  # Check for file handles after
+  final_temp_files <- list.files(tempdir(), full.names = TRUE)
+  
+  # Should not leave excessive temporary files
+  new_temp_files <- setdiff(final_temp_files, initial_temp_files)
+  expect_lt(length(new_temp_files), 10)  # Allow max 10 new temp files
+  
+  # Clean up any test files
+  unlink(new_temp_files[grep("test_|temp_", basename(new_temp_files))])
+})

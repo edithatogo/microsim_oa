@@ -1,0 +1,124 @@
+﻿name: E2E Testing
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 4 * * *'
+
+jobs:
+  e2e-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      # Setup test database if needed
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build test container
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.test
+          push: false
+          tags: ausoa:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Run E2E tests in container
+        run: |
+          docker run --rm \
+            -v ${pwd}:/workspace \
+            -e RUN_E2E_TESTS=true \
+            -e TEST_DATA_DIR=/workspace/input \
+            -e OUTPUT_DIR=/workspace/output \
+            ausoa:test \
+            Rscript -e "
+              library(testthat)
+              library(ausoa)
+              
+              # Run comprehensive E2E test suite
+              test_results <- test_dir('tests/testthat', pattern = 'e2e|integration')
+              
+              # Validate outputs
+              if (file.exists('output/simulation_results.rds')) {
+                results <- readRDS('output/simulation_results.rds')
+                expect_gt(length(results), 0)
+                expect_true(all(sapply(results, is.numeric)))
+              }
+              
+              # Check log files
+              log_files <- list.files('output', pattern = '*.log', full.names = TRUE)
+              expect_gt(length(log_files), 0)
+              
+              print('E2E tests completed successfully')
+            "
+      
+      - name: Upload E2E test artifacts
+        uses: actions/upload-artifact@main
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            output/
+            tests/testthat/_snaps/
+      
+      - name: Validate test data integrity
+        run: |
+          Rscript -e "
+            # Check test data consistency
+            if (file.exists('input/test_data.rds')) {
+              test_data <- readRDS('input/test_data.rds')
+              expect_true(is.list(test_data))
+              expect_gt(length(test_data), 0)
+            }
+            
+            # Validate configuration files
+            config_files <- list.files('config', pattern = '*.yaml|*.yml')
+            expect_gt(length(config_files), 0)
+            
+            print('Test data validation completed')
+          "
+      
+      - name: Performance validation in E2E context
+        run: |
+          Rscript -e "
+            library(bench)
+            
+            # Run performance test in full E2E context
+            bench_result <- bench::mark(
+              {
+                # Full simulation pipeline
+                source('scripts/00_AUS_OA_Master.R')
+              },
+              iterations = 1,
+              check = FALSE
+            )
+            
+            # E2E should complete within reasonable time
+            expect_lt(as.numeric(bench_result), 300)  # 5 minutes max
+            
+            print(sprintf('E2E performance: %.2f seconds', bench_result))
+          "
+      
+      - name: Clean up test artifacts
+        if: always()
+        run: |
+          # Clean up large test files but keep logs
+          find output -name "*.rds" -size +10M -delete || true
+          find output -name "*.csv" -size +50M -delete || true

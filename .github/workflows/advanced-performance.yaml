@@ -1,0 +1,374 @@
+﻿name: Advanced Performance Testing
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 4 * * *'
+
+jobs:
+  performance-testing:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        r-version: ['release', 'devel']
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r-version }}
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::bench
+            any::profvis
+            any::microbenchmark
+            any::Rcpp
+            any::data.table
+            any::parallel
+            any::future
+            any::promises
+            any::testthat
+            any::covr
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev
+      
+      - name: Advanced performance analysis
+        run: |
+          Rscript -e "
+            library(bench)
+            library(profvis)
+            library(microbenchmark)
+            library(parallel)
+            library(future)
+            library(testthat)
+            
+            # Initialize performance report
+            perf_report <- list()
+            
+            # 1. Comprehensive Benchmarking
+            try({
+              cat('Running comprehensive benchmarks...\n')
+              
+              # Load package functions for benchmarking
+              devtools::load_all('.')
+              
+              # Define benchmark scenarios
+              benchmark_scenarios <- list(
+                'small_data' = list(size = 100, iterations = 10),
+                'medium_data' = list(size = 1000, iterations = 5),
+                'large_data' = list(size = 10000, iterations = 3)
+              )
+              
+              benchmark_results <- list()
+              
+              for (scenario in names(benchmark_scenarios)) {
+                cat(sprintf('Benchmarking %s scenario...\n', scenario))
+                
+                size <- benchmark_scenarios[[scenario]]
+                iters <- benchmark_scenarios[[scenario]]
+                
+                # Create test data
+                test_data <- data.frame(
+                  age = rnorm(size, 65, 10),
+                  bmi = rnorm(size, 28, 5),
+                  comorbidities = sample(0:5, size, replace = TRUE),
+                  treatment = sample(c('conservative', 'surgical'), size, replace = TRUE)
+                )
+                
+                # Benchmark key functions
+                if (exists('run_oa_simulation')) {
+                  bench_result <- bench::mark(
+                    run_oa_simulation(test_data),
+                    iterations = iters,
+                    check = FALSE
+                  )
+                  
+                  benchmark_results[[scenario]] <- bench_result
+                  cat(sprintf('%s: median=%.3fs, mem_alloc=%.1fMB\n', 
+                            scenario, 
+                            as.numeric(bench_result), 
+                            as.numeric(bench_result) / 1024^2))
+                }
+              }
+              
+              perf_report <- benchmark_results
+            }, silent = TRUE)
+            
+            # 2. Memory Profiling
+            try({
+              cat('Running memory profiling...\n')
+              
+              # Profile memory usage for key operations
+              memory_profile <- profvis({
+                # Simulate typical workflow
+                if (exists('run_oa_simulation')) {
+                  test_data <- data.frame(
+                    age = rnorm(1000, 65, 10),
+                    bmi = rnorm(1000, 28, 5),
+                    comorbidities = sample(0:5, 1000, replace = TRUE),
+                    treatment = sample(c('conservative', 'surgical'), 1000, replace = TRUE)
+                  )
+                  
+                  result <- run_oa_simulation(test_data)
+                  rm(result)
+                }
+                gc()
+              })
+              
+              perf_report <- memory_profile
+              
+              # Extract memory statistics
+              if (!is.null(memory_profile)) {
+                mem_stats <- summary(memory_profile)
+                perf_report <- mem_stats
+                cat('Memory profiling completed\n')
+                print(mem_stats)
+              }
+            }, silent = TRUE)
+            
+            # 3. Parallel Processing Performance
+            try({
+              cat('Testing parallel processing performance...\n')
+              
+              # Test parallel vs sequential processing
+              test_sizes <- c(100, 500, 1000, 2000)
+              parallel_results <- list()
+              
+              for (size in test_sizes) {
+                cat(sprintf('Testing parallel performance with size %d...\n', size))
+                
+                # Create test data
+                test_data <- data.frame(
+                  age = rnorm(size, 65, 10),
+                  bmi = rnorm(size, 28, 5),
+                  comorbidities = sample(0:5, size, replace = TRUE),
+                  treatment = sample(c('conservative', 'surgical'), size, replace = TRUE)
+                )
+                
+                # Sequential processing
+                sequential_time <- system.time({
+                  if (exists('run_oa_simulation')) {
+                    result_seq <- run_oa_simulation(test_data)
+                  }
+                })
+                
+                # Parallel processing (if available)
+                parallel_time <- system.time({
+                  if (exists('run_oa_simulation_parallel')) {
+                    result_par <- run_oa_simulation_parallel(test_data)
+                  } else {
+                    result_par <- NULL
+                  }
+                })
+                
+                parallel_results[[as.character(size)]] <- list(
+                  sequential = sequential_time,
+                  parallel = parallel_time,
+                  speedup = if (!is.null(result_par)) sequential_time[3] / parallel_time[3] else NA
+                )
+                
+                if (!is.null(result_par)) {
+                  cat(sprintf('Size %d: Sequential=%.3fs, Parallel=%.3fs, Speedup=%.2fx\n',
+                            size, sequential_time[3], parallel_time[3], 
+                            sequential_time[3] / parallel_time[3]))
+                }
+              }
+              
+              perf_report <- parallel_results
+            }, silent = TRUE)
+            
+            # 4. Scalability Testing
+            try({
+              cat('Running scalability tests...\n')
+              
+              # Test performance scaling with data size
+              sizes <- c(100, 500, 1000, 2500, 5000)
+              scalability_results <- list()
+              
+              for (size in sizes) {
+                cat(sprintf('Scalability test with %d observations...\n', size))
+                
+                test_data <- data.frame(
+                  age = rnorm(size, 65, 10),
+                  bmi = rnorm(size, 28, 5),
+                  comorbidities = sample(0:5, size, replace = TRUE),
+                  treatment = sample(c('conservative', 'surgical'), size, replace = TRUE)
+                )
+                
+                timing <- microbenchmark::microbenchmark(
+                  {
+                    if (exists('run_oa_simulation')) {
+                      result <- run_oa_simulation(test_data)
+                    }
+                  },
+                  times = 3
+                )
+                
+                scalability_results[[as.character(size)]] <- summary(timing)
+                cat(sprintf('Size %d: median=%.3fms\n', size, median(timing) / 1e6))
+              }
+              
+              perf_report <- scalability_results
+              
+              # Calculate scaling efficiency
+              if (length(scalability_results) > 1) {
+                sizes_num <- as.numeric(names(scalability_results))
+                times <- sapply(scalability_results, function(x) median(x) / 1e6)
+                
+                scaling_efficiency <- lm(log(times) ~ log(sizes_num))
+                perf_report <- coef(scaling_efficiency)[2]
+                
+                cat(sprintf('Scaling coefficient: %.3f (ideal < 1.0 for good scaling)\n', 
+                          perf_report))
+              }
+            }, silent = TRUE)
+            
+            # 5. CPU and Memory Resource Analysis
+            try({
+              cat('Analyzing resource usage...\n')
+              
+              # Monitor system resources during execution
+              resource_monitor <- function(expr) {
+                start_time <- proc.time()
+                start_gc <- gc()
+                
+                result <- eval(expr)
+                
+                end_time <- proc.time()
+                end_gc <- gc()
+                
+                list(
+                  cpu_time = end_time - start_time,
+                  gc_info = end_gc - start_gc,
+                  result = result
+                )
+              }
+              
+              # Test resource usage on medium dataset
+              test_data <- data.frame(
+                age = rnorm(1000, 65, 10),
+                bmi = rnorm(1000, 28, 5),
+                comorbidities = sample(0:5, 1000, replace = TRUE),
+                treatment = sample(c('conservative', 'surgical'), 1000, replace = TRUE)
+              )
+              
+              resource_usage <- resource_monitor({
+                if (exists('run_oa_simulation')) {
+                  run_oa_simulation(test_data)
+                }
+              })
+              
+              perf_report <- resource_usage
+              
+              cat('Resource usage analysis:\n')
+              cat(sprintf('CPU time: %.3fs\n', resource_usage[3]))
+              cat(sprintf('GC collections: %d\n', resource_usage[2, 1]))
+            }, silent = TRUE)
+            
+            # 6. Performance Regression Detection
+            try({
+              cat('Checking for performance regressions...\n')
+              
+              # Compare current performance against baseline
+              baseline_file <- 'output/performance_baseline.rds'
+              
+              if (file.exists(baseline_file)) {
+                baseline <- readRDS(baseline_file)
+                
+                # Compare key metrics
+                current_median <- median(sapply(perf_report, function(x) 
+                  as.numeric(x)))
+                baseline_median <- median(sapply(baseline, function(x) 
+                  as.numeric(x)))
+                
+                regression_ratio <- current_median / baseline_median
+                
+                perf_report <- list(
+                  current_median = current_median,
+                  baseline_median = baseline_median,
+                  regression_ratio = regression_ratio,
+                  regression_detected = regression_ratio > 1.1  # 10% degradation
+                )
+                
+                cat(sprintf('Performance regression check: %.2fx (baseline: %.3fs, current: %.3fs)\n',
+                          regression_ratio, baseline_median, current_median))
+                
+                if (regression_ratio > 1.1) {
+                  cat('WARNING: Performance regression detected!\n')
+                }
+              } else {
+                cat('No baseline performance data found. Creating baseline...\n')
+                saveRDS(perf_report, baseline_file)
+              }
+            }, silent = TRUE)
+            
+            # Save performance report
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(perf_report, 'output/advanced_performance_report.rds')
+            
+            # Generate performance summary
+            cat('\n=== ADVANCED PERFORMANCE SUMMARY ===\n')
+            
+            if (!is.null(perf_report)) {
+              cat('Benchmark Results:\n')
+              for (scenario in names(perf_report)) {
+                result <- perf_report[[scenario]]
+                cat(sprintf('  %s: %.3fs (%.1fMB)\n', scenario, 
+                          as.numeric(result), 
+                          as.numeric(result) / 1024^2))
+              }
+            }
+            
+            if (!is.null(perf_report)) {
+              cat(sprintf('Scaling Efficiency: %.3f\n', perf_report))
+            }
+            
+            if (!is.null(perf_report)) {
+              reg <- perf_report
+              cat(sprintf('Performance vs Baseline: %.2fx\n', reg))
+              if (reg) {
+                cat('  PERFORMANCE REGRESSION DETECTED\n')
+              }
+            }
+            
+            # Performance grade
+            scaling_score <- if (!is.null(perf_report)) {
+              max(0, min(100, 100 - abs(perf_report - 1) * 50))
+            } else 50
+            
+            regression_score <- if (!is.null(perf_report)) {
+              if (perf_report) 0 else 100
+            } else 100
+            
+            overall_perf_score <- (scaling_score + regression_score) / 2
+            
+            cat(sprintf('Performance Score: %.1f/100\n', overall_perf_score))
+            
+            perf_grade <- if (overall_perf_score >= 95) 'A+' 
+                         else if (overall_perf_score >= 90) 'A'
+                         else if (overall_perf_score >= 85) 'B+'
+                         else if (overall_perf_score >= 80) 'B'
+                         else if (overall_perf_score >= 75) 'C+'
+                         else if (overall_perf_score >= 70) 'C'
+                         else 'D'
+            
+            cat(sprintf('Performance Grade: %s\n', perf_grade))
+          "
+      
+      - name: Upload performance report
+        uses: actions/upload-artifact@main
+        with:
+          name: advanced-performance-report
+          path: |
+            output/advanced_performance_report.rds
+            output/performance_baseline.rds

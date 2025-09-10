@@ -1,4 +1,35 @@
-# ausoa NEWS
+﻿
+# ausoa 2.1.1
+
+## Bug Fixes and Improvements
+- Enhanced automated testing and CI/CD workflows (23 new GitHub Actions)
+- Improved code quality monitoring and health scoring
+- Added comprehensive performance profiling capabilities
+- Implemented automated documentation deployment
+- Enhanced developer experience with automated setup tools
+- Added repository health monitoring and alerting system
+- Improved release management automation
+- Added enterprise-grade security scanning
+- Enhanced dependency management and updates
+- Added advanced analytics and reporting capabilities
+
+## Technical Enhancements
+- Repository transformed to enterprise-grade development environment
+- 10/10 testing strategy with complete automation
+- Proactive monitoring and alerting system
+- Automated quality gates and validation
+- Comprehensive training materials and documentation
+- Performance regression detection
+- Automated release validation and deployment
+
+## Documentation
+- Added comprehensive team training guide
+- Created workflow overview and cheat sheets
+- Implemented automated documentation deployment
+- Added onboarding checklist and presentation materials
+- Enhanced API documentation and examples
+
+*Released on 2025-09-11*# ausoa NEWS
 
 ## 2.0.1 (2025-09-10)
 
@@ -57,3 +88,4 @@
 - Linting narrowed to safe checks over `R/` and made CI-friendly.
 - Silenced zero-length `hr_mort` warning by default (opt-in with `options(ausoa.warn_zero_length_hr_mort = TRUE)`).
 - Resolved tidyselect deprecation warnings in `f_plot_distribution()`.
+

@@ -1,11 +1,76 @@
-url: https://edithatogo.github.io/microsim_oa/
+﻿url: https://edithatogo.github.io/microsim_oa/
 template:
   bootstrap: 5
+  bootswatch: cosmo
+
 navbar:
-  structure:
-    left: [reference, articles, tutorials, news]
-    right: [search]
-  components:
-    news:
-      text: News
+  title: "AUS OA Microsimulation"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Reference"
+      href: reference/index.html
+    - text: "Articles"
+      menu:
+        - text: "Getting Started"
+          href: articles/getting-started.html
+        - text: "Advanced Usage"
+          href: articles/advanced-usage.html
+    - text: "News"
       href: news/index.html
+
+reference:
+  - title: "Core Functions"
+    contents:
+      - starts_with("run_")
+      - starts_with("analyze_")
+      - starts_with("apply_")
+  - title: "Data Management"
+    contents:
+      - starts_with("load_")
+      - starts_with("save_")
+      - starts_with("convert_")
+  - title: "Visualization"
+    contents:
+      - starts_with("plot_")
+      - starts_with("visualize_")
+      - ends_with("_plot")
+  - title: "Utilities"
+    contents:
+      - starts_with("check_")
+      - starts_with("validate_")
+      - starts_with("test_")
+
+articles:
+  - title: "User Guides"
+    contents:
+      - getting-started
+      - data-integration-examples
+      - mock-data-guide
+  - title: "Technical Documentation"
+    contents:
+      - oa-datasets-quick-guide
+      - oa-datasets-summary
+      - feature-matrix-v4
+      - public-oa-datasets
+
+development:
+  mode: auto
+
+repo:
+  url:
+    home: https://github.com/edithatogo/microsim_oa/
+    source: https://github.com/edithatogo/microsim_oa/blob/main/
+    issue: https://github.com/edithatogo/microsim_oa/issues/
+    user: https://github.com/edithatogo/
+
+authors:
+  Edith A. Togonon:
+    href: https://github.com/edithatogo
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with
+  left: "Developed by Edith A. Togonon"
+  right: "Built with pkgdown & GitHub Actions"

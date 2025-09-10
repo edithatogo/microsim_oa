@@ -1,0 +1,437 @@
+﻿name: Advanced Documentation Testing
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 5 * * *'
+
+jobs:
+  documentation-testing:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::pkgdown
+            any::roxygen2
+            any::devtools
+            any::testthat
+            any::spelling
+            any::covr
+            any::DT
+            any::rmarkdown
+      
+      - name: Advanced documentation analysis
+        run: |
+          Rscript -e "
+            library(pkgdown)
+            library(roxygen2)
+            library(devtools)
+            library(spelling)
+            library(rmarkdown)
+            
+            # Initialize documentation report
+            doc_report <- list()
+            
+            # 1. Documentation Completeness Analysis
+            try({
+              cat('Analyzing documentation completeness...\n')
+              
+              # Check for documented functions
+              r_files <- list.files('R/', pattern = '*.R$', full.names = TRUE)
+              man_files <- list.files('man/', pattern = '*.Rd$', full.names = TRUE)
+              
+              # Extract function names from R files
+              r_functions <- c()
+              for (file in r_files) {
+                content <- readLines(file, warn = FALSE)
+                # Find function definitions
+                func_lines <- grep('^[^#]*<- *function|^function.*<-', content)
+                for (line in func_lines) {
+                  func_name <- sub('^([^<]+).*', '\\\\1', content[line])
+                  func_name <- trimws(gsub('[<\\\\-]', '', func_name))
+                  if (nchar(func_name) > 0) {
+                    r_functions <- c(r_functions, func_name)
+                  }
+                }
+              }
+              
+              # Extract documented functions from Rd files
+              documented_functions <- c()
+              for (file in man_files) {
+                content <- readLines(file, warn = FALSE)
+                name_line <- grep('\\\\name\\\\{', content)
+                if (length(name_line) > 0) {
+                  func_name <- sub('.*\\\\name\\\\{([^}]+).*', '\\\\1', content[name_line])
+                  documented_functions <- c(documented_functions, func_name)
+                }
+              }
+              
+              doc_report <- length(unique(r_functions))
+              doc_report <- length(unique(documented_functions))
+              doc_report <- setdiff(unique(r_functions), unique(documented_functions))
+              doc_report <- doc_report / doc_report
+              
+              cat(sprintf('Documentation Coverage: %.1f%% (%d/%d functions)\n',
+                        doc_report * 100,
+                        doc_report,
+                        doc_report))
+              
+              if (length(doc_report) > 0) {
+                cat('Undocumented functions:\n')
+                print(doc_report)
+              }
+            }, silent = TRUE)
+            
+            # 2. Examples Validation
+            try({
+              cat('Validating documentation examples...\n')
+              
+              examples_report <- list()
+              
+              for (file in man_files) {
+                content <- readLines(file, warn = FALSE)
+                
+                # Check for examples section
+                has_examples <- any(grepl('\\\\examples', content))
+                examples_report[[basename(file)]] <- has_examples
+                
+                if (has_examples) {
+                  # Extract examples section
+                  examples_start <- grep('\\\\examples', content)
+                  if (length(examples_start) > 0) {
+                    examples_end <- if (length(grep('\\\\}', content)) > 0) {
+                      min(grep('\\\\}', content)[grep('\\\\}', content) > examples_start])
+                    } else length(content)
+                    
+                    examples_content <- content[(examples_start + 1):(examples_end - 1)]
+                    
+                    # Check if examples are runnable (not just comments)
+                    has_runnable_code <- any(grepl('[^#]', examples_content) & 
+                                           !grepl('^\\\\s*$', examples_content))
+                    
+                    examples_report[[basename(file)]] <- list(
+                      has_examples = TRUE,
+                      has_runnable_code = has_runnable_code,
+                      examples_length = length(examples_content)
+                    )
+                  }
+                }
+              }
+              
+              doc_report <- examples_report
+              
+              examples_with_code <- sum(sapply(examples_report, function(x) 
+                if (is.list(x)) x else FALSE))
+              total_with_examples <- sum(sapply(examples_report, function(x) 
+                if (is.list(x)) x else x))
+              
+              doc_report <- if (total_with_examples > 0) {
+                examples_with_code / total_with_examples
+              } else 0
+              
+              cat(sprintf('Examples Coverage: %.1f%% (%d/%d functions with examples have runnable code)\n',
+                        doc_report * 100,
+                        examples_with_code,
+                        total_with_examples))
+            }, silent = TRUE)
+            
+            # 3. Documentation Quality Analysis
+            try({
+              cat('Analyzing documentation quality...\n')
+              
+              quality_metrics <- list()
+              
+              for (file in man_files) {
+                content <- readLines(file, warn = FALSE)
+                
+                # Check for required sections
+                has_title <- any(grepl('\\\\title', content))
+                has_description <- any(grepl('\\\\description', content))
+                has_usage <- any(grepl('\\\\usage', content))
+                has_arguments <- any(grepl('\\\\arguments', content))
+                has_value <- any(grepl('\\\\value', content))
+                has_examples <- any(grepl('\\\\examples', content))
+                
+                # Check description length
+                desc_start <- grep('\\\\description', content)
+                desc_length <- if (length(desc_start) > 0) {
+                  desc_end <- if (length(grep('\\\\}', content)) > 0) {
+                    min(grep('\\\\}', content)[grep('\\\\}', content) > desc_start])
+                  } else length(content)
+                  length(content[desc_start:desc_end])
+                } else 0
+                
+                # Check for parameter documentation
+                args_start <- grep('\\\\arguments', content)
+                args_documented <- if (length(args_start) > 0) {
+                  args_end <- if (length(grep('\\\\}', content)) > 0) {
+                    min(grep('\\\\}', content)[grep('\\\\}', content) > args_start])
+                  } else length(content)
+                  args_content <- content[args_start:args_end]
+                  length(grep('\\\\item', args_content))
+                } else 0
+                
+                quality_metrics[[basename(file)]] <- list(
+                  has_title = has_title,
+                  has_description = has_description,
+                  has_usage = has_usage,
+                  has_arguments = has_arguments,
+                  has_value = has_value,
+                  has_examples = has_examples,
+                  description_length = desc_length,
+                  parameters_documented = args_documented,
+                  completeness_score = sum(c(has_title, has_description, has_usage, 
+                                           has_arguments, has_value, has_examples)) / 6
+                )
+              }
+              
+              doc_report <- quality_metrics
+              
+              # Calculate overall quality scores
+              completeness_scores <- sapply(quality_metrics, function(x) x)
+              doc_report <- mean(completeness_scores)
+              doc_report <- min(completeness_scores)
+              
+              cat(sprintf('Average Documentation Completeness: %.1f%%\n', 
+                        doc_report * 100))
+              cat(sprintf('Minimum Documentation Completeness: %.1f%%\n', 
+                        doc_report * 100))
+            }, silent = TRUE)
+            
+            # 4. Spelling Check
+            try({
+              cat('Running spelling check...\n')
+              
+              spell_results <- spell_check_package()
+              doc_report <- length(spell_results)
+              doc_report <- spell_results
+              
+              cat(sprintf('Spelling Errors: %d\n', doc_report))
+              
+              if (length(spell_results) > 0) {
+                cat('Spelling errors found:\n')
+                print(spell_results)
+              }
+            }, silent = TRUE)
+            
+            # 5. Cross-reference Validation
+            try({
+              cat('Validating cross-references...\n')
+              
+              # Check for broken links in documentation
+              cross_ref_issues <- list()
+              
+              for (file in man_files) {
+                content <- readLines(file, warn = FALSE)
+                
+                # Find seealso and link references
+                seealso_refs <- grep('\\\\seealso', content)
+                link_refs <- grep('\\\\link', content)
+                
+                if (length(seealso_refs) > 0 || length(link_refs) > 0) {
+                  # Extract referenced functions
+                  refs <- c()
+                  if (length(seealso_refs) > 0) {
+                    seealso_content <- content[seealso_refs]
+                    refs <- c(refs, unlist(strsplit(gsub('.*\\\\seealso\\\\{([^}]+).*', '\\\\1', seealso_content), ',')))
+                  }
+                  if (length(link_refs) > 0) {
+                    link_content <- content[link_refs]
+                    refs <- c(refs, unlist(strsplit(gsub('.*\\\\link\\\\{([^}]+).*', '\\\\1', link_content), ',')))
+                  }
+                  
+                  # Check if referenced functions exist
+                  missing_refs <- c()
+                  for (ref in trimws(refs)) {
+                    if (!ref %in% documented_functions && !exists(ref, globalenv())) {
+                      missing_refs <- c(missing_refs, ref)
+                    }
+                  }
+                  
+                  if (length(missing_refs) > 0) {
+                    cross_ref_issues[[basename(file)]] <- missing_refs
+                  }
+                }
+              }
+              
+              doc_report <- cross_ref_issues
+              doc_report <- length(unlist(cross_ref_issues))
+              
+              cat(sprintf('Broken Cross-references: %d\n', doc_report))
+              
+              if (length(cross_ref_issues) > 0) {
+                cat('Files with broken references:\n')
+                for (file in names(cross_ref_issues)) {
+                  cat(sprintf('  %s: %s\n', file, paste(cross_ref_issues[[file]], collapse = ', ')))
+                }
+              }
+            }, silent = TRUE)
+            
+            # 6. Vignette and Article Validation
+            try({
+              cat('Validating vignettes and articles...\n')
+              
+              vignette_files <- list.files('vignettes/', pattern = '*.Rmd$', full.names = TRUE)
+              article_files <- list.files('docs/articles/', pattern = '*.html$', full.names = TRUE)
+              
+              doc_report <- length(vignette_files)
+              doc_report <- length(article_files)
+              
+              # Check vignette completeness
+              vignette_analysis <- list()
+              for (file in vignette_files) {
+                content <- readLines(file, warn = FALSE)
+                
+                has_title <- any(grepl('^title:', content))
+                has_abstract <- any(grepl('abstract:', content))
+                has_code_chunks <- any(grepl('`', content))
+                word_count <- sum(sapply(strsplit(content, '\\\\s+'), length))
+                
+                vignette_analysis[[basename(file)]] <- list(
+                  has_title = has_title,
+                  has_abstract = has_abstract,
+                  has_code_chunks = has_code_chunks,
+                  word_count = word_count
+                )
+              }
+              
+              doc_report <- vignette_analysis
+              
+              cat(sprintf('Vignettes: %d\n', doc_report))
+              cat(sprintf('Articles: %d\n', doc_report))
+              
+              vignette_completeness <- mean(sapply(vignette_analysis, function(x) 
+                sum(unlist(x[c('has_title', 'has_abstract', 'has_code_chunks')])) / 3))
+              
+              cat(sprintf('Average Vignette Completeness: %.1f%%\n', vignette_completeness * 100))
+            }, silent = TRUE)
+            
+            # 7. README and Package Documentation
+            try({
+              cat('Validating README and package documentation...\n')
+              
+              readme_files <- c('README.md', 'README.Rmd')
+              readme_exists <- any(file.exists(readme_files))
+              
+              pkgdown_config <- file.exists('_pkgdown.yml')
+              news_file <- file.exists('NEWS.md')
+              cran_comments <- file.exists('cran-comments.md')
+              
+              doc_report <- readme_exists
+              doc_report <- pkgdown_config
+              doc_report <- news_file
+              doc_report <- cran_comments
+              
+              # Calculate package documentation score
+              pkg_doc_score <- sum(c(readme_exists, pkgdown_config, news_file, cran_comments)) / 4
+              doc_report <- pkg_doc_score
+              
+              cat(sprintf('Package Documentation Score: %.1f%%\n', pkg_doc_score * 100))
+              
+              missing_docs <- c()
+              if (!readme_exists) missing_docs <- c(missing_docs, 'README')
+              if (!pkgdown_config) missing_docs <- c(missing_docs, 'pkgdown config')
+              if (!news_file) missing_docs <- c(missing_docs, 'NEWS.md')
+              if (!cran_comments) missing_docs <- c(missing_docs, 'cran-comments.md')
+              
+              if (length(missing_docs) > 0) {
+                cat('Missing documentation files:\n')
+                print(missing_docs)
+              }
+            }, silent = TRUE)
+            
+            # Save documentation report
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(doc_report, 'output/advanced_documentation_report.rds')
+            
+            # Generate documentation summary
+            cat('\n=== ADVANCED DOCUMENTATION SUMMARY ===\n')
+            cat(sprintf('Function Documentation: %.1f%% (%d/%d)\n',
+                      doc_report * 100,
+                      doc_report,
+                      doc_report))
+            cat(sprintf('Examples Coverage: %.1f%%\n', doc_report * 100))
+            cat(sprintf('Average Completeness: %.1f%%\n', doc_report * 100))
+            cat(sprintf('Spelling Errors: %d\n', doc_report))
+            cat(sprintf('Broken References: %d\n', doc_report))
+            cat(sprintf('Vignettes: %d\n', doc_report))
+            cat(sprintf('Package Documentation: %.1f%%\n', doc_report * 100))
+            
+            # Calculate overall documentation score
+            coverage_score <- doc_report * 100 * 0.25
+            examples_score <- doc_report * 100 * 0.15
+            completeness_score <- doc_report * 100 * 0.20
+            spelling_score <- max(0, 100 - doc_report * 5) * 0.15
+            references_score <- max(0, 100 - doc_report * 10) * 0.10
+            package_score <- doc_report * 100 * 0.15
+            
+            overall_doc_score <- coverage_score + examples_score + completeness_score + 
+                               spelling_score + references_score + package_score
+            
+            cat(sprintf('Overall Documentation Score: %.1f/100\n', overall_doc_score))
+            
+            # Documentation grade
+            doc_grade <- if (overall_doc_score >= 95) 'A+' 
+                        else if (overall_doc_score >= 90) 'A'
+                        else if (overall_doc_score >= 85) 'B+'
+                        else if (overall_doc_score >= 80) 'B'
+                        else if (overall_doc_score >= 75) 'C+'
+                        else if (overall_doc_score >= 70) 'C'
+                        else 'D'
+            
+            cat(sprintf('Documentation Grade: %s\n', doc_grade))
+            
+            # Critical issues
+            critical_issues <- c()
+            if (doc_report < 0.8) {
+              critical_issues <- c(critical_issues, 'Low function documentation coverage')
+            }
+            if (doc_report < 0.5) {
+              critical_issues <- c(critical_issues, 'Low examples coverage')
+            }
+            if (doc_report > 10) {
+              critical_issues <- c(critical_issues, 'High spelling error count')
+            }
+            if (doc_report > 5) {
+              critical_issues <- c(critical_issues, 'Many broken cross-references')
+            }
+            
+            if (length(critical_issues) > 0) {
+              cat('\n  CRITICAL DOCUMENTATION ISSUES:\n')
+              for (issue in critical_issues) {
+                cat(sprintf('   %s\n', issue))
+              }
+            }
+          "
+      
+      - name: Build pkgdown site
+        run: |
+          Rscript -e "
+            library(pkgdown)
+            if (file.exists('_pkgdown.yml')) {
+              build_site()
+              cat('pkgdown site built successfully\n')
+            } else {
+              cat('No _pkgdown.yml found, skipping site build\n')
+            }
+          "
+      
+      - name: Upload documentation report
+        uses: actions/upload-artifact@main
+        with:
+          name: advanced-documentation-report
+          path: |
+            output/advanced_documentation_report.rds
+            docs/

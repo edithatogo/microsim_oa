@@ -1,0 +1,271 @@
+﻿name: Advanced Code Quality
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  advanced-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::covr
+            any::goodpractice
+            any::lintr
+            any::cyclocomp
+            any::pkgdown
+            any::spelling
+            any::devtools
+            any::roxygen2
+            any::pkgdepends
+            any::cranlogs
+            any::testthat
+            any::DT
+      
+      - name: Advanced code quality analysis
+        run: |
+          Rscript -e "
+            library(covr)
+            library(goodpractice)
+            library(lintr)
+            library(cyclocomp)
+            library(spelling)
+            library(devtools)
+            
+            # Initialize comprehensive quality metrics
+            quality_report <- list()
+            
+            # 1. Code Coverage Analysis
+            try({
+              coverage <- package_coverage(type = 'all')
+              quality_report <- percent_coverage(coverage)
+              quality_report <- coverage
+              
+              # Detailed coverage by file
+              coverage_by_file <- sapply(coverage, function(x) percent_coverage(x))
+              quality_report <- coverage_by_file
+              
+              cat(sprintf('Overall Code Coverage: %.2f%%\n', quality_report))
+              cat('Coverage by file:\n')
+              print(sort(coverage_by_file, decreasing = TRUE))
+            }, silent = TRUE)
+            
+            # 2. Good Practice Score with detailed breakdown
+            try({
+              gp_results <- gp(checks = c(
+                'no_description_depends',
+                'no_description_date', 
+                'no_description_bugreports',
+                'description_length',
+                'description_spellcheck',
+                'no_cran_errors',
+                'no_cran_warnings',
+                'no_description_citation',
+                'no_examples',
+                'no_vignettes',
+                'no_news',
+                'no_readme',
+                'no_urls_http',
+                'lintr',
+                'namespace',
+                'no_cyclomatic_complexity',
+                'no_long_functions',
+                'no_nested_if',
+                'no_deeply_nested_functions',
+                'no_complex_functions'
+              ))
+              
+              quality_report <- gp_results
+              quality_report <- gp_results
+              
+              cat(sprintf('Good Practice Score: %.1f/100\n', quality_report))
+              cat('Failed checks:\n')
+              failed_checks <- gp_results[!gp_results, ]
+              if (nrow(failed_checks) > 0) {
+                print(failed_checks)
+              } else {
+                cat('All checks passed!\n')
+              }
+            }, silent = TRUE)
+            
+            # 3. Advanced Linting with custom rules
+            try({
+              custom_linters <- linters_with_defaults(
+                cyclocomp_linter(30),  # Stricter complexity
+                line_length_linter(100),  # Shorter lines
+                object_usage_linter(),
+                unused_import_linter(),
+                no_tab_linter(),
+                no_single_quotes_linter(),
+                trailing_whitespace_linter(),
+                trailing_blank_lines_linter(),
+                todo_comment_linter(),
+                object_length_linter(30),  # Object name length
+                function_left_parentheses_linter()  # Function parentheses
+              )
+              
+              lint_results <- lint_package(linters = custom_linters)
+              quality_report <- length(lint_results)
+              quality_report <- lint_results
+              
+              cat(sprintf('Lint Issues: %d\n', quality_report))
+              
+              # Categorize lint issues
+              if (length(lint_results) > 0) {
+                issue_types <- table(lint_results)
+                cat('Issues by type:\n')
+                print(issue_types)
+              }
+            }, silent = TRUE)
+            
+            # 4. Cyclomatic Complexity Analysis
+            try({
+              files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+              complexities <- sapply(files, function(f) {
+                tryCatch(cyclocomp(f), error = function(e) NA)
+              })
+              
+              quality_report <- mean(complexities, na.rm = TRUE)
+              quality_report <- max(complexities, na.rm = TRUE)
+              quality_report <- complexities
+              
+              cat(sprintf('Average Complexity: %.2f\n', quality_report))
+              cat(sprintf('Maximum Complexity: %d\n', quality_report))
+              
+              # Flag high complexity functions
+              high_complexity <- complexities[complexities > 50]
+              if (length(high_complexity) > 0) {
+                cat('High complexity files (>50):\n')
+                print(high_complexity)
+              }
+            }, silent = TRUE)
+            
+            # 5. Documentation Quality Analysis
+            try({
+              # Check documentation completeness
+              man_files <- list.files('man/', pattern = '*.Rd', full.names = TRUE)
+              r_files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+              
+              quality_report <- length(man_files) / length(r_files)
+              quality_report <- length(r_files) - length(man_files)
+              
+              cat(sprintf('Documentation Ratio: %.2f\n', quality_report))
+              cat(sprintf('Undocumented Functions: %d\n', quality_report))
+              
+              # Check for examples in documentation
+              if (length(man_files) > 0) {
+                has_examples <- sapply(man_files, function(f) {
+                  content <- readLines(f, warn = FALSE)
+                  any(grepl('\\\\examples', content))
+                })
+                quality_report <- mean(has_examples)
+                cat(sprintf('Examples Coverage: %.2f%%\n', quality_report * 100))
+              }
+            }, silent = TRUE)
+            
+            # 6. Spell Check Analysis
+            try({
+              spell_results <- spell_check_package()
+              quality_report <- length(spell_results)
+              quality_report <- spell_results
+              
+              cat(sprintf('Spelling Errors: %d\n', quality_report))
+              
+              if (length(spell_results) > 0) {
+                cat('Spelling errors found:\n')
+                print(spell_results)
+              }
+            }, silent = TRUE)
+            
+            # 7. Package Structure Analysis
+            try({
+              # Check for proper package structure
+              required_files <- c('DESCRIPTION', 'NAMESPACE', 'README.md', 'NEWS.md')
+              existing_files <- required_files[file.exists(required_files)]
+              quality_report <- length(existing_files) / length(required_files)
+              
+              cat(sprintf('Package Structure Completeness: %.2f%%\n', quality_report * 100))
+              
+              missing_files <- setdiff(required_files, existing_files)
+              if (length(missing_files) > 0) {
+                cat('Missing files:\n')
+                print(missing_files)
+              }
+            }, silent = TRUE)
+            
+            # 8. Dependency Analysis
+            try({
+              deps <- pkgdepends::pkg_deps(".")
+              quality_report <- nrow(deps)
+              quality_report <- deps
+              
+              cat(sprintf('Total Dependencies: %d\n', quality_report))
+              
+              # Check for heavy dependencies
+              if (nrow(deps) > 0) {
+                large_deps <- deps[deps > 10 * 1024 * 1024, ]  # >10MB
+                if (nrow(large_deps) > 0) {
+                  cat('Large dependencies (>10MB):\n')
+                  print(large_deps[, c('package', 'size')])
+                }
+              }
+            }, silent = TRUE)
+            
+            # Save comprehensive quality report
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(quality_report, 'output/advanced_quality_report.rds')
+            
+            # Generate summary
+            cat('\n=== ADVANCED QUALITY SUMMARY ===\n')
+            cat(sprintf('Coverage: %.1f%%\n', quality_report %||% 0))
+            cat(sprintf('Good Practice: %.1f/100\n', quality_report %||% 0))
+            cat(sprintf('Lint Issues: %d\n', quality_report %||% 0))
+            cat(sprintf('Avg Complexity: %.1f\n', quality_report %||% 0))
+            cat(sprintf('Documentation Ratio: %.2f\n', quality_report %||% 0))
+            cat(sprintf('Spelling Errors: %d\n', quality_report %||% 0))
+            
+            # Calculate overall quality score
+            coverage_score <- min(quality_report %||% 0, 100) * 0.15
+            gp_score <- (quality_report %||% 0) * 0.25
+            lint_score <- max(0, 100 - (quality_report %||% 0) * 5) * 0.15
+            complexity_score <- max(0, 100 - (quality_report %||% 0) * 2) * 0.15
+            doc_score <- (quality_report %||% 0) * 100 * 0.15
+            spell_score <- max(0, 100 - (quality_report %||% 0) * 10) * 0.15
+            
+            overall_score <- coverage_score + gp_score + lint_score + complexity_score + doc_score + spell_score
+            
+            cat(sprintf('Overall Quality Score: %.1f/100\n', overall_score))
+            
+            # Quality grade
+            grade <- if (overall_score >= 95) 'A+' 
+                    else if (overall_score >= 90) 'A'
+                    else if (overall_score >= 85) 'B+'
+                    else if (overall_score >= 80) 'B'
+                    else if (overall_score >= 75) 'C+'
+                    else if (overall_score >= 70) 'C'
+                    else 'D'
+            
+            cat(sprintf('Quality Grade: %s\n', grade))
+          "
+      
+      - name: Upload advanced quality report
+        uses: actions/upload-artifact@main
+        with:
+          name: advanced-quality-report
+          path: |
+            output/advanced_quality_report.rds
+            quality-summary.txt

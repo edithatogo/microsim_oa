@@ -1,0 +1,201 @@
+﻿name: Advanced Security Scan
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 2 * * 1'
+
+jobs:
+  advanced-security:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Run advanced security analysis
+        run: |
+          # Install security analysis tools
+          sudo apt-get update
+          sudo apt-get install -y clamav clamav-daemon
+          
+          # Update virus definitions
+          sudo freshclam
+          
+          # Scan for malware
+          clamscan --recursive --infected . || true
+      
+      - name: CodeQL Security Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, python, r
+          queries: security-and-quality
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+      
+      - name: Dependency vulnerability check
+        run: |
+          Rscript -e "
+            library(renv)
+            
+            if (file.exists('renv.lock')) {
+              lockfile <- jsonlite::read_json('renv.lock')
+              packages <- lockfile[['Packages']]
+              
+              # Check for known vulnerable packages
+              vulnerable_packages <- c()
+              
+              for (pkg_name in names(packages)) {
+                pkg_info <- packages[[pkg_name]]
+                version <- pkg_info[['Version']]
+                
+                # Check against known vulnerable versions (example)
+                if (pkg_name == 'dplyr' && version < '1.0.0') {
+                  vulnerable_packages <- c(vulnerable_packages, pkg_name)
+                }
+              }
+              
+              if (length(vulnerable_packages) > 0) {
+                warning('Vulnerable packages found: ', paste(vulnerable_packages, collapse = ', '))
+              }
+            }
+          "
+      
+      - name: Static Application Security Testing (SAST)
+        run: |
+          # Install bandit for Python security (if Python files exist)
+          if [ -f "*.py" ]; then
+            pip install bandit
+            bandit -r . || true
+          fi
+          
+          # R-specific security checks
+          Rscript -e "
+            library(lintr)
+            
+            # Security-focused linting
+            security_lints <- linters_with_defaults(
+              cyclocomp_linter(30),  # Lower threshold for security
+              object_usage_linter(),
+              no_tab_linter(),
+              no_single_quotes_linter(),
+              line_length_linter(100)  # Shorter lines for security review
+            )
+            
+            # Lint all R files with security focus
+            files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+            for (file in files) {
+              lint_results <- lint(file, linters = security_lints)
+              if (length(lint_results) > 0) {
+                cat(sprintf('Security issues in %s:\n', file))
+                print(lint_results)
+              }
+            }
+          "
+      
+      - name: Secrets detection
+        run: |
+          # Use git-secrets if available
+          if command -v git-secrets &> /dev/null; then
+            git-secrets --scan
+          fi
+          
+          # Manual secrets detection
+          echo "Scanning for potential secrets..."
+          
+          # Check for API keys, passwords, tokens
+          grep -r "api_key\|apikey\|password\|passwd\|secret\|token\|key.*=" --include="*.R" --include="*.py" --include="*.js" . || echo "No obvious secrets found"
+          
+          # Check for hardcoded credentials
+          grep -r "http.*://.*:.*@" --include="*.R" --include="*.py" . || echo "No hardcoded credentials found"
+      
+      - name: Container security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'advanced-security.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Software Composition Analysis (SCA)
+        run: |
+          # Check for license compliance
+          Rscript -e "
+            # Analyze package licenses
+            desc <- read.dcf('DESCRIPTION')
+            license <- desc[1, 'License']
+            
+            # Check for GPL compatibility
+            if (grepl('GPL', license)) {
+              cat('License is GPL-compatible\n')
+            } else {
+              warning('License may not be GPL-compatible')
+            }
+          "
+      
+      - name: Cryptographic security check
+        run: |
+          Rscript -e "
+            # Check for insecure random number generation
+            files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+            
+            insecure_patterns <- c(
+              'sample\\\\(',  # sample() without replacement
+              'runif\\\\(',   # Check for proper seeding
+              'set.seed\\\\(1234567890\\\\)'  # Weak seeds
+            )
+            
+            for (file in files) {
+              content <- readLines(file, warn = FALSE)
+              
+              for (pattern in insecure_patterns) {
+                if (any(grepl(pattern, content))) {
+                  warning(sprintf('Potential cryptographic issue in %s: %s', file, pattern))
+                }
+              }
+            }
+          "
+      
+      - name: Input validation security
+        run: |
+          Rscript -e "
+            # Check for input validation vulnerabilities
+            files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+            
+            validation_patterns <- c(
+              'eval\\\\(',     # Code injection risk
+              'system\\\\(',   # Command injection risk
+              'source\\\\(',   # File inclusion risk
+              'readRDS\\\\(',  # Deserialization risk
+              'load\\\\('      # File inclusion risk
+            )
+            
+            for (file in files) {
+              content <- readLines(file, warn = FALSE)
+              
+              for (pattern in validation_patterns) {
+                matches <- grep(pattern, content, value = TRUE)
+                if (length(matches) > 0) {
+                  cat(sprintf('Input validation concern in %s:\n', file))
+                  cat(matches, sep = '\n')
+                  cat('\n')
+                }
+              }
+            }
+          "
+      
+      - name: Upload advanced security results
+        uses: actions/upload-artifact@main
+        if: always()
+        with:
+          name: advanced-security-results
+          path: |
+            advanced-security.sarif
+            security-report.txt
+            codeql-results.sarif

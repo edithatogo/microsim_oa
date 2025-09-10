@@ -14,13 +14,13 @@ if (!require("devtools")) {
 
 # Clean previous builds
 cat("Cleaning previous builds...\n")
-if (file.exists("ausoa_2.0.1.tar.gz")) {
-  file.remove("ausoa_2.0.1.tar.gz")
+if (file.exists("ausoa_2.1.1.tar.gz")) {
+  file.remove("ausoa_2.1.1.tar.gz")
 }
 
 # Run document to ensure man files are up to date
 cat("Updating documentation...\n")
-devtools::document()
+# devtools::document()  # Temporarily disabled due to roxygen2 issue
 
 # Build package
 cat("Building package...\n")
@@ -33,7 +33,7 @@ check_results <- devtools::check()
 # Print results
 if (length(check_results$errors) == 0 && length(check_results$warnings) == 0) {
   cat("\n✅ Package built successfully!\n")
-  cat("📦 Package file: ausoa_2.0.1.tar.gz\n")
+  cat("📦 Package file: ausoa_2.1.1.tar.gz\n")
   cat("📋 Ready for CRAN submission\n")
 } else {
   cat("\n❌ Issues found during check:\n")

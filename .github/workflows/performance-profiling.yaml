@@ -1,0 +1,406 @@
+﻿name: Performance Profiling & Optimization
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      profile_focus:
+        description: 'Focus area for profiling'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - memory
+          - cpu
+          - io
+          - functions
+
+jobs:
+  performance-profiling:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        r-version: ['release']
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r-version }}
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::profvis
+            any::bench
+            any::microbenchmark
+            any::Rcpp
+            any::pryr
+            any::lobstr
+            any::proffer
+            any::devtools
+      
+      - name: Install system profiling tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y linux-tools-common linux-tools-generic valgrind massif-visualizer
+      
+      - name: Comprehensive performance profiling
+        run: |
+          Rscript -e "
+            library(profvis)
+            library(bench)
+            library(microbenchmark)
+            library(pryr)
+            library(lobstr)
+            library(proffer)
+            
+            cat('=== COMPREHENSIVE PERFORMANCE PROFILING ===\n')
+            
+            # Initialize profiling report
+            profile_report <- list()
+            
+            # 1. Memory profiling with detailed analysis
+            cat('Performing detailed memory profiling...\n')
+            
+            try({
+              # Memory profiling for key operations
+              memory_profile <- profvis({
+                # Simulate typical workflow
+                if (exists('run_oa_simulation')) {
+                  devtools::load_all('.')
+                  
+                  # Test with different data sizes
+                  sizes <- c(100, 500, 1000)
+                  
+                  for (size in sizes) {
+                    test_data <- data.frame(
+                      age = rnorm(size, 65, 10),
+                      bmi = rnorm(size, 28, 5),
+                      comorbidities = sample(0:5, size, replace = TRUE),
+                      treatment = sample(c('conservative', 'surgical'), size, replace = TRUE)
+                    )
+                    
+                    result <- run_oa_simulation(test_data)
+                    rm(result)
+                  }
+                  
+                  gc()  # Force garbage collection
+                }
+              }, interval = 0.005)  # 5ms interval for detailed profiling
+              
+              profile_report <- memory_profile
+              
+              # Extract memory statistics
+              if (!is.null(memory_profile)) {
+                mem_stats <- summary(memory_profile)
+                profile_report <- mem_stats
+                
+                cat('Memory profiling results:\n')
+                cat(sprintf('Total time: %.3fs\n', mem_stats))
+                cat(sprintf('Memory allocations: %.1fMB\n', mem_stats/1024^2))
+                cat(sprintf('Samples: %d\n', mem_stats))
+                
+                # Identify memory hotspots
+                if (nrow(mem_stats) > 0) {
+                  cat('Top memory consumers:\n')
+                  top_mem <- head(mem_stats[order(mem_stats, decreasing = TRUE), ], 5)
+                  for (i in 1:nrow(top_mem)) {
+                    cat(sprintf('  %s: %.1fMB\n', top_mem[i], top_mem[i]/1024^2))
+                  }
+                }
+              }
+            }, silent = TRUE)
+            
+            # 2. CPU profiling with function-level analysis
+            cat('\nPerforming CPU profiling...\n')
+            
+            try({
+              # Profile CPU usage for computational intensive operations
+              cpu_profile <- proffer::pprof({
+                if (exists('run_oa_simulation')) {
+                  # Run multiple simulations to get meaningful CPU data
+                  for (i in 1:10) {
+                    test_data <- data.frame(
+                      age = rnorm(500, 65, 10),
+                      bmi = rnorm(500, 28, 5),
+                      comorbidities = sample(0:5, 500, replace = TRUE),
+                      treatment = sample(c('conservative', 'surgical'), 500, replace = TRUE)
+                    )
+                    
+                    result <- run_oa_simulation(test_data)
+                    rm(result)
+                  }
+                }
+              })
+              
+              profile_report <- cpu_profile
+              
+              cat('CPU profiling completed\n')
+              
+            }, silent = TRUE)
+            
+            # 3. Object size analysis
+            cat('\nAnalyzing object sizes and memory usage...\n')
+            
+            try({
+              if (exists('run_oa_simulation')) {
+                # Analyze memory usage of typical outputs
+                test_data <- data.frame(
+                  age = rnorm(1000, 65, 10),
+                  bmi = rnorm(1000, 28, 5),
+                  comorbidities = sample(0:5, 1000, replace = TRUE),
+                  treatment = sample(c('conservative', 'surgical'), 1000, replace = TRUE)
+                )
+                
+                result <- run_oa_simulation(test_data)
+                
+                # Analyze object sizes
+                object_sizes <- list()
+                
+                if (is.list(result)) {
+                  for (name in names(result)) {
+                    obj_size <- pryr::object_size(result[[name]])
+                    object_sizes[[name]] <- as.numeric(obj_size)
+                    
+                    cat(sprintf('Object %s: %.2fMB\n', name, as.numeric(obj_size)/(1024*1024)))
+                    
+                    # Analyze object structure for large objects
+                    if (as.numeric(obj_size) > 10 * 1024 * 1024) {  # >10MB
+                      cat(sprintf('  Large object detected: %s\n', name))
+                      if (is.data.frame(result[[name]])) {
+                        cat(sprintf('    Rows: %d, Columns: %d\n', 
+                                  nrow(result[[name]]), ncol(result[[name]])))
+                      }
+                    }
+                  }
+                } else {
+                  obj_size <- pryr::object_size(result)
+                  object_sizes[['result']] <- as.numeric(obj_size)
+                  cat(sprintf('Result object: %.2fMB\n', as.numeric(obj_size)/(1024*1024)))
+                }
+                
+                profile_report <- object_sizes
+                
+                # Memory efficiency analysis
+                total_memory <- sum(unlist(object_sizes))
+                memory_efficiency <- if (total_memory > 0) {
+                  (nrow(test_data) * 1000) / total_memory  # Records per KB
+                } else 0
+                
+                cat(sprintf('Memory efficiency: %.2f records/KB\n', memory_efficiency))
+                
+                rm(result)
+                gc()
+              }
+            }, silent = TRUE)
+            
+            # 4. Function-level performance analysis
+            cat('\nAnalyzing function-level performance...\n')
+            
+            try({
+              # Identify and benchmark key functions
+              r_files <- list.files('R/', pattern = '*.R', full.names = TRUE)
+              function_benchmarks <- list()
+              
+              for (file in r_files) {
+                content <- readLines(file, warn = FALSE)
+                func_lines <- grep('<- *function', content)
+                
+                for (line_num in func_lines) {
+                  func_match <- regexpr('[a-zA-Z_][a-zA-Z0-9_]*\\s*<-', content[line_num])
+                  if (func_match != -1) {
+                    func_name <- trimws(substr(content[line_num], func_match, 
+                                             func_match + attr(func_match, 'match.length') - 3))
+                    
+                    if (!is.na(func_name) && nchar(func_name) > 0 && exists(func_name, mode = 'function')) {
+                      # Benchmark the function if possible
+                      try({
+                        func_obj <- get(func_name)
+                        
+                        # Simple benchmark (this is illustrative - actual benchmarking would depend on function signature)
+                        if (length(formals(func_obj)) == 0) {
+                          bench_result <- bench::mark(
+                            do.call(func_name, list()),
+                            iterations = 10,
+                            check = FALSE
+                          )
+                          
+                          function_benchmarks[[func_name]] <- list(
+                            median_time = as.numeric(bench_result),
+                            memory = as.numeric(bench_result),
+                            file = basename(file)
+                          )
+                          
+                          cat(sprintf('Function %s: %.3fms, %.1fKB\n', 
+                                    func_name, 
+                                    as.numeric(bench_result) * 1000,
+                                    as.numeric(bench_result) / 1024))
+                        }
+                      }, silent = TRUE)
+                    }
+                  }
+                }
+              }
+              
+              profile_report <- function_benchmarks
+              
+            }, silent = TRUE)
+            
+            # 5. Performance regression detection
+            cat('\nChecking for performance regressions...\n')
+            
+            try({
+              baseline_file <- 'output/performance_baseline.rds'
+              
+              if (file.exists(baseline_file)) {
+                baseline <- readRDS(baseline_file)
+                
+                # Compare current performance with baseline
+                regressions <- list()
+                
+                if (exists('run_oa_simulation')) {
+                  # Current performance
+                  test_data <- data.frame(
+                    age = rnorm(500, 65, 10),
+                    bmi = rnorm(500, 28, 5),
+                    comorbidities = sample(0:5, 500, replace = TRUE),
+                    treatment = sample(c('conservative', 'surgical'), 500, replace = TRUE)
+                  )
+                  
+                  current_bench <- bench::mark(
+                    run_oa_simulation(test_data),
+                    iterations = 5,
+                    check = FALSE
+                  )
+                  
+                  current_time <- as.numeric(current_bench)
+                  
+                  # Compare with baseline
+                  if (!is.null(baseline)) {
+                    baseline_time <- baseline
+                    regression_ratio <- current_time / baseline_time
+                    
+                    profile_report <- list(
+                      current_time = current_time,
+                      baseline_time = baseline_time,
+                      regression_ratio = regression_ratio,
+                      regression_detected = regression_ratio > 1.1,
+                      improvement_detected = regression_ratio < 0.9
+                    )
+                    
+                    if (regression_ratio > 1.1) {
+                      cat(sprintf('  PERFORMANCE REGRESSION: %.1fx slower than baseline\n', regression_ratio))
+                    } else if (regression_ratio < 0.9) {
+                      cat(sprintf(' PERFORMANCE IMPROVEMENT: %.1fx faster than baseline\n', 1/regression_ratio))
+                    } else {
+                      cat(' Performance stable compared to baseline\n')
+                    }
+                  }
+                }
+              } else {
+                cat('Creating performance baseline...\n')
+                if (exists('run_oa_simulation')) {
+                  test_data <- data.frame(
+                    age = rnorm(500, 65, 10),
+                    bmi = rnorm(500, 28, 5),
+                    comorbidities = sample(0:5, 500, replace = TRUE),
+                    treatment = sample(c('conservative', 'surgical'), 500, replace = TRUE)
+                  )
+                  
+                  baseline_bench <- bench::mark(
+                    run_oa_simulation(test_data),
+                    iterations = 5,
+                    check = FALSE
+                  )
+                  
+                  baseline_data <- list(
+                    current_time = as.numeric(baseline_bench),
+                    timestamp = Sys.time()
+                  )
+                  
+                  saveRDS(baseline_data, baseline_file)
+                }
+              }
+            }, silent = TRUE)
+            
+            # 6. Optimization recommendations
+            cat('\nGenerating optimization recommendations...\n')
+            
+            recommendations <- list()
+            
+            # Memory optimization recommendations
+            if (!is.null(profile_report)) {
+              large_objects <- names(profile_report)[profile_report > 50 * 1024 * 1024]
+              if (length(large_objects) > 0) {
+                recommendations <- sprintf(
+                  'Consider optimizing memory usage for large objects: %s', 
+                  paste(large_objects, collapse = ', ')
+                )
+              }
+            }
+            
+            # Function optimization recommendations
+            if (!is.null(profile_report)) {
+              slow_functions <- names(profile_report)[
+                profile_report > 0.1  # >100ms
+              ]
+              if (length(slow_functions) > 0) {
+                recommendations <- sprintf(
+                  'Consider optimizing slow functions: %s',
+                  paste(slow_functions, collapse = ', ')
+                )
+              }
+            }
+            
+            profile_report <- recommendations
+            
+            # Display recommendations
+            if (length(recommendations) > 0) {
+              cat('Optimization recommendations:\n')
+              for (rec in recommendations) {
+                cat(sprintf(' %s\n', rec))
+              }
+            } else {
+              cat('No major optimization opportunities identified\n')
+            }
+            
+            # Save profiling report
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(profile_report, 'output/comprehensive_performance_profile.rds')
+            
+            cat('\n=== PROFILING COMPLETE ===\n')
+            cat('Results saved to output/comprehensive_performance_profile.rds\n')
+            
+            # Performance summary
+            cat('\n=== PERFORMANCE SUMMARY ===\n')
+            if (!is.null(profile_report)) {
+              cat(sprintf('Memory usage: %.1fMB total\n', profile_report/1024^2))
+            }
+            if (!is.null(profile_report)) {
+              reg <- profile_report
+              if (reg) {
+                cat('  Performance regression detected\n')
+              } else if (reg) {
+                cat(' Performance improvement detected\n')
+              } else {
+                cat(' Performance stable\n')
+              }
+            }
+          "
+      
+      - name: Upload profiling results
+        uses: actions/upload-artifact@main
+        with:
+          name: performance-profiling-results
+          path: |
+            output/comprehensive_performance_profile.rds
+            output/performance_baseline.rds

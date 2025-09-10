@@ -1,0 +1,505 @@
+﻿name: Repository Health Monitoring
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      alert_threshold:
+        description: 'Alert threshold (1-10, default: 7)'
+        required: false
+        default: '7'
+        type: string
+      notify_on_issues:
+        description: 'Send notifications for issues'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  health-monitoring:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::devtools
+            any::usethis
+            any::roxygen2
+            any::pkgdown
+            any::cranlogs
+            any::covr
+            any::goodpractice
+            any::rhub
+            any::spelling
+            any::git2r
+            any::lubridate
+            any::dplyr
+            any::ggplot2
+            any::tidyr
+      
+      - name: Comprehensive repository health analysis
+        run: |
+          Rscript -e "
+            library(git2r)
+            library(lubridate)
+            library(dplyr)
+            library(ggplot2)
+            library(tidyr)
+            
+            cat('=== REPOSITORY HEALTH MONITORING ===\n')
+            
+            # Initialize health metrics
+            health_metrics <- list()
+            alerts <- list()
+            
+            # 1. Git repository analysis
+            cat('Analyzing Git repository...\n')
+            
+            repo <- repository('.')
+            commits <- commits(repo, n = 1000)  # Last 1000 commits
+            
+            # Commit frequency analysis
+            commit_dates <- sapply(commits, function(x) as.Date(x@committer@when@time))
+            commit_freq <- table(commit_dates)
+            
+            # Calculate commit velocity (commits per week)
+            recent_commits <- commit_dates[commit_dates >= (Sys.Date() - 90)]
+            weeks_active <- length(unique(floor_date(recent_commits, 'week')))
+            commits_per_week <- length(recent_commits) / max(weeks_active, 1)
+            
+            health_metrics <- list(
+              total_commits = length(commits),
+              recent_commits = length(recent_commits),
+              commits_per_week = commits_per_week,
+              active_weeks = weeks_active,
+              last_commit = max(commit_dates)
+            )
+            
+            cat(sprintf('Total commits: %d\n', health_metrics))
+            cat(sprintf('Recent commits (90 days): %d\n', health_metrics))
+            cat(sprintf('Commits per week: %.1f\n', health_metrics))
+            
+            # Alert for low activity
+            if (commits_per_week < 1) {
+              alerts <- c(alerts, ' Low commit activity (< 1 commit/week)')
+            }
+            
+            # 2. Code quality analysis
+            cat('\nAnalyzing code quality...\n')
+            
+            # Test coverage
+            try({
+              coverage <- covr::package_coverage()
+              coverage_pct <- covr::percent_coverage(coverage)
+              health_metrics <- coverage_pct
+              
+              if (coverage_pct < 80) {
+                alerts <- c(alerts, sprintf(' Low test coverage: %.1f%%', coverage_pct))
+              } else if (coverage_pct < 90) {
+                alerts <- c(alerts, sprintf(' Moderate test coverage: %.1f%%', coverage_pct))
+              }
+              
+              cat(sprintf('Test coverage: %.1f%%\n', coverage_pct))
+            }, error = function(e) {
+              health_metrics <- 0
+              alerts <- c(alerts, ' Test coverage analysis failed')
+              cat('Test coverage: FAILED\n')
+            })
+            
+            # Code quality checks
+            try({
+              quality <- goodpractice::gp()
+              quality_score <- sum(quality@checks) / length(quality@checks) * 100
+              health_metrics <- quality_score
+              
+              if (quality_score < 70) {
+                alerts <- c(alerts, sprintf(' Low code quality score: %.1f%%', quality_score))
+              }
+              
+              cat(sprintf('Code quality score: %.1f%%\n', quality_score))
+            }, error = function(e) {
+              health_metrics <- 0
+              alerts <- c(alerts, ' Code quality analysis failed')
+              cat('Code quality: FAILED\n')
+            })
+            
+            # 3. Documentation analysis
+            cat('\nAnalyzing documentation...\n')
+            
+            # Check for undocumented functions
+            try({
+              devtools::document()
+              functions <- ls(envir = asNamespace('aus_oa_public'))
+              documented <- length(functions) > 0  # Simplified check
+              health_metrics <- documented
+              
+              if (!documented) {
+                alerts <- c(alerts, ' Documentation may be incomplete')
+              }
+              
+              cat('Documentation: OK\n')
+            }, error = function(e) {
+              health_metrics <- FALSE
+              alerts <- c(alerts, ' Documentation analysis failed')
+              cat('Documentation: FAILED\n')
+            })
+            
+            # 4. Dependency analysis
+            cat('\nAnalyzing dependencies...\n')
+            
+            try({
+              deps <- desc::desc_get_deps()
+              outdated_deps <- sum(deps != '*')  # Simplified check
+              health_metrics <- list(
+                total = nrow(deps),
+                outdated = outdated_deps
+              )
+              
+              if (outdated_deps > 0) {
+                alerts <- c(alerts, sprintf(' %d outdated dependencies', outdated_deps))
+              }
+              
+              cat(sprintf('Dependencies: %d total, %d potentially outdated\n', 
+                        health_metrics, 
+                        health_metrics))
+            }, error = function(e) {
+              health_metrics <- list(total = 0, outdated = 0)
+              alerts <- c(alerts, ' Dependency analysis failed')
+              cat('Dependencies: FAILED\n')
+            })
+            
+            # 5. File system analysis
+            cat('\nAnalyzing file system...\n')
+            
+            # Check for large files
+            large_files <- system('find . -type f -size +50M', intern = TRUE)
+            if (length(large_files) > 0) {
+              alerts <- c(alerts, sprintf(' %d large files (>50MB) found', length(large_files)))
+            }
+            
+            # Check for temporary files
+            temp_files <- system('find . -name \"*.tmp\" -o -name \"*.log\" -o -name \"*~\"', intern = TRUE)
+            if (length(temp_files) > 0) {
+              alerts <- c(alerts, sprintf(' %d temporary files found', length(temp_files)))
+            }
+            
+            health_metrics <- list(
+              large_files = length(large_files),
+              temp_files = length(temp_files)
+            )
+            
+            cat(sprintf('Large files: %d\n', length(large_files)))
+            cat(sprintf('Temp files: %d\n', length(temp_files)))
+            
+            # 6. Calculate overall health score
+            cat('\nCalculating overall health score...\n')
+            
+            # Weight the metrics
+            weights <- list(
+              coverage = 0.25,
+              quality_score = 0.25,
+              documentation = 0.20,
+              git_activity = 0.15,
+              dependencies = 0.10,
+              filesystem = 0.05
+            )
+            
+            # Normalize scores to 0-10 scale
+            normalized_scores <- list()
+            
+            # Coverage (0-100% -> 0-10)
+            normalized_scores <- (health_metrics %||% 0) / 10
+            
+            # Quality score (0-100% -> 0-10)
+            normalized_scores <- (health_metrics %||% 0) / 10
+            
+            # Documentation (boolean -> 0 or 10)
+            normalized_scores <- ifelse(health_metrics %||% FALSE, 10, 0)
+            
+            # Git activity (commits/week -> score)
+            git_score <- min(health_metrics * 2, 10)
+            normalized_scores <- git_score
+            
+            # Dependencies (outdated count -> score, fewer outdated = higher score)
+            dep_score <- max(0, 10 - health_metrics)
+            normalized_scores <- dep_score
+            
+            # Filesystem (issues -> score)
+            fs_issues <- health_metrics + health_metrics
+            fs_score <- max(0, 10 - fs_issues)
+            normalized_scores <- fs_score
+            
+            # Calculate weighted average
+            health_score <- sum(
+              normalized_scores * weights,
+              normalized_scores * weights,
+              normalized_scores * weights,
+              normalized_scores * weights,
+              normalized_scores * weights,
+              normalized_scores * weights
+            )
+            
+            health_metrics <- health_score
+            health_metrics <- normalized_scores
+            
+            cat(sprintf('Overall health score: %.1f/10\n', health_score))
+            
+            # Determine health status
+            if (health_score >= 8.5) {
+              health_status <- ' EXCELLENT'
+            } else if (health_score >= 7.0) {
+              health_status <- ' GOOD'
+            } else if (health_score >= 5.0) {
+              health_status <- ' FAIR'
+            } else {
+              health_status <- ' POOR'
+            }
+            
+            cat(sprintf('Health status: %s\n', health_status))
+            
+            # 7. Generate alerts based on threshold
+            alert_threshold <- as.numeric(Sys.getenv('ALERT_THRESHOLD', unset = '7'))
+            
+            critical_alerts <- alerts[grepl(' ', alerts)]
+            warning_alerts <- alerts[grepl(' ', alerts)]
+            
+            if (health_score < alert_threshold) {
+              alerts <- c(alerts, sprintf(' Health score below threshold: %.1f < %d', 
+                                        health_score, alert_threshold))
+            }
+            
+            # 8. Generate health report
+            cat('\nGenerating health report...\n')
+            
+            health_report <- sprintf('# Repository Health Report
+Generated: %s
+
+## Overall Health Score: %.1f/10 (%s)
+
+### Component Scores
+- **Test Coverage**: %.1f/10 (%.1f%%)
+- **Code Quality**: %.1f/10 (%.1f%%)
+- **Documentation**: %.1f/10 (%s)
+- **Git Activity**: %.1f/10 (%.1f commits/week)
+- **Dependencies**: %.1f/10 (%d outdated)
+- **File System**: %.1f/10 (%d issues)
+
+### Git Repository Metrics
+- Total commits: %d
+- Recent commits (90 days): %d
+- Active weeks: %d
+- Last commit: %s
+
+### Alerts and Issues
+%s
+
+### Recommendations
+%s
+
+---
+*This report was automatically generated by repository health monitoring.*
+            ',
+            format(Sys.time(), '%Y-%m-%d %H:%M:%S'),
+            health_score,
+            health_status,
+            normalized_scores,
+            health_metrics %||% 0,
+            normalized_scores,
+            health_metrics %||% 0,
+            normalized_scores,
+            ifelse(health_metrics %||% FALSE, 'Complete', 'Incomplete'),
+            normalized_scores,
+            health_metrics,
+            normalized_scores,
+            health_metrics,
+            normalized_scores,
+            health_metrics + health_metrics,
+            health_metrics,
+            health_metrics,
+            health_metrics,
+            format(health_metrics, '%Y-%m-%d'),
+            ifelse(length(alerts) > 0, paste('-', alerts, collapse = '\n'), ' No issues detected'),
+            generate_recommendations(health_score, alerts)
+            )
+            
+            # Helper function for recommendations
+            generate_recommendations <- function(score, alerts) {
+              recs <- c()
+              
+              if (score < 7) {
+                recs <- c(recs, ' Improve test coverage to >= 90%')
+                recs <- c(recs, ' Address code quality issues')
+                recs <- c(recs, ' Complete documentation')
+              }
+              
+              if (any(grepl('dependencies', alerts))) {
+                recs <- c(recs, ' Update outdated dependencies')
+              }
+              
+              if (any(grepl('activity', alerts))) {
+                recs <- c(recs, ' Increase commit frequency')
+              }
+              
+              if (length(recs) == 0) {
+                recs <- c(' Maintain current excellent practices')
+                recs <- c(recs, ' Consider adding more comprehensive tests')
+                recs <- c(recs, ' Review and update dependencies regularly')
+              }
+              
+              paste(recs, collapse = '\n')
+            }
+            
+            # Save health report
+            if (!dir.exists('output')) dir.create('output')
+            writeLines(health_report, 'output/health_report.md')
+            saveRDS(health_metrics, sprintf('output/health_metrics_%s.rds', 
+                                          format(Sys.Date(), '%Y%m%d')))
+            
+            cat('\nHealth report saved to: output/health_report.md\n')
+            
+            # 9. Create visualizations
+            cat('\nCreating health visualizations...\n')
+            
+            # Create health score plot
+            health_data <- data.frame(
+              component = names(normalized_scores),
+              score = unlist(normalized_scores)
+            )
+            
+            p <- ggplot(health_data, aes(x = reorder(component, score), y = score)) +
+              geom_bar(stat = 'identity', fill = 'steelblue') +
+              coord_flip() +
+              labs(title = 'Repository Health Components',
+                   x = 'Component', y = 'Score (0-10)') +
+              theme_minimal()
+            
+            ggsave('output/health_components.png', p, width = 8, height = 6)
+            cat('Health visualization saved to: output/health_components.png\n')
+            
+            # 10. Summary
+            cat('\n=== HEALTH MONITORING COMPLETE ===\n')
+            cat(sprintf('Overall health score: %.1f/10 (%s)\n', health_score, health_status))
+            cat(sprintf('Alerts generated: %d\n', length(alerts)))
+            
+            if (length(alerts) > 0) {
+              cat('\nActive alerts:\n')
+              for (alert in alerts) {
+                cat(sprintf('  %s\n', alert))
+              }
+            }
+            
+            # Set output for subsequent steps
+            writeLines(as.character(health_score), 'health_score.txt')
+            writeLines(as.character(length(alerts)), 'alert_count.txt')
+          "
+      
+      - name: Upload health report
+        uses: actions/upload-artifact@main
+        with:
+          name: health-report
+          path: |
+            output/health_report.md
+            output/health_metrics_*.rds
+            output/health_components.png
+            health_score.txt
+            alert_count.txt
+      
+      - name: Send health notifications
+        if: always()
+        shell: pwsh
+        run: |
+          $healthScoreFile = "health_score.txt"
+          $alertCountFile = "alert_count.txt"
+          
+          if (Test-Path $healthScoreFile) {
+            $HEALTH_SCORE = Get-Content $healthScoreFile
+          } else {
+            $HEALTH_SCORE = "0"
+          }
+          
+          if (Test-Path $alertCountFile) {
+            $ALERT_COUNT = Get-Content $alertCountFile
+          } else {
+            $ALERT_COUNT = "0"
+          }
+          
+          Write-Host "Health Score: $HEALTH_SCORE"
+          Write-Host "Alert Count: $ALERT_COUNT"
+          
+          # Here you would integrate with notification services
+          # Examples: Slack, Discord, email, etc.
+          
+          if ([int]$ALERT_COUNT -gt 0) {
+            Write-Host " Health alerts detected - consider reviewing the health report"
+          } else {
+            Write-Host " Repository health is good"
+          }
+          
+          Write-Host "Health monitoring completed successfully"
+      
+      - name: Create health status badge
+        if: always()
+        shell: pwsh
+        run: |
+          # Create a simple health status badge
+          $healthScoreFile = "health_score.txt"
+          
+          if (Test-Path $healthScoreFile) {
+            $HEALTH_SCORE = [double](Get-Content $healthScoreFile)
+          } else {
+            $HEALTH_SCORE = 0.0
+          }
+          
+          if ($HEALTH_SCORE -ge 8.5) {
+            $COLOR = "brightgreen"
+            $STATUS = "Excellent"
+          } elseif ($HEALTH_SCORE -ge 7.0) {
+            $COLOR = "green"
+            $STATUS = "Good"
+          } elseif ($HEALTH_SCORE -ge 5.0) {
+            $COLOR = "yellow"
+            $STATUS = "Fair"
+          } else {
+            $COLOR = "red"
+            $STATUS = "Poor"
+          }
+          
+          Write-Host "Health Status: $STATUS ($HEALTH_SCORE/10)"
+          Write-Host "Badge URL: https://img.shields.io/badge/health-$STATUS-$COLOR"
+          
+          # Save badge info for potential use
+          $badgeInfo = @{
+            score = $HEALTH_SCORE
+            status = $STATUS
+            color = $COLOR
+          }
+          
+          $badgeInfo | ConvertTo-Json | Out-File -FilePath "health_badge.json" -Encoding UTF8
+          
+          Get-Content "health_badge.json"
+      
+      - name: Archive health history
+        if: always()
+        run: |
+          # Archive previous health reports
+          if [ ! -d "output/health_history" ]; then
+            mkdir -p output/health_history
+          fi
+          
+          # Move old reports (keep last 30 days)
+          find output -name "health_report.md" -mtime +30 -exec mv {} output/health_history/ \; 2>/dev/null || true
+          find output -name "health_metrics_*.rds" -mtime +30 -exec mv {} output/health_history/ \; 2>/dev/null || true
+          
+          echo "Health history archived"

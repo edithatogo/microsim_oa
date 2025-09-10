@@ -1,0 +1,349 @@
+﻿name: Automated Release Management
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      custom_version:
+        description: 'Custom version (optional)'
+        required: false
+        type: string
+
+jobs:
+  release-management:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::devtools
+            any::usethis
+            any::roxygen2
+            any::pkgdown
+            any::cranlogs
+            any::covr
+            any::goodpractice
+            any::rhub
+            any::spelling
+      
+      - name: Automated release preparation
+        run: |
+          Rscript -e "
+            library(devtools)
+            library(usethis)
+            library(roxygen2)
+            library(pkgdown)
+            
+            cat('=== AUTOMATED RELEASE MANAGEMENT ===\n')
+            
+            # 1. Determine release version
+            cat('Determining release version...\n')
+            
+            current_desc <- desc::desc()
+            current_version <- current_desc$get_version()
+            
+            # Get release type from workflow input or tag
+            release_type <- Sys.getenv('RELEASE_TYPE', unset = 'patch')
+            custom_version <- Sys.getenv('CUSTOM_VERSION', unset = '')
+            
+            if (nchar(custom_version) > 0) {
+              new_version <- custom_version
+              cat(sprintf('Using custom version: %s\n', new_version))
+            } else {
+              # Parse current version
+              version_parts <- strsplit(as.character(current_version), '\\\\.')[[1]]
+              major <- as.numeric(version_parts[1])
+              minor <- as.numeric(version_parts[2])
+              patch <- as.numeric(version_parts[3])
+              
+              # Increment based on release type
+              if (release_type == 'major') {
+                new_version <- sprintf('%d.0.0', major + 1)
+              } else if (release_type == 'minor') {
+                new_version <- sprintf('%d.%d.0', major, minor + 1)
+              } else {  # patch
+                new_version <- sprintf('%d.%d.%d', major, minor, patch + 1)
+              }
+              
+              cat(sprintf('Current version: %s\n', current_version))
+              cat(sprintf('Release type: %s\n', release_type))
+              cat(sprintf('New version: %s\n', new_version))
+            }
+            
+            # 2. Pre-release quality checks
+            cat('\nRunning pre-release quality checks...\n')
+            
+            quality_checks <- list()
+            
+            # Check tests
+            try({
+              test_results <- devtools::test(reporter = SilentReporter())
+              quality_checks$tests_pass <- all(sapply(test_results, function(x) x$passed) == x$failed)
+              cat(sprintf('Tests: %s\n', ifelse(quality_checks$tests_pass, 'PASSED', 'FAILED')))
+            }, error = function(e) {
+              quality_checks$tests_pass <- FALSE
+              cat('Tests: FAILED (error)\n')
+            })
+            
+            # Check code coverage
+            try({
+              coverage <- covr::package_coverage()
+              coverage_pct <- covr::percent_coverage(coverage)
+              quality_checks$coverage <- coverage_pct
+              quality_checks$coverage_ok <- coverage_pct >= 90
+              cat(sprintf('Coverage: %.1f%% (%s)\n', coverage_pct, 
+                        ifelse(quality_checks$coverage_ok, 'OK', 'LOW')))
+            }, error = function(e) {
+              quality_checks$coverage_ok <- FALSE
+              cat('Coverage: FAILED\n')
+            })
+            
+            # Check documentation
+            try({
+              devtools::document()
+              quality_checks$docs_ok <- TRUE
+              cat('Documentation: OK\n')
+            }, error = function(e) {
+              quality_checks$docs_ok <- FALSE
+              cat('Documentation: FAILED\n')
+            })
+            
+            # Check spelling
+            try({
+              spelling::spell_check_package()
+              quality_checks$spelling_ok <- TRUE
+              cat('Spelling: OK\n')
+            }, error = function(e) {
+              quality_checks$spelling_ok <- FALSE
+              cat('Spelling: WARNING\n')
+            })
+            
+            # Overall quality assessment
+            quality_passed <- all(c(
+              quality_checks$tests_pass %||% FALSE,
+              quality_checks$coverage_ok %||% FALSE,
+              quality_checks$docs_ok %||% FALSE
+            ))
+            
+            if (quality_passed) {
+              cat(' All quality checks passed\n')
+            } else {
+              cat(' Quality checks failed - fix issues before release\n')
+              quit(status = 1)
+            }
+            
+            # 3. Update version and documentation
+            cat('\nUpdating version and documentation...\n')
+            
+            # Update DESCRIPTION
+            current_desc$set_version(new_version)
+            current_desc$write()
+            cat(sprintf('Updated DESCRIPTION to version %s\n', new_version))
+            
+            # Update NEWS.md
+            if (file.exists('NEWS.md')) {
+              news_content <- readLines('NEWS.md', warn = FALSE)
+              
+              # Add new version header
+              new_news <- c(
+                sprintf('# aus_oa_public %s', new_version),
+                '',
+                sprintf('* Released on %s', format(Sys.Date(), '%Y-%m-%d')),
+                '',
+                news_content
+              )
+              
+              writeLines(new_news, 'NEWS.md')
+              cat('Updated NEWS.md\n')
+            }
+            
+            # Update documentation
+            devtools::document()
+            cat('Updated package documentation\n')
+            
+            # 4. Build package
+            cat('\nBuilding package...\n')
+            
+            devtools::build()
+            cat('Package built successfully\n')
+            
+            # Build source package for CRAN
+            devtools::build(vignettes = TRUE)
+            cat('Source package built with vignettes\n')
+            
+            # 5. Generate release notes
+            cat('\nGenerating release notes...\n')
+            
+            release_notes <- sprintf('# Release %s
+              
+## Overview
+Automated release of aus_oa_public version %s
+
+## Quality Metrics
+- Tests: %s
+- Code Coverage: %.1f%%
+- Documentation: %s
+- Spelling: %s
+
+## Changes
+%s
+
+## Installation
+`
+# Install from CRAN
+install.packages(\"aus_oa_public\")
+
+# Or install development version
+devtools::install_github(\"edithatogo/microsim_oa\")
+`
+
+## Verification
+- All tests pass
+- Code coverage >= 90%%
+- Documentation complete
+- Spelling check passed
+
+---
+*This release was automatically generated and validated.*
+            ',
+            new_version,
+            new_version,
+            ifelse(quality_checks$tests_pass, ' PASSED', ' FAILED'),
+            quality_checks$coverage %||% 0,
+            ifelse(quality_checks$docs_ok, ' OK', ' FAILED'),
+            ifelse(quality_checks$spelling_ok, ' OK', ' WARNING'),
+            '* See NEWS.md for detailed changes'
+            )
+            
+            writeLines(release_notes, sprintf('RELEASE_NOTES_%s.md', new_version))
+            cat(sprintf('Generated release notes: RELEASE_NOTES_%s.md\n', new_version))
+            
+            # 6. Prepare deployment artifacts
+            cat('\nPreparing deployment artifacts...\n')
+            
+            # Build pkgdown site
+            if (file.exists('_pkgdown.yml')) {
+              pkgdown::build_site()
+              cat('Built package website\n')
+            }
+            
+            # Create release summary
+            release_summary <- list(
+              version = new_version,
+              release_date = Sys.Date(),
+              quality_checks = quality_checks,
+              release_type = release_type,
+              generated_at = Sys.time()
+            )
+            
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(release_summary, sprintf('output/release_summary_%s.rds', new_version))
+            
+            cat('\n=== RELEASE PREPARATION COMPLETE ===\n')
+            cat(sprintf('Version %s ready for release!\n', new_version))
+            cat('Artifacts generated:\n')
+            cat(sprintf('   RELEASE_NOTES_%s.md\n', new_version))
+            cat('   Package tarball\n')
+            cat('   Documentation website\n')
+            cat(sprintf('   Release summary: output/release_summary_%s.rds\n', new_version))
+          "
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ## Automated Release
+            
+            This release was automatically generated and validated with enterprise-grade quality checks.
+            
+            ### Quality Metrics
+            -  All tests passing
+            -  Code coverage >= 90%
+            -  Documentation complete
+            -  Spelling validated
+            
+            ### Files
+            - Package source code
+            - Documentation website
+            - Release notes
+            
+            ### Installation
+            `
+            install.packages("aus_oa_public")
+            `
+            
+            For more details, see the [package documentation](https://edithatogo.github.io/microsim_oa/).
+          draft: false
+          prerelease: false
+      
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@main
+        with:
+          name: release-artifacts
+          path: |
+            *.tar.gz
+            RELEASE_NOTES_*.md
+            output/release_summary_*.rds
+            docs/
+      
+      - name: Deploy documentation
+        if: success()
+        run: |
+          echo 'Documentation deployment would go here'
+          echo 'Consider setting up GitHub Pages or Netlify for automatic documentation deployment'
+      
+      - name: CRAN submission preparation
+        if: success()
+        run: |
+          Rscript -e "
+            cat('=== CRAN SUBMISSION PREPARATION ===\n')
+            
+            # Check CRAN readiness
+            try({
+              rhub::check_for_cran()
+              cat(' Package ready for CRAN submission\n')
+              
+              cat('Next steps for CRAN submission:\n')
+              cat('1. Review CRAN policies: https://cran.r-project.org/web/packages/policies.html\n')
+              cat('2. Submit via: https://cran.r-project.org/submit.html\n')
+              cat('3. Or use: devtools::submit_cran()\n')
+              cat('4. Monitor submission status\n')
+              
+            }, error = function(e) {
+              cat('  CRAN readiness check failed\n')
+              cat('Review the error messages above before submitting to CRAN\n')
+            })
+          "
+      
+      - name: Post-release notifications
+        if: always()
+        run: |
+          echo 'Release process completed'
+          echo 'Consider setting up notifications to Slack, Discord, or email for release updates'

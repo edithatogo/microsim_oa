@@ -1,0 +1,283 @@
+﻿name: Test Coverage Enforcement
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  coverage-enforcement:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::covr
+            any::testthat
+            any::DT
+            any::rmarkdown
+      
+      - name: Comprehensive test coverage analysis
+        run: |
+          Rscript -e "
+            library(covr)
+            library(testthat)
+            
+            cat('=== COMPREHENSIVE COVERAGE ANALYSIS ===\n')
+            
+            # 1. Overall package coverage
+            cat('Calculating overall package coverage...\n')
+            coverage <- package_coverage(type = 'all')
+            overall_coverage <- percent_coverage(coverage)
+            
+            cat(sprintf('Overall Code Coverage: %.2f%%\n', overall_coverage))
+            
+            # 2. Coverage by file
+            cat('\nCoverage by file:\n')
+            file_coverage <- sapply(coverage, percent_coverage)
+            file_coverage_sorted <- sort(file_coverage, decreasing = TRUE)
+            
+            for (i in 1:length(file_coverage_sorted)) {
+              file <- names(file_coverage_sorted)[i]
+              pct <- file_coverage_sorted[i]
+              status <- if (pct >= 90) '' else if (pct >= 75) '' else ''
+              cat(sprintf('  %s %s: %.1f%%\n', status, basename(file), pct))
+            }
+            
+            # 3. Coverage by function
+            cat('\nCoverage by function:\n')
+            function_coverage <- coverage
+            
+            # Extract function-level coverage
+            func_details <- list()
+            for (file_cov in coverage) {
+              if (length(file_cov) > 0) {
+                for (func_name in names(file_cov)) {
+                  func_cov <- percent_coverage(file_cov[func_name])
+                  func_details[[func_name]] <- list(
+                    coverage = func_cov,
+                    file = attr(file_cov, 'filename')
+                  )
+                }
+              }
+            }
+            
+            # Sort functions by coverage
+            func_df <- do.call(rbind, lapply(names(func_details), function(name) {
+              data.frame(
+                function_name = name,
+                coverage = func_details[[name]],
+                file = func_details[[name]],
+                stringsAsFactors = FALSE
+              )
+            }))
+            
+            func_df <- func_df[order(func_df), ]
+            
+            # Show lowest coverage functions
+            low_coverage_funcs <- func_df[func_df < 80, ]
+            if (nrow(low_coverage_funcs) > 0) {
+              cat('\nFunctions with <80% coverage:\n')
+              for (i in 1:min(10, nrow(low_coverage_funcs))) {
+                row <- low_coverage_funcs[i, ]
+                cat(sprintf('   %s (%.1f%%) in %s\n', 
+                          row, row, basename(row)))
+              }
+              if (nrow(low_coverage_funcs) > 10) {
+                cat(sprintf('  ... and %d more\n', nrow(low_coverage_funcs) - 10))
+              }
+            }
+            
+            # 4. Test coverage details
+            cat('\nDetailed coverage analysis:\n')
+            
+            # Lines covered vs total
+            total_lines <- sum(sapply(coverage, function(x) attr(x, 'lines')))
+            covered_lines <- sum(sapply(coverage, function(x) {
+              sum(attr(x, 'covered')) / length(attr(x, 'covered')) * attr(x, 'lines')
+            }))
+            
+            cat(sprintf('Lines of code: %d\n', total_lines))
+            cat(sprintf('Lines covered: %d\n', round(covered_lines)))
+            cat(sprintf('Coverage ratio: %.2f%%\n', overall_coverage))
+            
+            # 5. Coverage by test type
+            cat('\nCoverage by test category:\n')
+            
+            # Run different types of tests and measure coverage
+            test_categories <- c(
+              'unit' = 'test-unit',
+              'integration' = 'test-integration', 
+              'property' = 'test-property',
+              'api' = 'test-api'
+            )
+            
+            category_coverage <- list()
+            
+            for (category in names(test_categories)) {
+              pattern <- test_categories[category]
+              test_files <- list.files('tests/testthat/', pattern = pattern, full.names = TRUE)
+              
+              if (length(test_files) > 0) {
+                cat(sprintf('Testing %s coverage...\n', category))
+                
+                # Run tests for this category
+                test_results <- lapply(test_files, function(file) {
+                  tryCatch({
+                    test_file(file, reporter = SilentReporter())
+                  }, error = function(e) NULL)
+                })
+                
+                # Calculate coverage for this category
+                cat_coverage <- package_coverage(type = 'tests', pattern = pattern)
+                cat_pct <- percent_coverage(cat_coverage)
+                
+                category_coverage[[category]] <- cat_pct
+                cat(sprintf('  %s: %.1f%%\n', category, cat_pct))
+              } else {
+                category_coverage[[category]] <- 0
+                cat(sprintf('  %s: No tests found\n', category))
+              }
+            }
+            
+            # 6. Coverage trends and targets
+            cat('\nCoverage targets and status:\n')
+            
+            # Minimum coverage requirements
+            min_overall <- 90
+            min_per_file <- 80
+            min_functions <- 85
+            
+            # Check overall coverage
+            overall_status <- if (overall_coverage >= min_overall) ' PASSED' else ' FAILED'
+            cat(sprintf('Overall coverage (>=%.0f%%): %.1f%% %s\n', 
+                      min_overall, overall_coverage, overall_status))
+            
+            # Check file coverage
+            files_below_threshold <- sum(file_coverage < min_per_file)
+            file_status <- if (files_below_threshold == 0) ' PASSED' else ' FAILED'
+            cat(sprintf('File coverage (>=%d files >=%.0f%%): %d files below threshold %s\n',
+                      length(file_coverage), min_per_file, files_below_threshold, file_status))
+            
+            # Check function coverage
+            functions_below_threshold <- sum(func_df < min_functions)
+            func_status <- if (functions_below_threshold == 0) ' PASSED' else ' FAILED'
+            cat(sprintf('Function coverage (>=%d functions >=%.0f%%): %d functions below threshold %s\n',
+                      nrow(func_df), min_functions, functions_below_threshold, func_status))
+            
+            # 7. Coverage improvement suggestions
+            cat('\nCoverage improvement suggestions:\n')
+            
+            if (overall_coverage < min_overall) {
+              cat(sprintf(' Overall coverage is %.1f%% below target. Add tests for uncovered lines.\n',
+                        min_overall - overall_coverage))
+            }
+            
+            if (files_below_threshold > 0) {
+              worst_files <- names(head(sort(file_coverage), 3))
+              cat(' Files needing most improvement:\n')
+              for (file in worst_files) {
+                cat(sprintf('  - %s: %.1f%%\n', basename(file), file_coverage[file]))
+              }
+            }
+            
+            if (functions_below_threshold > 0) {
+              worst_funcs <- head(func_df[func_df < min_functions], 5)
+              cat(' Functions needing tests:\n')
+              for (func in worst_funcs) {
+                cat(sprintf('  - %s\n', func))
+              }
+            }
+            
+            # 8. Generate coverage report
+            coverage_report <- list(
+              overall_coverage = overall_coverage,
+              file_coverage = file_coverage,
+              function_coverage = func_df,
+              category_coverage = category_coverage,
+              targets = list(
+                overall = min_overall,
+                per_file = min_per_file,
+                functions = min_functions
+              ),
+              status = list(
+                overall = overall_coverage >= min_overall,
+                files = files_below_threshold == 0,
+                functions = functions_below_threshold == 0
+              ),
+              timestamp = Sys.time()
+            )
+            
+            if (!dir.exists('output')) dir.create('output')
+            saveRDS(coverage_report, 'output/coverage_enforcement_report.rds')
+            
+            # 9. Final assessment
+            cat('\n=== COVERAGE ENFORCEMENT SUMMARY ===\n')
+            
+            all_passed <- all(c(
+              overall_coverage >= min_overall,
+              files_below_threshold == 0,
+              functions_below_threshold == 0
+            ))
+            
+            if (all_passed) {
+              cat(' ALL COVERAGE TARGETS MET!\n')
+              cat(' Enterprise-grade test coverage achieved\n')
+            } else {
+              cat('  COVERAGE TARGETS NOT MET\n')
+              cat(' Additional testing required\n')
+              
+              # Fail the workflow if coverage is insufficient
+              if (overall_coverage < min_overall) {
+                cat('Failing workflow due to insufficient overall coverage\n')
+                quit(status = 1)
+              }
+            }
+            
+            # Coverage grade
+            coverage_score <- overall_coverage
+            grade <- if (coverage_score >= 95) 'A+' 
+                    else if (coverage_score >= 90) 'A'
+                    else if (coverage_score >= 85) 'B+'
+                    else if (coverage_score >= 80) 'B'
+                    else if (coverage_score >= 75) 'C+'
+                    else if (coverage_score >= 70) 'C'
+                    else 'D'
+            
+            cat(sprintf('Coverage Grade: %s (%.1f%%)\n', grade, coverage_score))
+          "
+      
+      - name: Generate coverage report
+        run: |
+          Rscript -e "
+            library(covr)
+            library(rmarkdown)
+            
+            cat('Generating detailed coverage report...\n')
+            
+            # Generate HTML coverage report
+            coverage <- package_coverage(type = 'all')
+            report_file <- file.path('output', 'coverage-report.html')
+            
+            # Create coverage report
+            coverage_html <- report(coverage, file = report_file)
+            
+            cat('Coverage report generated:', report_file, '\n')
+          "
+      
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@main
+        with:
+          name: coverage-enforcement-report
+          path: |
+            output/coverage_enforcement_report.rds
+            output/coverage-report.html

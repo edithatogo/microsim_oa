@@ -1,0 +1,49 @@
+﻿# Test-specific Dockerfile for E2E testing
+FROM rocker/r-ver:4.3.3
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    libfontconfig1-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    libxt-dev \
+    libcairo2-dev \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy package files first for better caching
+COPY DESCRIPTION .
+COPY NAMESPACE .
+
+# Install R package dependencies
+RUN R -e "install.packages(c('remotes', 'devtools', 'testthat', 'covr', 'bench', 'profvis'))"
+
+# Copy source code
+COPY R/ ./R/
+COPY tests/ ./tests/
+COPY config/ ./config/
+COPY input/ ./input/
+COPY scripts/ ./scripts/
+
+# Install the package itself
+RUN R -e "devtools::install(dependencies = TRUE, upgrade = 'never')"
+
+# Create necessary directories
+RUN mkdir -p output logs
+
+# Set environment variables for testing
+ENV R_ENVIRON_USER=/workspace/.Renviron
+ENV R_PROFILE_USER=/workspace/.Rprofile
+
+# Default command
+CMD ["R", "--no-save", "--no-restore"]

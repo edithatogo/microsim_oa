@@ -1,0 +1,561 @@
+﻿name: Developer Experience Enhancement
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 8 * * *'
+
+jobs:
+  dev-experience:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::devtools
+            any::usethis
+            any::roxygen2
+            any::testthat
+            any::pkgdown
+            any::covr
+            any::goodpractice
+            any::lintr
+            any::styler
+            any::spelling
+      
+      - name: Automated development environment setup
+        run: |
+          Rscript -e "
+            library(usethis)
+            library(devtools)
+            
+            cat('=== DEVELOPMENT ENVIRONMENT ENHANCEMENT ===\n')
+            
+            # 1. Check and update package structure
+            cat('Checking package structure...\n')
+            
+            required_files <- c(
+              'DESCRIPTION',
+              'NAMESPACE', 
+              'README.md',
+              'NEWS.md',
+              'CODE_OF_CONDUCT.md',
+              'CONTRIBUTING.md',
+              '.gitignore',
+              '.Rbuildignore'
+            )
+            
+            missing_files <- required_files[!file.exists(required_files)]
+            
+            if (length(missing_files) > 0) {
+              cat('Missing recommended files:\n')
+              for (file in missing_files) {
+                cat(sprintf('   %s\n', file))
+                
+                # Auto-create some files
+                if (file == 'CODE_OF_CONDUCT.md') {
+                  usethis::use_code_of_conduct()
+                  cat('    Created CODE_OF_CONDUCT.md\n')
+                } else if (file == 'CONTRIBUTING.md') {
+                  # Create basic contributing guide
+                  contributing_content <- '# Contributing to aus_oa_public
+                  
+## Development Setup
+                  
+1. Fork the repository
+2. Clone your fork: git clone https://github.com/YOUR_USERNAME/aus_oa_public.git
+3. Install dependencies: env::restore()
+4. Check setup: devtools::check()
+                  
+## Development Workflow
+                  
+1. Create a feature branch: git checkout -b feature/your-feature
+2. Make your changes
+3. Run tests: devtools::test()
+4. Check code style: lintr::lint_package()
+5. Build documentation: devtools::document()
+6. Submit a pull request
+                  
+## Code Style
+                  
+This project uses:
+- [tidyverse style guide](https://style.tidyverse.org/)
+- Automated linting with lintr
+- Automated styling with styler
+                  
+## Testing
+                  
+- Write tests for new features
+- Maintain >90% code coverage
+- Run devtools::test() before committing
+                  
+## Documentation
+                  
+- Document all exported functions with oxygen2
+- Update NEWS.md for changes
+- Build site with pkgdown::build_site()
+                  '
+                  writeLines(contributing_content, 'CONTRIBUTING.md')
+                  cat('    Created CONTRIBUTING.md\n')
+                }
+              }
+            } else {
+              cat(' All recommended files present\n')
+            }
+            
+            # 2. Check and update development dependencies
+            cat('\nChecking development dependencies...\n')
+            
+            desc <- desc::desc()
+            current_deps <- desc()
+            
+            # Recommended development dependencies
+            recommended_dev_deps <- c(
+              'devtools',
+              'usethis', 
+              'roxygen2',
+              'testthat',
+              'covr',
+              'lintr',
+              'styler',
+              'spelling',
+              'pkgdown',
+              'goodpractice',
+              'rhub',
+              'cranlogs'
+            )
+            
+            missing_dev_deps <- setdiff(recommended_dev_deps, current_deps)
+            
+            if (length(missing_dev_deps) > 0) {
+              cat('Recommended development dependencies to add:\n')
+              for (dep in missing_dev_deps) {
+                cat(sprintf('   %s\n', dep))
+              }
+              
+              # Add missing dependencies to Suggests
+              for (dep in missing_dev_deps) {
+                try({
+                  usethis::use_package(dep, type = 'Suggests')
+                  cat(sprintf('    Added %s to Suggests\n', dep))
+                }, silent = TRUE)
+              }
+            } else {
+              cat(' All recommended development dependencies present\n')
+            }
+            
+            # 3. Setup development scripts
+            cat('\nSetting up development scripts...\n')
+            
+            scripts_dir <- 'scripts'
+            if (!dir.exists(scripts_dir)) dir.create(scripts_dir)
+            
+            # Development setup script
+            setup_script <- '#!/usr/bin/env Rscript
+# Development Environment Setup Script
+# Run this script to set up your development environment
+
+cat(\"Setting up development environment...\\n\")
+
+# Install development dependencies
+dev_deps <- c(
+  \"devtools\",
+  \"usethis\",
+  \"roxygen2\",
+  \"testthat\",
+  \"covr\",
+  \"lintr\",
+  \"styler\",
+  \"spelling\",
+  \"pkgdown\",
+  \"goodpractice\"
+)
+
+for (dep in dev_deps) {
+  if (!requireNamespace(dep, quietly = TRUE)) {
+    install.packages(dep)
+    cat(sprintf(\"Installed %s\\n\", dep))
+  }
+}
+
+# Setup pre-commit hooks if available
+if (requireNamespace(\"precommit\", quietly = TRUE)) {
+  precommit::use_precommit()
+  cat(\"Pre-commit hooks configured\\n\")
+}
+
+# Setup lintr
+if (requireNamespace(\"lintr\", quietly = TRUE)) {
+  lintr::use_lintr(type = \"tidy\")
+  cat(\"Linting configured\\n\")
+}
+
+cat(\"Development environment setup complete!\\n\")
+cat(\"Run devtools::check() to verify everything works.\\n\")
+'
+            
+            writeLines(setup_script, file.path(scripts_dir, 'setup-dev.R'))
+            cat('Created scripts/setup-dev.R\n')
+            
+            # Quality check script
+            quality_script <- '#!/usr/bin/env Rscript
+# Code Quality Check Script
+# Run this script to check code quality
+
+cat(\"Running code quality checks...\\n\")
+
+# Load required packages
+library(devtools)
+library(testthat)
+library(lintr)
+library(covr)
+library(goodpractice)
+
+results <- list()
+
+# 1. Run tests
+cat(\"Running tests...\\n\")
+try({
+  test_results <- devtools::test()
+  results <- \"PASSED\"
+  cat(\" Tests passed\\n\")
+}, error = function(e) {
+  results <- \"FAILED\"
+  cat(\" Tests failed\\n\")
+})
+
+# 2. Check code coverage
+cat(\"Checking code coverage...\\n\")
+try({
+  coverage <- covr::package_coverage()
+  coverage_pct <- covr::percent_coverage(coverage)
+  results <- coverage_pct
+  
+  if (coverage_pct >= 90) {
+    cat(sprintf(\" Code coverage: %.1f%%\\n\", coverage_pct))
+  } else {
+    cat(sprintf(\"  Code coverage: %.1f%% (target: 90%%)\\n\", coverage_pct))
+  }
+}, error = function(e) {
+  results <- 0
+  cat(\" Coverage check failed\\n\")
+})
+
+# 3. Lint code
+cat(\"Linting code...\\n\")
+try({
+  lint_results <- lintr::lint_package()
+  results <- length(lint_results)
+  
+  if (length(lint_results) == 0) {
+    cat(\" No linting issues\\n\")
+  } else {
+    cat(sprintf(\"  Found %d linting issues\\n\", length(lint_results)))
+  }
+}, error = function(e) {
+  results <- -1
+  cat(\" Linting failed\\n\")
+})
+
+# 4. Good practice check
+cat(\"Checking good practices...\\n\")
+try({
+  gp_results <- goodpractice::gp()
+  results <- gp_results
+  
+  if (gp_results >= 80) {
+    cat(sprintf(\" Good practice score: %.1f/100\\n\", gp_results))
+  } else {
+    cat(sprintf(\"  Good practice score: %.1f/100\\n\", gp_results))
+  }
+}, error = function(e) {
+  results <- 0
+  cat(\" Good practice check failed\\n\")
+})
+
+# Summary
+cat(\"\\n=== QUALITY CHECK SUMMARY ===\\n\")
+cat(sprintf(\"Tests: %s\\n\", results))
+cat(sprintf(\"Coverage: %.1f%%\\n\", results))
+cat(sprintf(\"Lint Issues: %d\\n\", results))
+cat(sprintf(\"Good Practice: %.1f/100\\n\", results))
+
+# Overall assessment
+overall_score <- 0
+if (results == \"PASSED\") overall_score <- overall_score + 25
+if (results >= 90) overall_score <- overall_score + 25
+if (results <= 5) overall_score <- overall_score + 25
+if (results >= 80) overall_score <- overall_score + 25
+
+cat(sprintf(\"Overall Quality Score: %d/100\\n\", overall_score))
+
+if (overall_score >= 90) {
+  cat(\" Excellent quality!\\n\")
+} else if (overall_score >= 75) {
+  cat(\" Good quality\\n\")
+} else if (overall_score >= 50) {
+  cat(\"  Needs improvement\\n\")
+} else {
+  cat(\" Major quality issues\\n\")
+}
+'
+            
+            writeLines(quality_script, file.path(scripts_dir, 'check-quality.R'))
+            cat('Created scripts/check-quality.R\n')
+            
+            # 4. Setup GitHub templates
+            cat('\nSetting up GitHub templates...\n')
+            
+            templates_dir <- '.github'
+            if (!dir.exists(templates_dir)) dir.create(templates_dir)
+            
+            issue_templates_dir <- file.path(templates_dir, 'ISSUE_TEMPLATE')
+            if (!dir.exists(issue_templates_dir)) dir.create(issue_templates_dir)
+            
+            # Bug report template
+            bug_template <- '---
+name: Bug Report
+about: Report a bug or issue
+title: \"[BUG] \"
+labels: bug
+assignees: ''
+
+---
+
+## Bug Description
+A clear and concise description of the bug.
+
+## Steps to Reproduce
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+## Expected Behavior
+A clear and concise description of what you expected to happen.
+
+## Actual Behavior
+What actually happened.
+
+## Environment
+- OS: [e.g., Windows 10, macOS 11]
+- R version: [e.g., 4.1.0]
+- Package version: [e.g., 2.0.0]
+
+## Additional Context
+Add any other context about the problem here.
+
+## Screenshots
+If applicable, add screenshots to help explain your problem.
+'
+            
+            writeLines(bug_template, file.path(issue_templates_dir, 'bug-report.md'))
+            cat('Created .github/ISSUE_TEMPLATE/bug-report.md\n')
+            
+            # Feature request template
+            feature_template <- '---
+name: Feature Request
+about: Suggest a new feature or enhancement
+title: \"[FEATURE] \"
+labels: enhancement
+assignees: ''
+
+---
+
+## Feature Summary
+A clear and concise description of the feature you'd like to see.
+
+## Problem Statement
+What problem does this feature solve? What is the current limitation?
+
+## Proposed Solution
+A clear and concise description of what you want to happen.
+
+## Alternative Solutions
+Describe any alternative solutions or features you've considered.
+
+## Additional Context
+Add any other context or screenshots about the feature request here.
+
+## Implementation Notes
+Any technical details or considerations for implementing this feature.
+'
+            
+            writeLines(feature_template, file.path(issue_templates_dir, 'feature-request.md'))
+            cat('Created .github/ISSUE_TEMPLATE/feature-request.md\n')
+            
+            # 5. Setup automated dependency updates
+            cat('\nSetting up dependency update configuration...\n')
+            
+            dependabot_config <- 'version: 2
+updates:
+  - package-ecosystem: \"github-actions\"
+    directory: \"/\"
+    schedule:
+      interval: \"weekly\"
+    open-pull-requests-limit: 10
+    
+  - package-ecosystem: \"docker\"
+    directory: \"/\"
+    schedule:
+      interval: \"weekly\"
+    open-pull-requests-limit: 5
+'
+            
+            writeLines(dependabot_config, '.github/dependabot.yml')
+            cat('Created .github/dependabot.yml for automated dependency updates\n')
+            
+            # 6. Create development workflow documentation
+            workflow_doc <- '# Development Workflow
+
+This document outlines the development workflow for the aus_oa_public package.
+
+## Getting Started
+
+1. **Setup Development Environment**
+   `ash
+   # Run the setup script
+   Rscript scripts/setup-dev.R
+   `
+
+2. **Install Dependencies**
+   `
+   # Restore renv environment
+   renv::restore()
+   `
+
+3. **Verify Setup**
+   `
+   # Run quality checks
+   Rscript scripts/check-quality.R
+   `
+
+## Daily Development Workflow
+
+### 1. Start Working
+`ash
+# Create feature branch
+git checkout -b feature/your-feature-name
+
+# Pull latest changes
+git pull origin main
+`
+
+### 2. Make Changes
+- Write code following the [tidyverse style guide](https://style.tidyverse.org/)
+- Add tests for new functionality
+- Update documentation with roxygen2 comments
+
+### 3. Quality Checks
+`
+# Run all quality checks
+Rscript scripts/check-quality.R
+
+# Or run individual checks
+devtools::test()        # Run tests
+covr::package_coverage() # Check coverage
+lintr::lint_package()   # Check style
+`
+
+### 4. Documentation
+`
+# Update documentation
+devtools::document()
+
+# Build package site
+pkgdown::build_site()
+`
+
+### 5. Commit and Push
+`ash
+# Stage changes
+git add .
+
+# Commit with descriptive message
+git commit -m \"feat: add new feature description\"
+
+# Push to branch
+git push origin feature/your-feature-name
+`
+
+### 6. Create Pull Request
+- Go to GitHub and create a pull request
+- Ensure CI checks pass
+- Request review from maintainers
+
+## Code Quality Standards
+
+### Testing
+- Maintain >90% code coverage
+- Write unit tests for all functions
+- Include integration tests for complex workflows
+- Test edge cases and error conditions
+
+### Style
+- Follow tidyverse style guide
+- Use lintr for automated style checking
+- Use styler for automated formatting
+
+### Documentation
+- Document all exported functions with roxygen2
+- Include examples in documentation
+- Keep NEWS.md updated with changes
+- Maintain comprehensive README
+
+## CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration:
+
+- **Unit Tests**: Run on every push and PR
+- **Code Coverage**: Must maintain >90% coverage
+- **Linting**: Automated style checking
+- **Documentation**: Auto-build pkgdown site
+- **Security**: Automated security scanning
+
+## Release Process
+
+1. Update version in DESCRIPTION
+2. Update NEWS.md with changes
+3. Run final quality checks
+4. Create release on GitHub
+5. Submit to CRAN if appropriate
+
+## Getting Help
+
+- Check CONTRIBUTING.md for detailed guidelines
+- Use GitHub Issues for bugs and feature requests
+- Join discussions in GitHub Discussions
+'
+            
+            writeLines(workflow_doc, 'DEVELOPMENT_WORKFLOW.md')
+            cat('Created DEVELOPMENT_WORKFLOW.md\n')
+            
+            cat('\n=== DEVELOPMENT ENVIRONMENT ENHANCEMENT COMPLETE ===\n')
+            cat(' Created development scripts\n')
+            cat(' Set up GitHub issue templates\n')
+            cat(' Configured automated dependency updates\n')
+            cat(' Created comprehensive development workflow documentation\n')
+          "
+      
+      - name: Upload development enhancement results
+        uses: actions/upload-artifact@main
+        with:
+          name: dev-experience-enhancement
+          path: |
+            scripts/
+            .github/ISSUE_TEMPLATE/
+            .github/dependabot.yml
+            CONTRIBUTING.md
+            DEVELOPMENT_WORKFLOW.md
+            CODE_OF_CONDUCT.md

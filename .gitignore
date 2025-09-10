@@ -27,3 +27,4 @@ output/
 # Local environment files
 .env
 .env.local
+$gitignoreEntry
