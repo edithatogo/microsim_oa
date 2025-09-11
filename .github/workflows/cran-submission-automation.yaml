@@ -1,0 +1,155 @@
+name: CRAN Submission Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      submission_type:
+        description: 'Type of CRAN submission'
+        required: true
+        default: 'initial'
+        type: choice
+        options:
+          - initial
+          - update
+          - resubmission
+      version:
+        description: 'Package version for submission'
+        required: true
+        type: string
+      maintainer_email:
+        description: 'Maintainer email for submission'
+        required: true
+        type: string
+
+jobs:
+  cran-preparation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::devtools
+            any::rcmdcheck
+            any::rhub
+            any::goodpractice
+            any::covr
+
+      - name: Update version and prepare package
+        run: |
+          # Update DESCRIPTION version
+          sed -i "s/^Version:.*/Version: ${{ inputs.version }}/" DESCRIPTION
+
+          # Update cran-comments.md
+          sed -i "s/ausoa v[0-9]\+\.[0-9]\+\.[0-9]\+/ausoa v${{ inputs.version }}/" cran-comments.md
+
+          # Update NEWS.md
+          sed -i "1s/.*/# ausoa ${{ inputs.version }}/" NEWS.md
+
+      - name: Build package
+        run: |
+          Rscript -e "devtools::build()"
+          PACKAGE_FILE=$(ls *.tar.gz | head -1)
+          echo "PACKAGE_FILE=$PACKAGE_FILE" >> $GITHUB_ENV
+
+      - name: Run comprehensive CRAN checks
+        run: |
+          Rscript -e "
+            library(rcmdcheck)
+            result <- rcmdcheck::rcmdcheck(
+              path = '.',
+              args = c('--as-cran', '--no-manual', '--no-vignettes'),
+              check_dir = 'cran_check_results'
+            )
+
+            if (length(result$errors) > 0) {
+              cat('❌ CRAN CHECK FAILED - ERRORS FOUND\n')
+              print(result$errors)
+              quit(status = 1)
+            }
+
+            if (length(result$warnings) > 0) {
+              cat('⚠️  WARNINGS FOUND - REVIEW REQUIRED\n')
+              print(result$warnings)
+            }
+
+            cat('✅ CRAN checks passed\n')
+          "
+
+      - name: Generate submission package
+        run: |
+          mkdir -p cran_submission
+          cp ${{ env.PACKAGE_FILE }} cran_submission/
+          cp cran-comments.md cran_submission/
+          cp DESCRIPTION cran_submission/
+          cp NEWS.md cran_submission/
+
+          # Create submission instructions
+          cat > cran_submission/SUBMISSION_INSTRUCTIONS.md << 'EOF'
+          # CRAN Submission Instructions
+
+          ## Files to Submit:
+          - ${{ env.PACKAGE_FILE }}
+          - cran-comments.md
+
+          ## Submission Steps:
+          1. Go to: https://cran.r-project.org/submit.html
+          2. Upload the .tar.gz package file
+          3. Upload cran-comments.md as comments
+          4. Use email: ${{ inputs.maintainer_email }}
+          5. Submit the form
+
+          ## Post-Submission:
+          - Monitor email for CRAN responses
+          - Address any feedback within 2 weeks
+          - Use resubmission workflow if changes needed
+
+          Generated on: $(date)
+          EOF
+
+      - name: Upload submission package
+        uses: actions/upload-artifact@v4
+        with:
+          name: cran-submission-package
+          path: cran_submission/
+          retention-days: 30
+
+      - name: Generate submission summary
+        run: |
+          echo "## 🚀 CRAN Submission Ready!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** ausoa ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**File:** ${{ env.PACKAGE_FILE }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Type:** ${{ inputs.submission_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Email:** ${{ inputs.maintainer_email }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the submission package artifact" >> $GITHUB_STEP_SUMMARY
+          echo "2. Go to https://cran.r-project.org/submit.html" >> $GITHUB_STEP_SUMMARY
+          echo "3. Upload package and comments" >> $GITHUB_STEP_SUMMARY
+          echo "4. Submit form manually" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Submission Package:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Package file: ${{ env.PACKAGE_FILE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Comments: cran-comments.md" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Instructions: SUBMISSION_INSTRUCTIONS.md" >> $GITHUB_STEP_SUMMARY
+
+  notify-maintainer:
+    needs: cran-preparation
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Send notification
+        run: |
+          echo "🔔 CRAN Submission Package Ready!"
+          echo "Download from: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "Submission Type: ${{ inputs.submission_type }}"
+          echo "Package Version: ${{ inputs.version }}"

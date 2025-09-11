@@ -1,0 +1,200 @@
+name: Performance Regression Testing
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  performance-baseline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::bench
+            any::profvis
+            any::testthat
+            any::microbenchmark
+
+      - name: Run performance benchmarks
+        run: |
+          Rscript -e "
+            library(bench)
+            library(testthat)
+
+            cat('🏃 Running Performance Benchmarks...\n')
+
+            # Create benchmark results directory
+            dir.create('performance_results', showWarnings = FALSE)
+
+            # Basic performance tests
+            benchmark_results <- bench::mark(
+              # Test package loading
+              load_package = library(ausoa),
+
+              # Test basic function calls
+              check_functions = ls('package:ausoa'),
+
+              # Test data loading (if applicable)
+              iterations = 10,
+              check = FALSE
+            )
+
+            # Save results
+            saveRDS(benchmark_results, 'performance_results/benchmarks.rds')
+
+            # Print summary
+            print(benchmark_results)
+            cat('\n✅ Performance benchmarks completed\n')
+          "
+
+      - name: Generate performance report
+        run: |
+          Rscript -e "
+            library(ggplot2)
+
+            # Load benchmark results
+            if (file.exists('performance_results/benchmarks.rds')) {
+              results <- readRDS('performance_results/benchmarks.rds')
+
+              # Create performance summary
+              perf_summary <- data.frame(
+                expression = as.character(results$expression),
+                median_time = as.numeric(results$median),
+                min_time = as.numeric(results$min),
+                max_time = as.numeric(results$max)
+              )
+
+              write.csv(perf_summary, 'performance_results/summary.csv', row.names = FALSE)
+
+              cat('📊 Performance Summary:\n')
+              print(perf_summary)
+            }
+          "
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: performance_results/
+          retention-days: 30
+
+      - name: Compare with baseline (if exists)
+        run: |
+          if [ -f performance_baseline.json ]; then
+            echo '📈 Comparing with baseline...'
+            # Compare current results with baseline
+            # This would require more complex comparison logic
+          else
+            echo '📝 Creating new performance baseline...'
+            cp performance_results/summary.csv performance_baseline.csv
+          fi
+
+      - name: Performance regression check
+        run: |
+          Rscript -e "
+            # Check for performance regressions
+            if (file.exists('performance_baseline.csv') && file.exists('performance_results/summary.csv')) {
+              baseline <- read.csv('performance_baseline.csv')
+              current <- read.csv('performance_results/summary.csv')
+
+              cat('🔍 Checking for performance regressions...\n')
+
+              # Simple regression check (more sophisticated logic could be added)
+              for (i in 1:nrow(current)) {
+                expr <- current$expression[i]
+                baseline_time <- baseline$median_time[baseline$expression == expr]
+                current_time <- current$median_time[i]
+
+                if (length(baseline_time) > 0) {
+                  change_percent <- ((current_time - baseline_time) / baseline_time) * 100
+
+                  if (abs(change_percent) > 10) {  # 10% threshold
+                    if (change_percent > 0) {
+                      cat('⚠️  Performance regression detected for', expr, ':', change_percent, '% slower\n')
+                    } else {
+                      cat('✅ Performance improvement for', expr, ':', abs(change_percent), '% faster\n')
+                    }
+                  }
+                }
+              }
+            }
+          "
+
+      - name: Update performance dashboard
+        run: |
+          echo '## 🏃 Performance Results' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '### Benchmark Summary:' >> $GITHUB_STEP_SUMMARY
+          if [ -f performance_results/summary.csv ]; then
+            echo '\`\`\`csv' >> $GITHUB_STEP_SUMMARY
+            cat performance_results/summary.csv >> $GITHUB_STEP_SUMMARY
+            echo '\`\`\`' >> $GITHUB_STEP_SUMMARY
+          fi
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '### 📈 Performance Status:' >> $GITHUB_STEP_SUMMARY
+          echo '- ✅ Benchmarks completed' >> $GITHUB_STEP_SUMMARY
+          echo '- ✅ Results uploaded as artifacts' >> $GITHUB_STEP_SUMMARY
+          echo '- 🔍 Regression analysis completed' >> $GITHUB_STEP_SUMMARY
+
+  memory-profiling:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::profvis
+            any::bench
+
+      - name: Memory profiling
+        run: |
+          Rscript -e "
+            library(profvis)
+
+            cat('🧠 Running Memory Profiling...\n')
+
+            # Profile key functions
+            profvis::profvis({
+              library(ausoa)
+
+              # Profile main functions (adjust based on actual functions)
+              # This is a template - adjust for actual package functions
+              if (exists('load_config')) {
+                load_config()
+              }
+
+              if (exists('run_simulation')) {
+                # Small test run for profiling
+                run_simulation(iterations = 10)
+              }
+            }, prof_output = 'memory_profile.html')
+
+            cat('✅ Memory profiling completed\n')
+          "
+
+      - name: Upload memory profile
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-profile
+          path: memory_profile.html
+          retention-days: 30

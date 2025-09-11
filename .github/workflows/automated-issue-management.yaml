@@ -1,0 +1,241 @@
+name: Automated Issue Management
+
+on:
+  issues:
+    types: [opened, labeled, unlabeled, edited]
+  issue_comment:
+    types: [created]
+
+jobs:
+  issue-triage:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Analyze issue content
+        id: analyze
+        run: |
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          ISSUE_BODY="${{ github.event.issue.body }}"
+          ISSUE_LABELS="${{ join(github.event.issue.labels.*.name, ',') }}"
+
+          echo "title=$ISSUE_TITLE" >> $GITHUB_OUTPUT
+          echo "body=$ISSUE_BODY" >> $GITHUB_OUTPUT
+          echo "labels=$ISSUE_LABELS" >> $GITHUB_OUTPUT
+
+          # Analyze issue type
+          if [[ "$ISSUE_TITLE" =~ [Bb]ug|[Ee]rror|[Ff]ail ]]; then
+            echo "issue_type=bug" >> $GITHUB_OUTPUT
+          elif [[ "$ISSUE_TITLE" =~ [Ff]eature|[Ee]nhancement|[Rr]equest ]]; then
+            echo "issue_type=feature" >> $GITHUB_OUTPUT
+          elif [[ "$ISSUE_TITLE" =~ [Qq]uestion|[Hh]elp|[Ss]upport ]]; then
+            echo "issue_type=question" >> $GITHUB_OUTPUT
+          else
+            echo "issue_type=other" >> $GITHUB_OUTPUT
+          fi
+
+          # Check for code blocks
+          if [[ "$ISSUE_BODY" =~ \`\`\` ]]; then
+            echo "has_code=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_code=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Add priority labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '${{ steps.analyze.outputs.title }}';
+            const body = '${{ steps.analyze.outputs.body }}';
+            const issueType = '${{ steps.analyze.outputs.issue_type }}';
+
+            // Determine priority based on keywords
+            let priority = 'normal';
+            const urgentKeywords = ['urgent', 'critical', 'breaking', 'crash', 'security'];
+            const highKeywords = ['important', 'high priority', 'blocking'];
+
+            const titleLower = title.toLowerCase();
+            const bodyLower = body.toLowerCase();
+
+            if (urgentKeywords.some(keyword => titleLower.includes(keyword) || bodyLower.includes(keyword))) {
+              priority = 'urgent';
+            } else if (highKeywords.some(keyword => titleLower.includes(keyword) || bodyLower.includes(keyword))) {
+              priority = 'high';
+            }
+
+            // Add priority label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [priority]
+            });
+
+      - name: Add type labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueType = '${{ steps.analyze.outputs.issue_type }}';
+            const hasCode = '${{ steps.analyze.outputs.has_code }}';
+
+            const labels = [];
+
+            // Add type label
+            if (issueType === 'bug') {
+              labels.push('bug');
+            } else if (issueType === 'feature') {
+              labels.push('enhancement');
+            } else if (issueType === 'question') {
+              labels.push('question');
+            }
+
+            // Add code label if code blocks detected
+            if (hasCode === 'true') {
+              labels.push('has-code');
+            }
+
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: labels
+              });
+            }
+
+      - name: Add welcome comment for new issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueType = '${{ steps.analyze.outputs.issue_type }}';
+
+            let comment = '👋 Thank you for opening this issue!\n\n';
+
+            if (issueType === 'bug') {
+              comment += '🐛 **Bug Report**\n';
+              comment += 'To help us investigate this issue, please provide:\n';
+              comment += '- R version (`R.version$version.string`)\n';
+              comment += '- Package version (`packageVersion("ausoa")`)\n';
+              comment += '- Minimal reproducible example\n';
+              comment += '- Expected vs actual behavior\n\n';
+            } else if (issueType === 'feature') {
+              comment += '✨ **Feature Request**\n';
+              comment += 'Thanks for the suggestion! We\'ll review this and consider it for future releases.\n\n';
+            } else if (issueType === 'question') {
+              comment += '❓ **Question**\n';
+              comment += 'We\'ll do our best to help with your question.\n\n';
+            }
+
+            comment += '📋 **Issue Management**\n';
+            comment += '- This issue has been automatically triaged\n';
+            comment += '- Priority and type labels have been added\n';
+            comment += '- Our team will review this shortly\n\n';
+
+            comment += '🔗 **Resources**\n';
+            comment += '- [Documentation](https://edithatogo.github.io/microsim_oa/)\n';
+            comment += '- [Contributing Guide](https://github.com/edithatogo/microsim_oa/blob/main/CONTRIBUTING.md)\n';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+  issue-qa-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+
+    steps:
+      - name: Check issue quality
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+          BODY="${{ github.event.issue.body }}"
+
+          echo "## 📋 Issue Quality Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Check title quality
+          if [[ ${#TITLE} -lt 10 ]]; then
+            echo "⚠️  **Title Quality:** Title is very short (< 10 chars)" >> $GITHUB_STEP_SUMMARY
+          elif [[ ${#TITLE} -gt 100 ]]; then
+            echo "⚠️  **Title Quality:** Title is very long (> 100 chars)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Title Quality:** Good length" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check body quality
+          if [[ ${#BODY} -lt 50 ]]; then
+            echo "⚠️  **Description Quality:** Description is very short (< 50 chars)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Description Quality:** Adequate length" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for required information
+          if [[ "$BODY" =~ "R version" || "$BODY" =~ "version" ]]; then
+            echo "✅ **Technical Info:** Includes version information" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️  **Technical Info:** Consider adding R/package version" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "$BODY" =~ "reproduce" || "$BODY" =~ "example" || "$BODY" =~ "code" ]]; then
+            echo "✅ **Reproducibility:** Includes example or reproduction steps" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️  **Reproducibility:** Consider adding reproduction example" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  stale-issue-management:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: |
+            👋 This issue has been inactive for 60 days.
+
+            To keep our issue tracker clean and focused, we'll close this issue in 7 days if there's no further activity.
+
+            If this issue is still relevant, please:
+            - Add a comment explaining why it's still important
+            - Update the issue with any new information
+            - Add the `keep-open` label to prevent auto-closing
+
+            Thank you for your understanding! 🤝
+          close-issue-message: |
+            🔒 This issue has been automatically closed due to inactivity.
+
+            If you believe this issue should be reopened, please:
+            - Add a comment with additional information
+            - Create a new issue if the problem persists
+            - Check if the issue has been resolved in newer versions
+
+            Thank you for your contribution to the project! 🙏
+          days-before-stale: 60
+          days-before-close: 7
+          exempt-issue-labels: 'keep-open,enhancement,bug,documentation'
+          operations-per-run: 30
+
+  issue-analytics:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Generate issue analytics
+        run: |
+          echo "## 📊 Issue Analytics Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Issue Statistics:" >> $GITHUB_STEP_SUMMARY
+          echo "- Total open issues: $(gh issue list --state open --json number --jq 'length')" >> $GITHUB_STEP_SUMMARY
+          echo "- Bugs: $(gh issue list --state open --label bug --json number --jq 'length')" >> $GITHUB_STEP_SUMMARY
+          echo "- Features: $(gh issue list --state open --label enhancement --json number --jq 'length')" >> $GITHUB_STEP_SUMMARY
+          echo "- Questions: $(gh issue list --state open --label question --json number --jq 'length')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Recent Activity:" >> $GITHUB_STEP_SUMMARY
+          echo "- Issues opened this week: $(gh issue list --state open --since '1 week ago' --json number --jq 'length')" >> $GITHUB_STEP_SUMMARY
+          echo "- Issues closed this week: $(gh issue list --state closed --since '1 week ago' --json number --jq 'length')" >> $GITHUB_STEP_SUMMARY
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

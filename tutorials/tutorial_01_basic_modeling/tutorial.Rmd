@@ -1,0 +1,310 @@
+---
+title: "Tutorial 1: Basic Population Health Modeling with AUS-OA"
+author: "AUS-OA Development Team"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: cosmo
+    highlight: tango
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(aus_oa_public)
+```
+
+# Introduction
+
+Welcome to the first tutorial in the AUS-OA microsimulation model series! This tutorial introduces basic concepts in population health modeling using osteoarthritis data.
+
+## Learning Objectives
+
+By the end of this tutorial, you will be able to:
+
+1. Load and explore health survey data
+2. Perform basic statistical analysis of osteoarthritis prevalence
+3. Create simple visualizations of health data
+4. Understand population-level risk factors
+
+## Prerequisites
+
+- Basic knowledge of R programming
+- Familiarity with tidyverse packages
+- Understanding of basic statistical concepts
+
+# Getting Started
+
+## Loading Required Packages
+
+First, let's load the necessary R packages for this tutorial:
+
+```{r packages}
+# Core tidyverse packages
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(tidyr)
+
+# AUS-OA package
+library(aus_oa_public)
+
+# Additional packages for this tutorial
+library(scales)
+library(ggthemes)
+```
+
+## Data Acquisition
+
+For this tutorial, we'll use synthetic health survey data that mimics the structure of real Australian health surveys. In a real-world scenario, you would acquire this data from official sources like the Australian Institute of Health and Welfare (AIHW).
+
+```{r data_acquisition}
+# Acquire synthetic health survey data
+health_data <- aus_oa_public::acquire_aihw_nhs_data(year = 2022)
+
+# Display basic information about the dataset
+glimpse(health_data)
+```
+
+# Data Exploration
+
+## Basic Dataset Overview
+
+Let's start by exploring the structure and basic characteristics of our health data:
+
+```{r data_overview}
+# Dataset dimensions
+cat("Dataset dimensions:", dim(health_data), "\n")
+
+# Summary statistics
+summary(health_data)
+```
+
+## Osteoarthritis Prevalence
+
+One of the key questions in population health is understanding the prevalence of conditions like osteoarthritis:
+
+```{r oa_prevalence}
+# Calculate overall osteoarthritis prevalence
+oa_prevalence <- health_data %>%
+  summarise(
+    total_patients = n(),
+    oa_cases = sum(osteoarthritis == 1, na.rm = TRUE),
+    prevalence = oa_cases / total_patients * 100
+  )
+
+print(oa_prevalence)
+```
+
+## Age Distribution Analysis
+
+Age is a major risk factor for osteoarthritis. Let's examine the age distribution:
+
+```{r age_distribution}
+# Create age groups
+health_data <- health_data %>%
+  mutate(
+    age_group = cut(age,
+                   breaks = c(18, 35, 50, 65, 80, Inf),
+                   labels = c("18-34", "35-49", "50-64", "65-79", "80+"),
+                   include.lowest = TRUE)
+  )
+
+# Age distribution by osteoarthritis status
+age_oa_summary <- health_data %>%
+  group_by(age_group, osteoarthritis) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(
+    oa_status = ifelse(osteoarthritis == 1, "Has OA", "No OA"),
+    percentage = count / sum(count) * 100
+  )
+
+print(age_oa_summary)
+```
+
+# Data Visualization
+
+## Osteoarthritis Prevalence by Age Group
+
+```{r oa_by_age_plot}
+ggplot(age_oa_summary, aes(x = age_group, y = percentage, fill = oa_status)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Osteoarthritis Prevalence by Age Group",
+    x = "Age Group",
+    y = "Percentage (%)",
+    fill = "OA Status"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set2")
+```
+
+## BMI Distribution
+
+Body Mass Index (BMI) is another important risk factor for osteoarthritis:
+
+```{r bmi_analysis}
+# BMI distribution
+ggplot(health_data, aes(x = bmi)) +
+  geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7) +
+  geom_vline(xintercept = 25, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = 30, linetype = "dashed", color = "orange") +
+  labs(
+    title = "BMI Distribution in Study Population",
+    x = "BMI",
+    y = "Count"
+  ) +
+  theme_minimal() +
+  annotate("text", x = 22, y = max(table(cut(health_data$bmi, 30)))/2,
+           label = "Normal", angle = 90, color = "red") +
+  annotate("text", x = 27.5, y = max(table(cut(health_data$bmi, 30)))/2,
+           label = "Overweight", angle = 90, color = "orange") +
+  annotate("text", x = 32, y = max(table(cut(health_data$bmi, 30)))/2,
+           label = "Obese", angle = 90, color = "orange")
+```
+
+## Pain Scores by OA Status
+
+```{r pain_analysis}
+# Compare pain scores between OA and non-OA groups
+ggplot(health_data, aes(x = factor(osteoarthritis), y = pain_score, fill = factor(osteoarthritis))) +
+  geom_boxplot(alpha = 0.7) +
+  labs(
+    title = "Pain Scores by Osteoarthritis Status",
+    x = "Osteoarthritis Status",
+    y = "Pain Score (0-10)",
+    fill = "OA Status"
+  ) +
+  scale_x_discrete(labels = c("No OA", "Has OA")) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set2")
+```
+
+# Statistical Analysis
+
+## Risk Factor Analysis
+
+Let's examine the relationship between various risk factors and osteoarthritis:
+
+```{r risk_factors}
+# Calculate odds ratios for different risk factors
+risk_analysis <- health_data %>%
+  mutate(
+    high_bmi = bmi >= 30,
+    older_age = age >= 65,
+    female = sex == "Female"
+  ) %>%
+  summarise(
+    # BMI risk
+    bmi_oa_rate = mean(osteoarthritis[high_bmi == TRUE], na.rm = TRUE),
+    bmi_no_oa_rate = mean(osteoarthritis[high_bmi == FALSE], na.rm = TRUE),
+    bmi_odds_ratio = (bmi_oa_rate / (1 - bmi_oa_rate)) / (bmi_no_oa_rate / (1 - bmi_no_oa_rate)),
+
+    # Age risk
+    age_oa_rate = mean(osteoarthritis[older_age == TRUE], na.rm = TRUE),
+    age_no_oa_rate = mean(osteoarthritis[older_age == FALSE], na.rm = TRUE),
+    age_odds_ratio = (age_oa_rate / (1 - age_oa_rate)) / (age_no_oa_rate / (1 - age_no_oa_rate)),
+
+    # Sex risk
+    female_oa_rate = mean(osteoarthritis[female == TRUE], na.rm = TRUE),
+    female_no_oa_rate = mean(osteoarthritis[female == FALSE], na.rm = TRUE),
+    female_odds_ratio = (female_oa_rate / (1 - female_oa_rate)) / (female_no_oa_rate / (1 - female_no_oa_rate))
+  )
+
+print(risk_analysis)
+```
+
+## Correlation Analysis
+
+```{r correlations}
+# Calculate correlations between numeric variables
+correlation_data <- health_data %>%
+  select(age, bmi, pain_score, osteoarthritis, comorbidities) %>%
+  na.omit()
+
+correlation_matrix <- cor(correlation_data)
+print(round(correlation_matrix, 3))
+```
+
+# Basic Modeling
+
+## Simple Logistic Regression
+
+Let's build a simple model to predict osteoarthritis risk:
+
+```{r simple_model}
+# Prepare data for modeling
+model_data <- health_data %>%
+  mutate(
+    high_bmi = bmi >= 30,
+    older_age = age >= 65
+  ) %>%
+  select(osteoarthritis, age, high_bmi, sex, comorbidities) %>%
+  na.omit()
+
+# Fit simple logistic regression model
+oa_model <- glm(osteoarthritis ~ age + high_bmi + sex + comorbidities,
+                data = model_data,
+                family = binomial)
+
+# Model summary
+summary(oa_model)
+```
+
+## Model Interpretation
+
+```{r model_interpretation}
+# Calculate odds ratios from model coefficients
+model_odds_ratios <- exp(coef(oa_model))
+print(model_odds_ratios)
+```
+
+# Summary and Next Steps
+
+## Key Findings
+
+In this tutorial, we have:
+
+1. **Explored health survey data** and understood its structure
+2. **Calculated osteoarthritis prevalence** in different age groups
+3. **Visualized risk factors** like BMI and age
+4. **Performed statistical analysis** to identify correlations
+5. **Built a simple predictive model** for osteoarthritis risk
+
+## Key Takeaways
+
+- Osteoarthritis prevalence increases significantly with age
+- BMI is an important modifiable risk factor
+- Women have higher osteoarthritis rates than men
+- Simple statistical models can help identify risk patterns
+
+## What's Next?
+
+This tutorial covered basic concepts. In the next tutorial, we'll explore:
+
+- More advanced statistical modeling techniques
+- Healthcare utilization patterns
+- Cost-effectiveness analysis
+- Geographic variations in osteoarthritis
+
+## Exercises
+
+Try these exercises to reinforce your learning:
+
+1. **Calculate prevalence by state**: Modify the code to show OA prevalence for different Australian states
+2. **Explore comorbidities**: Analyze how the number of comorbidities relates to OA prevalence
+3. **Create custom visualizations**: Try different types of plots to visualize the relationships
+4. **Extend the model**: Add more variables to the logistic regression model
+
+## Additional Resources
+
+- [AUS-OA Package Documentation](https://github.com/edithatogo/microsim_oa)
+- [Australian Institute of Health and Welfare](https://www.aihw.gov.au/)
+- [R for Data Science](https://r4ds.had.co.nz/)
+
+---
+
+*This tutorial was created as part of the AUS-OA microsimulation model educational resources. For questions or feedback, please visit our [GitHub repository](https://github.com/edithatogo/microsim_oa/issues).*

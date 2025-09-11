@@ -1,6 +1,8 @@
-﻿# A Microsimulation Model of Osteoarthritis in Australia (AUS-OA)
+﻿# AUS-OA: Osteoarthritis Health Economics Microsimulation Model
 
-AUS-OA is a dynamic discrete-time microsimulation model of osteoarthritis and its treatment in Australia. It aims to provide policymakers and researchers with an enhanced capacity to evaluate the burden and treatment of osteoarthritis across Australia.
+> **⚠️ FORK NOTICE**: This repository is a fork of the original [AUS-OA project](https://github.com/UnimelbHealthEconomics/AUS_OA_public). This enhanced version includes significant improvements focused on osteoarthritis health economics modeling. For the original upstream repository, please visit: [https://github.com/UnimelbHealthEconomics/AUS_OA_public](https://github.com/UnimelbHealthEconomics/AUS_OA_public)
+
+AUS-OA is a dynamic discrete-time microsimulation model specifically designed for osteoarthritis (OA) health economics and policy evaluation in Australia. It provides policymakers and researchers with advanced capacity to evaluate the clinical, economic, and quality-of-life impacts of OA interventions across Australia.
 
 <!-- CI/CD badges -->
 [![R-CMD-check](https://github.com/edithatogo/microsim_oa/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/edithatogo/microsim_oa/actions/workflows/R-CMD-check.yaml)
@@ -33,23 +35,26 @@ This project has evolved significantly from its original version. Here's a summa
 
 | Feature                                      | Original Version | Current Version |
 | -------------------------------------------- | :--------------: | :-------------: |
-| **Core Simulation Engine**                   |        âœ        |       âœ        |
-| - Osteoarthritis Progression                 |        âœ        |       âœ        |
+| **Core OA Simulation Engine**                |        âœ        |       âœ        |
+| - OA Progression Modeling                    |        âœ        |       âœ        |
 | - TKA & Revision Surgery Modelling           |        âœ        |       âœ        |
 | - Basic Attribute Tracking (Age, Sex, BMI)   |        âœ        |       âœ        |
-| **Advanced Modelling**                       |                  |                 |
-| - Intervention Modelling Framework           |        âŒ        |       âœ        |
-| - Policy Lever Analysis                      |        âŒ        |       âœ        |
-| - Comorbidity Modelling                      |        âŒ        |       âœ        |
-| **Health Economics**                         |                  |                 |
-| - Comprehensive Cost-Effectiveness Analysis  |        âŒ        |       âœ        |
-| - Multi-perspective Costing                  |        âŒ        |       âœ        |
-| - QALY Calculation (SF-6D)                   |        âŒ        |       âœ        |
-| **PROMs Integration**                        |        âŒ        |       âœ        |
-| **External Data Integration**                |        âŒ        |       âœ        |
-| - Public OA Dataset Integration (50+ datasets)|        âŒ        |       âœ        |
-| - Model Calibration with Real-World Data     |        âŒ        |       âœ        |
-| - Validation Against External Benchmarks     |        âŒ        |       âœ        |
+| **OA-Specific Complications**                |        âŒ        |       âœ        |
+| - PJI (Periprosthetic Joint Infection)        |        âŒ        |       âœ        |
+| - DVT (Deep Vein Thrombosis)                 |        âŒ        |       âœ        |
+| - TKA Revision Risk Modeling                 |        âŒ        |       âœ        |
+| **OA Health Economics**                      |                  |                 |
+| - OA-Specific Cost-Effectiveness Analysis    |        âŒ        |       âœ        |
+| - Australian Healthcare System Modeling      |        âŒ        |       âœ        |
+| - QALY Calculation (SF-6D) for OA            |        âŒ        |       âœ        |
+| **OA Data Integration**                      |        âŒ        |       âœ        |
+| - AIHW OA Prevalence Data                    |        âŒ        |       âœ        |
+| - OAI Longitudinal OA Data                   |        âŒ        |       âœ        |
+| - ABS Demographic Data for OA Epidemiology   |        âŒ        |       âœ        |
+| **OA Policy Analysis**                       |        âŒ        |       âœ        |
+| - Public vs Private OA Treatment Pathways    |        âŒ        |       âœ        |
+| - OA Surgery Waiting List Dynamics           |        âŒ        |       âœ        |
+| - OA Intervention Policy Levers              |        âŒ        |       âœ        |
 
 ### Technical Features
 
@@ -62,12 +67,17 @@ This project has evolved significantly from its original version. Here's a summa
 | - Unit Testing Framework (	estthat)        |        âŒ        |       âœ        |
 | - Automated Validation & Reporting (RMarkdown)|        âŒ        |       âœ        |
 | **Dependency Management**                    |                  |                 |
-| - env for Reproducible Environments       |        âŒ        |       âœ        |
+| - 
+env for Reproducible Environments       |        âŒ        |       âœ        |
 | **Performance**                              |                  |                 |
 | - Parallel Processing                        |        âŒ        |       âœ        |
 | **Documentation & Research Support**         |                  |                 |
 | - Comprehensive Dataset Documentation        |        âŒ        |       âœ        |
-| - Integration Examples & Tutorials           |        âŒ        |       âœ        |
+### OA-Focused Tutorials & Educational Content
+| - **Tutorial 1**: OA Population Health Modeling |        âŒ        |       âœ        |
+| - **Tutorial 2**: OA Healthcare Utilization Analysis |        âŒ        |       âœ        |
+| - **Tutorial 3**: OA Disease Progression Modeling |        âŒ        |       âœ        |
+| - **Tutorial 4**: Geographic OA Health Disparities |        âŒ        |       âœ        |
 | - Research Citation & Attribution            |        âŒ        |       âœ        |
 | **Quality Control**                          |                  |                 |
 | - Multi-platform CI/CD (Linux/macOS/Windows) |        âŒ        |       âœ        |
@@ -94,7 +104,9 @@ This project has evolved significantly from its original version. Here's a summa
     cd microsim_oa
     `
 
-2.  **Install dependencies:** This project uses env to manage dependencies. Open the AUS-OA.Rproj file in RStudio, and env should automatically start installing the required packages. If not, run the following command in the R console:
+2.  **Install dependencies:** This project uses 
+env to manage dependencies. Open the AUS-OA.Rproj file in RStudio, and 
+env should automatically start installing the required packages. If not, run the following command in the R console:
     `
     renv::restore()
     `
@@ -121,8 +133,10 @@ The simulation will run, and the outputs will be saved in the output/ directory.
 
 This project uses a structured development approach:
 
--   **Dependency Management:** env is used to ensure a reproducible environment.
--   **Testing:** 	estthat is used for unit testing. You can run the tests using the un_tests.R script in the scripts/ directory.
+-   **Dependency Management:** 
+env is used to ensure a reproducible environment.
+-   **Testing:** 	estthat is used for unit testing. You can run the tests using the 
+un_tests.R script in the scripts/ directory.
 -   **Style:** A consistent code style is encouraged.
 -   **Quality Control:** Enterprise-grade CI/CD with multi-platform testing, performance benchmarking, security scanning, and automated quality metrics.
 
@@ -191,6 +205,46 @@ results <- run_simulation(
 `
 
 For detailed integration examples and data format specifications, see the dataset documentation in the docs/ directory.
+
+## Educational Tutorials
+
+This enhanced fork includes a comprehensive tutorial series demonstrating AUS-OA capabilities:
+
+### Tutorial 1: Basic Population Health Modeling
+- **Location**: `tutorials/tutorial_01_basic_modeling/`
+- **Focus**: Data exploration, statistical analysis, basic modeling
+- **Data**: Synthetic Australian health survey data
+- **Skills**: R programming, data visualization, logistic regression
+
+### Tutorial 2: Healthcare Utilization Analysis
+- **Location**: `tutorials/tutorial_02_healthcare_utilization/`
+- **Focus**: Healthcare costs, utilization patterns, cost-effectiveness
+- **Data**: Synthetic Medicare and hospital utilization data
+- **Skills**: Cost analysis, disparity assessment, CEA methods
+
+### Upcoming Tutorials
+- **Tutorial 3**: Longitudinal Disease Progression Modeling
+- **Tutorial 4**: Geographic Health Disparities Analysis
+
+Each tutorial includes:
+- Complete exercise materials
+- R scripts for data generation and analysis
+- Comprehensive solutions
+- Data visualization examples
+- Policy implications and recommendations
+
+### Getting Started with Tutorials
+
+```bash
+# Navigate to tutorial directory
+cd tutorials/tutorial_01_basic_modeling/
+
+# Run the analysis script
+Rscript scripts/tutorial_01_analysis.R
+
+# Or work through exercises interactively
+# Open tutorial_exercises.Rmd in RStudio
+```
 
 ## Citation
 

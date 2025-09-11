@@ -1,0 +1,562 @@
+# Tutorial 2: Healthcare Utilization Analysis
+# ==========================================
+
+This tutorial demonstrates healthcare utilization analysis using Australian health service data. It covers analyzing healthcare costs, service usage patterns, and utilization disparities across different population groups.
+
+## Learning Objectives
+
+By the end of this tutorial, you will be able to:
+
+1. Analyze healthcare service utilization patterns
+2. Calculate healthcare costs and cost distributions
+3. Identify utilization disparities across demographic groups
+4. Perform cost-effectiveness analysis
+5. Create healthcare utilization visualizations
+6. Interpret utilization data for health policy
+
+## Prerequisites
+
+- Completion of Tutorial 1: Basic Population Health Modeling
+- Basic understanding of healthcare systems
+- Familiarity with cost analysis concepts
+
+## Dataset Description
+
+This tutorial uses synthetic Australian healthcare utilization data including:
+
+- **50,000 patient records** with healthcare encounters
+- **Service utilization data**: GP visits, specialist visits, hospitalizations
+- **Cost data**: Healthcare costs by service type and patient characteristics
+- **Demographic factors**: Age, sex, socioeconomic status, geographic location
+- **Clinical factors**: Comorbidities, osteoarthritis severity, treatment status
+
+## Healthcare Utilization Concepts
+
+### Key Metrics
+
+1. **Utilization Rates**: Number of healthcare contacts per person per time period
+2. **Cost Analysis**: Direct and indirect healthcare costs
+3. **Service Mix**: Distribution of healthcare services used
+4. **Access Disparities**: Differences in utilization across population groups
+5. **Cost-Effectiveness**: Value for money in healthcare interventions
+
+### Australian Healthcare Context
+
+- **Medicare**: Universal health insurance scheme
+- **Private Health Insurance**: Supplementary coverage
+- **Public Hospitals**: Free public hospital treatment
+- **Primary Care**: GP and allied health services
+- **Pharmaceutical Benefits**: Subsidized medications
+
+---
+
+## Exercise 1: Loading and Exploring Healthcare Data
+
+### 1.1 Load Healthcare Utilization Data
+
+Load the synthetic healthcare utilization dataset and examine its structure.
+
+```r
+# Load required packages
+library(tidyverse)
+library(scales)
+library(ggthemes)
+library(aus_oa_public)
+set.seed(12345)
+
+# Load healthcare utilization data
+healthcare_data <- readRDS("data/healthcare_utilization_data.rds")
+
+# Alternative: Load from CSV
+# healthcare_data <- read_csv("data/healthcare_utilization_data.csv")
+```
+
+### 1.2 Examine Dataset Structure
+
+Explore the structure and content of the healthcare utilization data.
+
+```r
+# View dataset dimensions and structure
+dim(healthcare_data)
+str(healthcare_data)
+summary(healthcare_data)
+
+# Check for missing values
+colSums(is.na(healthcare_data))
+
+# View sample records
+head(healthcare_data, 10)
+```
+
+### 1.3 Data Quality Assessment
+
+Assess the quality and completeness of the healthcare data.
+
+```r
+# Check data ranges and distributions
+summary(healthcare_data$age)
+summary(healthcare_data$total_cost)
+summary(healthcare_data$gp_visits)
+
+# Identify potential data quality issues
+healthcare_data %>%
+  summarise(
+    negative_costs = sum(total_cost < 0, na.rm = TRUE),
+    zero_visits = sum(gp_visits == 0, na.rm = TRUE),
+    extreme_age = sum(age > 100, na.rm = TRUE)
+  )
+```
+
+---
+
+## Exercise 2: Basic Utilization Analysis
+
+### 2.1 Overall Utilization Statistics
+
+Calculate basic healthcare utilization statistics.
+
+```r
+# Overall utilization summary
+utilization_summary <- healthcare_data %>%
+  summarise(
+    total_patients = n(),
+    mean_gp_visits = mean(gp_visits, na.rm = TRUE),
+    mean_specialist_visits = mean(specialist_visits, na.rm = TRUE),
+    mean_hospitalizations = mean(hospital_admissions, na.rm = TRUE),
+    mean_total_cost = mean(total_cost, na.rm = TRUE),
+    median_total_cost = median(total_cost, na.rm = TRUE)
+  )
+
+print(utilization_summary)
+```
+
+### 2.2 Service Utilization by Type
+
+Analyze utilization patterns across different healthcare services.
+
+```r
+# Service utilization breakdown
+service_utilization <- healthcare_data %>%
+  summarise(
+    gp_only = sum(gp_visits > 0 & specialist_visits == 0 & hospital_admissions == 0),
+    specialist_only = sum(gp_visits == 0 & specialist_visits > 0 & hospital_admissions == 0),
+    hospital_only = sum(gp_visits == 0 & specialist_visits == 0 & hospital_admissions > 0),
+    gp_specialist = sum(gp_visits > 0 & specialist_visits > 0 & hospital_admissions == 0),
+    gp_hospital = sum(gp_visits > 0 & specialist_visits == 0 & hospital_admissions > 0),
+    specialist_hospital = sum(gp_visits == 0 & specialist_visits > 0 & hospital_admissions > 0),
+    all_services = sum(gp_visits > 0 & specialist_visits > 0 & hospital_admissions > 0)
+  ) %>%
+  gather(service_pattern, count)
+
+print(service_utilization)
+```
+
+### 2.3 High Utilizers Analysis
+
+Identify patients with high healthcare utilization.
+
+```r
+# Define high utilizers (top 10% by cost)
+cost_threshold <- quantile(healthcare_data$total_cost, 0.9, na.rm = TRUE)
+
+high_utilizers <- healthcare_data %>%
+  filter(total_cost >= cost_threshold) %>%
+  summarise(
+    count = n(),
+    mean_age = mean(age, na.rm = TRUE),
+    pct_female = mean(sex == "Female", na.rm = TRUE) * 100,
+    mean_comorbidities = mean(comorbidities, na.rm = TRUE),
+    pct_osteoarthritis = mean(osteoarthritis, na.rm = TRUE) * 100,
+    total_cost_high_users = sum(total_cost, na.rm = TRUE)
+  )
+
+print(high_utilizers)
+```
+
+---
+
+## Exercise 3: Demographic Utilization Analysis
+
+### 3.1 Utilization by Age Groups
+
+Analyze healthcare utilization patterns across different age groups.
+
+```r
+# Create age groups
+age_utilization <- healthcare_data %>%
+  mutate(
+    age_group = cut(age,
+                   breaks = c(18, 35, 50, 65, 80, Inf),
+                   labels = c("18-34", "35-49", "50-64", "65-79", "80+"))
+  ) %>%
+  group_by(age_group) %>%
+  summarise(
+    n = n(),
+    mean_gp_visits = mean(gp_visits, na.rm = TRUE),
+    mean_specialist_visits = mean(specialist_visits, na.rm = TRUE),
+    mean_hospitalizations = mean(hospital_admissions, na.rm = TRUE),
+    mean_total_cost = mean(total_cost, na.rm = TRUE),
+    cost_per_person = mean_total_cost
+  ) %>%
+  arrange(age_group)
+
+print(age_utilization)
+```
+
+### 3.2 Utilization by Sex
+
+Compare healthcare utilization between males and females.
+
+```r
+# Utilization by sex
+sex_utilization <- healthcare_data %>%
+  group_by(sex) %>%
+  summarise(
+    n = n(),
+    mean_gp_visits = mean(gp_visits, na.rm = TRUE),
+    mean_specialist_visits = mean(specialist_visits, na.rm = TRUE),
+    mean_hospitalizations = mean(hospital_admissions, na.rm = TRUE),
+    mean_total_cost = mean(total_cost, na.rm = TRUE),
+    median_total_cost = median(total_cost, na.rm = TRUE)
+  )
+
+print(sex_utilization)
+```
+
+### 3.3 Geographic Utilization Analysis
+
+Analyze utilization patterns by geographic location.
+
+```r
+# Utilization by state
+state_utilization <- healthcare_data %>%
+  group_by(state) %>%
+  summarise(
+    n = n(),
+    mean_gp_visits = mean(gp_visits, na.rm = TRUE),
+    mean_specialist_visits = mean(specialist_visits, na.rm = TRUE),
+    mean_hospitalizations = mean(hospital_admissions, na.rm = TRUE),
+    mean_total_cost = mean(total_cost, na.rm = TRUE),
+    utilization_rate = mean(gp_visits > 0 | specialist_visits > 0 | hospital_admissions > 0)
+  ) %>%
+  arrange(desc(mean_total_cost))
+
+print(state_utilization)
+```
+
+---
+
+## Exercise 4: Cost Analysis
+
+### 4.1 Cost Distribution Analysis
+
+Analyze the distribution of healthcare costs.
+
+```r
+# Cost distribution statistics
+cost_distribution <- healthcare_data %>%
+  summarise(
+    mean_cost = mean(total_cost, na.rm = TRUE),
+    median_cost = median(total_cost, na.rm = TRUE),
+    sd_cost = sd(total_cost, na.rm = TRUE),
+    min_cost = min(total_cost, na.rm = TRUE),
+    max_cost = max(total_cost, na.rm = TRUE),
+    cost_skewness = (mean_cost - median_cost) / sd_cost
+  )
+
+print(cost_distribution)
+
+# Cost percentiles
+cost_percentiles <- quantile(healthcare_data$total_cost,
+                           probs = c(0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99),
+                           na.rm = TRUE)
+print(cost_percentiles)
+```
+
+### 4.2 Cost Components Analysis
+
+Break down costs by service type and patient characteristics.
+
+```r
+# Calculate cost components
+cost_components <- healthcare_data %>%
+  mutate(
+    gp_cost = gp_visits * 50,  # Approximate GP visit cost
+    specialist_cost = specialist_visits * 150,  # Approximate specialist visit cost
+    hospital_cost = hospital_admissions * 5000,  # Approximate hospitalization cost
+    calculated_total = gp_cost + specialist_cost + hospital_cost
+  ) %>%
+  summarise(
+    mean_gp_cost = mean(gp_cost),
+    mean_specialist_cost = mean(specialist_cost),
+    mean_hospital_cost = mean(hospital_cost),
+    mean_calculated_total = mean(calculated_total),
+    mean_actual_total = mean(total_cost, na.rm = TRUE)
+  )
+
+print(cost_components)
+```
+
+### 4.3 Cost Drivers Analysis
+
+Identify key drivers of healthcare costs.
+
+```r
+# Correlation analysis
+cost_correlations <- healthcare_data %>%
+  select(total_cost, age, comorbidities, osteoarthritis, gp_visits,
+         specialist_visits, hospital_admissions) %>%
+  cor(use = "complete.obs")
+
+# Print correlations with total cost
+cost_correlations["total_cost", ]
+```
+
+---
+
+## Exercise 5: Access and Disparity Analysis
+
+### 5.1 Healthcare Access Analysis
+
+Analyze access to healthcare services across different groups.
+
+```r
+# Access analysis
+access_analysis <- healthcare_data %>%
+  mutate(
+    has_access = gp_visits > 0 | specialist_visits > 0 | hospital_admissions > 0,
+    socioeconomic_group = cut(socioeconomic_score,
+                             breaks = quantile(socioeconomic_score, probs = c(0, 0.33, 0.67, 1), na.rm = TRUE),
+                             labels = c("Low", "Medium", "High"))
+  ) %>%
+  group_by(socioeconomic_group) %>%
+  summarise(
+    n = n(),
+    access_rate = mean(has_access, na.rm = TRUE) * 100,
+    mean_cost = mean(total_cost, na.rm = TRUE),
+    mean_visits = mean(gp_visits + specialist_visits, na.rm = TRUE)
+  )
+
+print(access_analysis)
+```
+
+### 5.2 Rural vs Urban Analysis
+
+Compare healthcare utilization between rural and urban areas.
+
+```r
+# Rural-urban analysis
+rural_urban_analysis <- healthcare_data %>%
+  group_by(rural_urban) %>%
+  summarise(
+    n = n(),
+    mean_gp_visits = mean(gp_visits, na.rm = TRUE),
+    mean_specialist_visits = mean(specialist_visits, na.rm = TRUE),
+    mean_hospitalizations = mean(hospital_admissions, na.rm = TRUE),
+    mean_total_cost = mean(total_cost, na.rm = TRUE),
+    access_rate = mean(gp_visits > 0 | specialist_visits > 0 | hospital_admissions > 0) * 100
+  )
+
+print(rural_urban_analysis)
+```
+
+### 5.3 Disparity Index Calculation
+
+Calculate healthcare disparity indices across population groups.
+
+```r
+# Calculate disparity indices
+disparity_analysis <- healthcare_data %>%
+  mutate(
+    age_group = cut(age, breaks = c(18, 50, 70, Inf), labels = c("Young", "Middle", "Older")),
+    income_group = cut(income_level, breaks = quantile(income_level, c(0, 0.5, 1), na.rm = TRUE),
+                      labels = c("Low", "High"))
+  ) %>%
+  group_by(age_group, sex, income_group) %>%
+  summarise(
+    mean_cost = mean(total_cost, na.rm = TRUE),
+    utilization_rate = mean(gp_visits > 0 | specialist_visits > 0 | hospital_admissions > 0),
+    n = n()
+  ) %>%
+  ungroup()
+
+# Calculate disparity ratios
+max_cost <- max(disparity_analysis$mean_cost, na.rm = TRUE)
+min_cost <- min(disparity_analysis$mean_cost, na.rm = TRUE)
+cost_disparity_ratio <- max_cost / min_cost
+
+cat("Cost Disparity Ratio:", round(cost_disparity_ratio, 2), "\n")
+```
+
+---
+
+## Exercise 6: Cost-Effectiveness Analysis
+
+### 6.1 Basic Cost-Effectiveness
+
+Perform basic cost-effectiveness analysis for healthcare interventions.
+
+```r
+# Cost-effectiveness analysis for osteoarthritis treatment
+cea_analysis <- healthcare_data %>%
+  filter(osteoarthritis == 1) %>%
+  mutate(
+    treatment_effectiveness = rnorm(n(), mean = 0.7, sd = 0.2),  # Simulated effectiveness
+    treatment_cost = 2000,  # Annual treatment cost
+    qaly_gain = treatment_effectiveness * 0.15  # Quality of life improvement
+  ) %>%
+  summarise(
+    total_patients = n(),
+    mean_baseline_cost = mean(total_cost, na.rm = TRUE),
+    mean_treatment_cost = mean(treatment_cost),
+    mean_qaly_gain = mean(qaly_gain),
+    icer = mean_treatment_cost / mean_qaly_gain  # Incremental cost-effectiveness ratio
+  )
+
+print(cea_analysis)
+```
+
+### 6.2 Intervention Impact Analysis
+
+Analyze the impact of healthcare interventions on utilization and costs.
+
+```r
+# Simulate intervention impact
+intervention_analysis <- healthcare_data %>%
+  mutate(
+    # Simulate 20% reduction in hospitalizations for intervention group
+    intervention_group = rbinom(n(), 1, 0.5),
+    reduced_hospitalizations = hospital_admissions * (1 - 0.2 * intervention_group),
+    intervention_cost = 500 * intervention_group,  # Intervention cost
+    cost_savings = (hospital_admissions - reduced_hospitalizations) * 5000,
+    net_cost = intervention_cost - cost_savings
+  ) %>%
+  group_by(intervention_group) %>%
+  summarise(
+    n = n(),
+    mean_hospitalizations_original = mean(hospital_admissions),
+    mean_hospitalizations_reduced = mean(reduced_hospitalizations),
+    mean_intervention_cost = mean(intervention_cost),
+    mean_cost_savings = mean(cost_savings),
+    mean_net_cost = mean(net_cost),
+    roi = mean(cost_savings) / mean(intervention_cost)
+  )
+
+print(intervention_analysis)
+```
+
+---
+
+## Exercise 7: Advanced Visualizations
+
+### 7.1 Healthcare Utilization Dashboard
+
+Create a comprehensive dashboard of healthcare utilization metrics.
+
+```r
+# Set up plotting theme
+theme_set(theme_minimal())
+
+# 1. Cost distribution by age group
+cost_age_plot <- healthcare_data %>%
+  mutate(age_group = cut(age, breaks = c(18, 35, 50, 65, 80, Inf),
+                        labels = c("18-34", "35-49", "50-64", "65-79", "80+"))) %>%
+  ggplot(aes(x = age_group, y = total_cost)) +
+  geom_boxplot(fill = "steelblue", alpha = 0.7) +
+  scale_y_log10(labels = dollar) +
+  labs(title = "Healthcare Costs by Age Group",
+       x = "Age Group", y = "Total Cost (log scale)") +
+  theme_minimal()
+
+print(cost_age_plot)
+
+# 2. Service utilization heatmap
+service_heatmap_data <- healthcare_data %>%
+  mutate(age_group = cut(age, breaks = c(18, 35, 50, 65, 80, Inf),
+                        labels = c("18-34", "35-49", "50-64", "65-79", "80+"))) %>%
+  group_by(age_group, sex) %>%
+  summarise(
+    gp_rate = mean(gp_visits > 0),
+    specialist_rate = mean(specialist_visits > 0),
+    hospital_rate = mean(hospital_admissions > 0)
+  ) %>%
+  gather(service_type, utilization_rate, gp_rate:hospital_rate)
+
+service_heatmap <- ggplot(service_heatmap_data,
+                         aes(x = age_group, y = service_type, fill = utilization_rate)) +
+  geom_tile() +
+  facet_wrap(~sex) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(title = "Healthcare Service Utilization by Age and Sex",
+       x = "Age Group", y = "Service Type", fill = "Utilization Rate") +
+  theme_minimal()
+
+print(service_heatmap)
+
+# 3. Cost vs utilization scatter plot
+cost_utilization_plot <- ggplot(healthcare_data,
+                               aes(x = gp_visits + specialist_visits, y = total_cost)) +
+  geom_point(alpha = 0.6, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red") +
+  scale_y_log10(labels = dollar) +
+  labs(title = "Healthcare Costs vs Service Utilization",
+       x = "Total Visits (GP + Specialist)", y = "Total Cost (log scale)") +
+  theme_minimal()
+
+print(cost_utilization_plot)
+```
+
+### 7.2 Geographic Utilization Map
+
+Create visualizations showing geographic variations in healthcare utilization.
+
+```r
+# State-level utilization summary
+state_summary <- healthcare_data %>%
+  group_by(state) %>%
+  summarise(
+    utilization_rate = mean(gp_visits > 0 | specialist_visits > 0 | hospital_admissions > 0),
+    mean_cost = mean(total_cost, na.rm = TRUE),
+    n = n()
+  )
+
+# Bar chart of utilization by state
+state_utilization_plot <- ggplot(state_summary,
+                                aes(x = reorder(state, utilization_rate), y = utilization_rate)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", utilization_rate * 100)), hjust = -0.1) +
+  coord_flip() +
+  labs(title = "Healthcare Utilization Rate by State",
+       x = "State", y = "Utilization Rate (%)") +
+  scale_y_continuous(limits = c(0, max(utilization_rate) * 1.2)) +
+  theme_minimal()
+
+print(state_utilization_plot)
+```
+
+---
+
+## Key Takeaways
+
+1. **Utilization Patterns**: Healthcare utilization varies significantly by age, sex, and geographic location
+2. **Cost Distribution**: Healthcare costs are highly skewed with a small proportion of patients accounting for most costs
+3. **Access Disparities**: Socioeconomic and geographic factors influence healthcare access and utilization
+4. **Cost Drivers**: Hospitalizations and specialist visits are major cost drivers
+5. **Policy Implications**: Understanding utilization patterns informs resource allocation and intervention strategies
+
+## Next Steps
+
+- **Tutorial 3**: Longitudinal disease progression modeling
+- **Tutorial 4**: Geographic health disparities analysis
+- **Advanced Topics**: Machine learning for utilization prediction, advanced cost-effectiveness analysis
+
+## Additional Resources
+
+- [Australian Institute of Health and Welfare](https://www.aihw.gov.au/)
+- [Medicare Statistics](https://www.health.gov.au/resources/publications/medicare-statistics)
+- [Healthcare Cost Analysis Methods](https://www.oecd.org/health/health-systems/health-care-utilisation.htm)
+
+---
+
+*This tutorial is part of the AUS-OA educational series demonstrating healthcare utilization analysis techniques.*</content>
+<parameter name="filePath">\\wsl.localhost\Ubuntu\home\doughnut\github\aus_oa_public\tutorials\tutorial_02_healthcare_utilization\tutorial_exercises.Rmd

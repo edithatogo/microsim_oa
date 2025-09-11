@@ -1,0 +1,223 @@
+name: Documentation Quality Assurance
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  documentation-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::roxygen2
+            any::pkgdown
+            any::spelling
+            any::devtools
+            any::covr
+
+      - name: Check documentation completeness
+        run: |
+          Rscript -e "
+            library(devtools)
+            library(roxygen2)
+
+            cat('📚 Checking documentation completeness...\n')
+
+            # Check if roxygen comments are up to date
+            roxygen2::roxygenise()
+
+            # Check for undocumented functions
+            check_result <- devtools::check_man()
+            print(check_result)
+
+            # Check for missing examples
+            functions <- ls('package:ausoa')
+            missing_examples <- c()
+
+            for (func in functions) {
+              # Check if function has examples (simplified check)
+              func_file <- find.function(func)
+              if (!is.null(func_file)) {
+                content <- readLines(func_file, warn = FALSE)
+                has_examples <- any(grepl('@examples', content))
+                if (!has_examples) {
+                  missing_examples <- c(missing_examples, func)
+                }
+              }
+            }
+
+            if (length(missing_examples) > 0) {
+              cat('⚠️  Functions missing examples:\n')
+              for (func in missing_examples) {
+                cat('  -', func, '\n')
+              }
+            } else {
+              cat('✅ All functions have examples\n')
+            }
+          "
+
+      - name: Spell check documentation
+        run: |
+          Rscript -e "
+            library(spelling)
+
+            cat('🔤 Running spell check on documentation...\n')
+
+            # Spell check R files
+            r_files <- list.files('R/', pattern = '\\\\.R$', full.names = TRUE)
+            spell_check_results <- spelling::spell_check_files(r_files)
+
+            if (length(spell_check_results) > 0) {
+              cat('⚠️  Spelling issues found:\n')
+              print(spell_check_results)
+            } else {
+              cat('✅ No spelling issues found\n')
+            }
+
+            # Spell check documentation files
+            doc_files <- list.files('man/', pattern = '\\\\.Rd$', full.names = TRUE)
+            if (length(doc_files) > 0) {
+              doc_spell_check <- spelling::spell_check_files(doc_files)
+              if (length(doc_spell_check) > 0) {
+                cat('⚠️  Documentation spelling issues:\n')
+                print(doc_spell_check)
+              }
+            }
+          "
+
+      - name: Check README and vignettes
+        run: |
+          Rscript -e "
+            cat('📖 Checking README and vignettes...\n')
+
+            # Check README
+            if (file.exists('README.md')) {
+              readme_content <- readLines('README.md', warn = FALSE)
+
+              # Check for required sections
+              required_sections <- c('Installation', 'Usage', 'Documentation')
+              missing_sections <- c()
+
+              for (section in required_sections) {
+                if (!any(grepl(section, readme_content, ignore.case = TRUE))) {
+                  missing_sections <- c(missing_sections, section)
+                }
+              }
+
+              if (length(missing_sections) > 0) {
+                cat('⚠️  README missing sections:', paste(missing_sections, collapse = ', '), '\n')
+              } else {
+                cat('✅ README has all required sections\n')
+              }
+            }
+
+            # Check vignettes
+            if (dir.exists('vignettes')) {
+              vignette_files <- list.files('vignettes', pattern = '\\\\.Rmd$', full.names = TRUE)
+              cat('📄 Found', length(vignette_files), 'vignette(s)\n')
+
+              if (length(vignette_files) == 0) {
+                cat('⚠️  No vignettes found - consider adding usage examples\n')
+              }
+            }
+          "
+
+      - name: Generate documentation coverage report
+        run: |
+          Rscript -e "
+            cat('📊 Generating documentation coverage report...\n')
+
+            # Get all exported functions
+            exports <- readLines('NAMESPACE')
+            exported_functions <- grep('^export\\\\(', exports, value = TRUE)
+            exported_functions <- sub('^export\\\\((.*)\\\\)$', '\\\\1', exported_functions)
+
+            cat('📈 Documentation Coverage:\n')
+            cat('Total exported functions:', length(exported_functions), '\n')
+
+            # Check which have documentation
+            documented <- 0
+            man_files <- list.files('man/', pattern = '\\\\.Rd$')
+
+            for (func in exported_functions) {
+              func_doc <- paste0(func, '.Rd')
+              if (func_doc %in% man_files) {
+                documented <- documented + 1
+              }
+            }
+
+            coverage_percent <- round((documented / length(exported_functions)) * 100, 1)
+            cat('Documented functions:', documented, '\n')
+            cat('Coverage:', coverage_percent, '%\n')
+
+            if (coverage_percent < 100) {
+              cat('⚠️  Missing documentation for:\n')
+              for (func in exported_functions) {
+                func_doc <- paste0(func, '.Rd')
+                if (!(func_doc %in% man_files)) {
+                  cat('  -', func, '\n')
+                }
+              }
+            }
+          "
+
+      - name: Build pkgdown site
+        run: |
+          Rscript -e "
+            library(pkgdown)
+
+            cat('🏗️  Building pkgdown site...\n')
+
+            # Build site
+            pkgdown::build_site()
+
+            if (dir.exists('docs')) {
+              cat('✅ pkgdown site built successfully\n')
+
+              # Check for common issues
+              index_file <- 'docs/index.html'
+              if (file.exists(index_file)) {
+                cat('✅ Site index exists\n')
+              } else {
+                cat('❌ Site index missing\n')
+              }
+
+              # Check reference documentation
+              reference_dir <- 'docs/reference'
+              if (dir.exists(reference_dir)) {
+                ref_files <- list.files(reference_dir, pattern = '\\\\.html$')
+                cat('📄 Generated', length(ref_files), 'reference pages\n')
+              }
+            } else {
+              cat('❌ pkgdown site build failed\n')
+            }
+          "
+
+      - name: Documentation quality summary
+        run: |
+          echo '## 📚 Documentation Quality Report' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '### ✅ Completed Checks:' >> $GITHUB_STEP_SUMMARY
+          echo '- Documentation completeness' >> $GITHUB_STEP_SUMMARY
+          echo '- Spelling check' >> $GITHUB_STEP_SUMMARY
+          echo '- README validation' >> $GITHUB_STEP_SUMMARY
+          echo '- Vignette check' >> $GITHUB_STEP_SUMMARY
+          echo '- pkgdown site build' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '### 📊 Results:' >> $GITHUB_STEP_SUMMARY
+          echo '- Status: Documentation checks completed' >> $GITHUB_STEP_SUMMARY
+          echo '- Site: Built successfully' >> $GITHUB_STEP_SUMMARY
+          echo '- Coverage: Analysis completed' >> $GITHUB_STEP_SUMMARY

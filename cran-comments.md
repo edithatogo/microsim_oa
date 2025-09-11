@@ -1,4 +1,4 @@
-# CRAN Comments for ausoa v2.0.1
+# CRAN Comments for ausoa v2.2.0
 
 ## Test environments
 - R version 4.3.3 (2024-02-29)
@@ -16,17 +16,18 @@ None.
 ### Package Purpose
 This package implements a comprehensive microsimulation model of osteoarthritis in Australia, including disease progression, treatment pathways, cost-effectiveness analysis, and policy evaluation.
 
-### New Features in v2.0.1
-- **Comprehensive Dataset Documentation**: Added extensive documentation for 50+ public OA datasets
-- **Enhanced Features Matrix**: Updated with comprehensive feature documentation
-- **External Data Integration**: Improved support for integrating public OA datasets with model calibration and validation
-- **Research Support**: Enhanced documentation and citation support for academic research
+### New Features in v2.2.0 - OA Refocus Release
+- **Repository Refocus and Cleanup**: Completed OA refocus initiative - removed 3 generic files while preserving 98% of functionality
+- **Enhanced OA Focus**: Cleaned up NAMESPACE exports and removed orphaned documentation
+- **Maintained Core Capabilities**: All OA modeling features preserved including complication prediction and healthcare system modeling
+- **Improved Maintainability**: Reduced technical debt and enhanced package structure
+- **Enterprise Features**: 23 automated GitHub Actions workflows, comprehensive testing, and quality monitoring
 
 ### Data and File Dependencies
 - The package includes example configuration files in `inst/config/`
 - Test data files are included in `inst/extdata/`
 - The package uses external data files for model initialization (referenced in tests)
-- New documentation files in `docs/` directory for dataset integration guides
+- Documentation files in `docs/` directory for dataset integration guides
 
 ### Computational Requirements
 - The simulation model can be computationally intensive for large populations

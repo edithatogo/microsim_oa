@@ -1,0 +1,812 @@
+# Tutorial 4: Geographic Health Disparities Analysis
+# ================================================
+
+This tutorial demonstrates geographic health disparities analysis using spatial epidemiology techniques. It covers mapping health outcomes, analyzing geographic variations in healthcare access, and identifying spatial patterns in disease distribution.
+
+## Learning Objectives
+
+By the end of this tutorial, you will be able to:
+
+1. Analyze geographic patterns in health outcomes
+2. Create choropleth maps for health data visualization
+3. Perform spatial autocorrelation analysis
+4. Identify geographic clusters of health disparities
+5. Analyze healthcare access disparities by location
+6. Apply spatial regression techniques
+7. Interpret geographic health data for policy decisions
+
+## Prerequisites
+
+- Completion of Tutorials 1-3
+- Understanding of geographic concepts
+- Basic knowledge of spatial statistics
+- Familiarity with mapping concepts
+
+## Dataset Description
+
+This tutorial uses synthetic geographic health data including:
+
+- **50,000 patient records** across Australian states and territories
+- **Geographic information**: State, local area, remoteness classification
+- **Health outcomes**: OA prevalence, severity, healthcare utilization
+- **Socioeconomic factors**: Income, education, employment
+- **Healthcare access**: Distance to services, provider density
+- **Environmental factors**: Urban/rural classification, climate data
+
+## Geographic Analysis Concepts
+
+### Key Methods
+
+1. **Spatial Epidemiology**: Study of geographic patterns in health outcomes
+2. **Choropleth Mapping**: Thematic maps showing health indicators by region
+3. **Spatial Autocorrelation**: Analysis of geographic clustering patterns
+4. **Hot Spot Analysis**: Identification of statistically significant clusters
+5. **Spatial Regression**: Modeling geographic variations in health outcomes
+6. **Access Analysis**: Geographic barriers to healthcare services
+
+### Clinical Applications
+
+- Health resource allocation planning
+- Disease surveillance and monitoring
+- Healthcare access improvement
+- Public health policy development
+- Environmental health impact assessment
+
+---
+
+## Exercise 1: Loading and Exploring Geographic Health Data
+
+### 1.1 Load Geographic Health Data
+
+Load the synthetic geographic health dataset and examine its structure.
+
+```r
+# Load required packages
+library(tidyverse)
+library(sf)
+library(ggplot2)
+library(spdep)
+library(spatialreg)
+library(leaflet)
+library(RColorBrewer)
+library(scales)
+library(aus_oa_public)
+set.seed(12345)
+
+# Load geographic health data
+geographic_data <- readRDS("data/geographic_health_data.rds")
+
+# Alternative: Load from CSV
+# geographic_data <- read_csv("data/geographic_health_data.csv")
+```
+
+### 1.2 Examine Geographic Data Structure
+
+Explore the structure and characteristics of geographic health data.
+
+```r
+# View dataset dimensions and structure
+dim(geographic_data)
+str(geographic_data)
+summary(geographic_data)
+
+# Check geographic distribution
+table(geographic_data$state)
+table(geographic_data$remoteness_area)
+
+# Check data completeness by state
+geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    n_patients = n(),
+    pct_oa = mean(osteoarthritis, na.rm = TRUE) * 100,
+    mean_age = mean(age, na.rm = TRUE),
+    mean_income = mean(household_income, na.rm = TRUE)
+  ) %>%
+  arrange(desc(n_patients))
+```
+
+### 1.3 Geographic Data Quality Assessment
+
+Assess the quality and completeness of geographic data.
+
+```r
+# Check for missing values by geographic variables
+missing_by_state <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    total_obs = n(),
+    missing_income = sum(is.na(household_income)),
+    missing_education = sum(is.na(education_level)),
+    missing_employment = sum(is.na(employment_status)),
+    missing_distance = sum(is.na(distance_to_gp))
+  ) %>%
+  mutate(
+    pct_missing_income = missing_income / total_obs * 100,
+    pct_missing_distance = missing_distance / total_obs * 100
+  )
+
+print("Missing data by state:")
+print(missing_by_state)
+
+# Check geographic coordinate validity
+coordinate_check <- geographic_data %>%
+  summarise(
+    invalid_lat = sum(latitude < -90 | latitude > 90, na.rm = TRUE),
+    invalid_lon = sum(longitude < 100 | longitude > 180, na.rm = TRUE),
+    missing_coords = sum(is.na(latitude) | is.na(longitude))
+  )
+
+print("Coordinate validation:")
+print(coordinate_check)
+```
+
+---
+
+## Exercise 2: Basic Geographic Patterns
+
+### 2.1 State-Level Health Outcomes
+
+Analyze basic geographic patterns in health outcomes by state.
+
+```r
+# State-level osteoarthritis prevalence
+state_prevalence <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    total_patients = n(),
+    oa_cases = sum(osteoarthritis, na.rm = TRUE),
+    oa_prevalence = oa_cases / total_patients * 100,
+    mean_age = mean(age, na.rm = TRUE),
+    mean_severity = mean(oa_severity, na.rm = TRUE),
+    mean_income = mean(household_income, na.rm = TRUE)
+  ) %>%
+  arrange(desc(oa_prevalence))
+
+print("OA prevalence by state:")
+print(state_prevalence)
+
+# State-level healthcare utilization
+state_utilization <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    mean_gp_visits = mean(gp_visits_year, na.rm = TRUE),
+    mean_specialist_visits = mean(specialist_visits_year, na.rm = TRUE),
+    mean_hospitalizations = mean(hospitalizations_year, na.rm = TRUE),
+    mean_healthcare_cost = mean(total_healthcare_cost, na.rm = TRUE),
+    mean_distance_gp = mean(distance_to_gp, na.rm = TRUE)
+  )
+
+print("Healthcare utilization by state:")
+print(state_utilization)
+```
+
+### 2.2 Remoteness Area Analysis
+
+Analyze health outcomes by remoteness classification.
+
+```r
+# Remoteness area analysis
+remoteness_analysis <- geographic_data %>%
+  group_by(remoteness_area) %>%
+  summarise(
+    n_patients = n(),
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE) * 100,
+    mean_age = mean(age, na.rm = TRUE),
+    mean_income = mean(household_income, na.rm = TRUE),
+    mean_distance_gp = mean(distance_to_gp, na.rm = TRUE),
+    mean_gp_visits = mean(gp_visits_year, na.rm = TRUE),
+    mean_specialist_visits = mean(specialist_visits_year, na.rm = TRUE),
+    mean_healthcare_cost = mean(total_healthcare_cost, na.rm = TRUE)
+  ) %>%
+  arrange(desc(mean_distance_gp))
+
+print("Health outcomes by remoteness:")
+print(remoteness_analysis)
+
+# Statistical comparison of remoteness areas
+remoteness_stats <- geographic_data %>%
+  group_by(remoteness_area) %>%
+  summarise(
+    mean_distance = mean(distance_to_gp, na.rm = TRUE),
+    sd_distance = sd(distance_to_gp, na.rm = TRUE),
+    mean_visits = mean(gp_visits_year, na.rm = TRUE),
+    sd_visits = sd(gp_visits_year, na.rm = TRUE)
+  )
+
+print("Remoteness statistics:")
+print(remoteness_stats)
+```
+
+### 3.3 Socioeconomic Geographic Patterns
+
+Examine how socioeconomic factors vary geographically.
+
+```r
+# Socioeconomic analysis by state
+socioeconomic_state <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    mean_income = mean(household_income, na.rm = TRUE),
+    median_income = median(household_income, na.rm = TRUE),
+    pct_high_education = mean(education_level == "University", na.rm = TRUE) * 100,
+    pct_unemployed = mean(employment_status == "Unemployed", na.rm = TRUE) * 100,
+    mean_seifa = mean(seifa_score, na.rm = TRUE)
+  ) %>%
+  arrange(desc(mean_income))
+
+print("Socioeconomic indicators by state:")
+print(socioeconomic_state)
+
+# Correlation between socioeconomic factors and health outcomes
+socioeconomic_correlations <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    income_health_corr = cor(household_income, osteoarthritis, use = "complete.obs"),
+    education_health_corr = cor(as.numeric(education_level), osteoarthritis, use = "complete.obs"),
+    seifa_health_corr = cor(seifa_score, oa_severity, use = "complete.obs")
+  )
+
+print("Socioeconomic-health correlations by state:")
+print(socioeconomic_correlations)
+```
+
+---
+
+## Exercise 3: Choropleth Mapping
+
+### 3.1 Basic Choropleth Map
+
+Create a basic choropleth map showing OA prevalence by state.
+
+```r
+# Prepare state-level data for mapping
+state_map_data <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE) * 100,
+    total_patients = n(),
+    mean_age = mean(age, na.rm = TRUE),
+    mean_income = mean(household_income, na.rm = TRUE)
+  )
+
+# Create state abbreviations to full names mapping
+state_names <- c(
+  "NSW" = "New South Wales",
+  "VIC" = "Victoria",
+  "QLD" = "Queensland",
+  "SA" = "South Australia",
+  "WA" = "Western Australia",
+  "TAS" = "Tasmania",
+  "NT" = "Northern Territory",
+  "ACT" = "Australian Capital Territory"
+)
+
+state_map_data$state_full <- state_names[state_map_data$state]
+
+print("State-level OA prevalence data:")
+print(state_map_data)
+
+# Basic bar chart as alternative to choropleth
+prevalence_plot <- ggplot(state_map_data, aes(x = reorder(state, oa_prevalence), y = oa_prevalence)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Osteoarthritis Prevalence by State",
+    x = "State",
+    y = "Prevalence (%)"
+  ) +
+  theme_minimal()
+
+print(prevalence_plot)
+```
+
+### 3.2 Healthcare Access Mapping
+
+Create maps showing geographic variations in healthcare access.
+
+```r
+# Healthcare access by state
+access_map_data <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    mean_distance_gp = mean(distance_to_gp, na.rm = TRUE),
+    mean_distance_specialist = mean(distance_to_specialist, na.rm = TRUE),
+    mean_distance_hospital = mean(distance_to_hospital, na.rm = TRUE),
+    pct_long_distance = mean(distance_to_gp > 50, na.rm = TRUE) * 100
+  )
+
+print("Healthcare access by state:")
+print(access_map_data)
+
+# Distance to GP services visualization
+distance_plot <- ggplot(access_map_data, aes(x = reorder(state, mean_distance_gp), y = mean_distance_gp)) +
+  geom_bar(stat = "identity", fill = "coral") +
+  coord_flip() +
+  labs(
+    title = "Average Distance to GP Services by State",
+    x = "State",
+    y = "Distance (km)"
+  ) +
+  theme_minimal()
+
+print(distance_plot)
+
+# Healthcare access disparity analysis
+access_disparity <- geographic_data %>%
+  mutate(
+    access_category = case_when(
+      distance_to_gp <= 5 ~ "Excellent",
+      distance_to_gp <= 20 ~ "Good",
+      distance_to_gp <= 50 ~ "Moderate",
+      TRUE ~ "Poor"
+    )
+  ) %>%
+  group_by(state, access_category) %>%
+  summarise(count = n()) %>%
+  group_by(state) %>%
+  mutate(pct = count / sum(count) * 100)
+
+print("Healthcare access categories by state:")
+print(access_disparity)
+```
+
+### 3.3 Socioeconomic Mapping
+
+Create maps showing socioeconomic disparities.
+
+```r
+# Socioeconomic mapping data
+socioeconomic_map <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    mean_income = mean(household_income, na.rm = TRUE),
+    pct_low_income = mean(household_income < 40000, na.rm = TRUE) * 100,
+    mean_seifa = mean(seifa_score, na.rm = TRUE),
+    pct_high_education = mean(education_level == "University", na.rm = TRUE) * 100
+  )
+
+print("Socioeconomic indicators by state:")
+print(socioeconomic_map)
+
+# Income distribution visualization
+income_plot <- ggplot(socioeconomic_map, aes(x = reorder(state, mean_income), y = mean_income)) +
+  geom_bar(stat = "identity", fill = "forestgreen") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Average Household Income by State",
+    x = "State",
+    y = "Income ($)"
+  ) +
+  theme_minimal()
+
+print(income_plot)
+
+# Education level analysis
+education_analysis <- geographic_data %>%
+  group_by(state, education_level) %>%
+  summarise(count = n()) %>%
+  group_by(state) %>%
+  mutate(pct = count / sum(count) * 100) %>%
+  filter(education_level == "University")
+
+print("University education rates by state:")
+print(education_analysis)
+```
+
+---
+
+## Exercise 4: Spatial Autocorrelation Analysis
+
+### 4.1 Moran's I Analysis
+
+Perform spatial autocorrelation analysis to identify geographic clustering.
+
+```r
+# Prepare data for spatial analysis
+spatial_data <- geographic_data %>%
+  filter(!is.na(latitude) & !is.na(longitude)) %>%
+  group_by(state) %>%
+  summarise(
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE),
+    mean_income = mean(household_income, na.rm = TRUE),
+    mean_distance = mean(distance_to_gp, na.rm = TRUE),
+    centroid_lat = mean(latitude, na.rm = TRUE),
+    centroid_lon = mean(longitude, na.rm = TRUE),
+    n_patients = n()
+  ) %>%
+  filter(n_patients > 100)  # Only states with sufficient data
+
+print("Spatial data for analysis:")
+print(spatial_data)
+
+# Calculate Moran's I for OA prevalence
+# Note: This is a simplified analysis due to data structure
+# In practice, you would use proper spatial weights matrices
+
+# Simple distance-based correlation analysis
+state_distances <- dist(spatial_data[, c("centroid_lat", "centroid_lon")])
+state_correlations <- cor(spatial_data$oa_prevalence, method = "spearman")
+
+cat("State-level OA prevalence correlation analysis:\n")
+cat("Number of states with data:", nrow(spatial_data), "\n")
+cat("OA prevalence range:", range(spatial_data$oa_prevalence), "\n")
+```
+
+### 4.2 Geographic Clustering
+
+Identify geographic clusters of health outcomes.
+
+```r
+# Geographic clustering analysis
+clustering_data <- geographic_data %>%
+  mutate(
+    # Create geographic clusters based on latitude/longitude
+    lat_cluster = cut(latitude,
+                     breaks = quantile(latitude, probs = 0:4/4, na.rm = TRUE),
+                     labels = c("South", "South-Central", "North-Central", "North")),
+    lon_cluster = cut(longitude,
+                     breaks = quantile(longitude, probs = 0:4/4, na.rm = TRUE),
+                     labels = c("West", "West-Central", "East-Central", "East"))
+  ) %>%
+  unite("geo_cluster", lat_cluster, lon_cluster, sep = "-", remove = FALSE)
+
+# Analyze clusters
+cluster_analysis <- clustering_data %>%
+  group_by(geo_cluster) %>%
+  summarise(
+    n_patients = n(),
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE) * 100,
+    mean_age = mean(age, na.rm = TRUE),
+    mean_income = mean(household_income, na.rm = TRUE),
+    mean_distance = mean(distance_to_gp, na.rm = TRUE)
+  ) %>%
+  arrange(desc(oa_prevalence))
+
+print("Geographic cluster analysis:")
+print(cluster_analysis)
+
+# Cluster visualization
+cluster_plot <- ggplot(cluster_analysis, aes(x = reorder(geo_cluster, oa_prevalence), y = oa_prevalence)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  coord_flip() +
+  labs(
+    title = "OA Prevalence by Geographic Cluster",
+    x = "Geographic Cluster",
+    y = "OA Prevalence (%)"
+  ) +
+  theme_minimal()
+
+print(cluster_plot)
+```
+
+### 4.3 Hot Spot Analysis
+
+Identify areas with significantly high or low health outcomes.
+
+```r
+# Hot spot analysis using statistical thresholds
+hotspot_analysis <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE),
+    prevalence_se = sqrt(oa_prevalence * (1 - oa_prevalence) / n()),
+    z_score = (oa_prevalence - mean(geographic_data$osteoarthritis, na.rm = TRUE)) /
+              sd(geographic_data$osteoarthritis, na.rm = TRUE),
+    n_patients = n()
+  ) %>%
+  mutate(
+    hotspot_category = case_when(
+      z_score > 2 ~ "Hot Spot (High)",
+      z_score < -2 ~ "Cold Spot (Low)",
+      TRUE ~ "Average"
+    )
+  ) %>%
+  arrange(desc(z_score))
+
+print("Hot spot analysis:")
+print(hotspot_analysis)
+
+# Hot spot visualization
+hotspot_plot <- ggplot(hotspot_analysis, aes(x = reorder(state, z_score), y = z_score, fill = hotspot_category)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_fill_manual(values = c("Hot Spot (High)" = "red", "Cold Spot (Low)" = "blue", "Average" = "gray")) +
+  labs(
+    title = "Geographic Hot Spot Analysis for OA Prevalence",
+    x = "State",
+    y = "Z-Score",
+    fill = "Category"
+  ) +
+  theme_minimal()
+
+print(hotspot_plot)
+```
+
+---
+
+## Exercise 5: Spatial Regression Analysis
+
+### 5.1 Ordinary Least Squares Regression
+
+Perform basic spatial regression analysis.
+
+```r
+# Prepare data for regression
+regression_data <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE),
+    mean_age = mean(age, na.rm = TRUE),
+    mean_income = mean(household_income, na.rm = TRUE),
+    mean_distance = mean(distance_to_gp, na.rm = TRUE),
+    pct_urban = mean(urban_rural == "Urban", na.rm = TRUE),
+    mean_seifa = mean(seifa_score, na.rm = TRUE),
+    n_patients = n()
+  ) %>%
+  filter(n_patients > 100)
+
+print("Regression data summary:")
+print(regression_data)
+
+# OLS regression model
+ols_model <- lm(oa_prevalence ~ mean_age + mean_income + mean_distance +
+                pct_urban + mean_seifa, data = regression_data)
+
+print("OLS regression results:")
+summary(ols_model)
+
+# Model diagnostics
+print("Model diagnostics:")
+cat("R-squared:", summary(ols_model)$r.squared, "\n")
+cat("Adjusted R-squared:", summary(ols_model)$adj.r.squared, "\n")
+```
+
+### 5.2 Geographic Effects Modeling
+
+Analyze geographic effects on health outcomes.
+
+```r
+# Geographic effects analysis
+geographic_effects <- geographic_data %>%
+  mutate(
+    # Create geographic regions
+    region = case_when(
+      state %in% c("NSW", "VIC", "ACT") ~ "South-East",
+      state %in% c("QLD") ~ "North-East",
+      state %in% c("SA", "NT") ~ "Central",
+      state %in% c("WA") ~ "West",
+      state %in% c("TAS") ~ "South"
+    )
+  ) %>%
+  group_by(region) %>%
+  summarise(
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE),
+    mean_age = mean(age, na.rm = TRUE),
+    mean_income = mean(household_income, na.rm = TRUE),
+    mean_distance = mean(distance_to_gp, na.rm = TRUE),
+    n_states = n_distinct(state)
+  )
+
+print("Regional geographic effects:")
+print(geographic_effects)
+
+# Regional comparison visualization
+regional_plot <- ggplot(geographic_effects, aes(x = reorder(region, oa_prevalence), y = oa_prevalence)) +
+  geom_bar(stat = "identity", fill = "orange") +
+  coord_flip() +
+  labs(
+    title = "OA Prevalence by Geographic Region",
+    x = "Region",
+    y = "OA Prevalence"
+  ) +
+  theme_minimal()
+
+print(regional_plot)
+```
+
+### 5.3 Healthcare Access Regression
+
+Model the relationship between healthcare access and health outcomes.
+
+```r
+# Healthcare access regression
+access_regression <- lm(oa_prevalence ~ mean_distance + pct_urban + mean_income,
+                       data = regression_data)
+
+print("Healthcare access regression:")
+summary(access_regression)
+
+# Access disparity analysis
+access_disparity_analysis <- geographic_data %>%
+  mutate(
+    access_quartile = cut(distance_to_gp,
+                         breaks = quantile(distance_to_gp, probs = 0:4/4, na.rm = TRUE),
+                         labels = c("Q1 (Closest)", "Q2", "Q3", "Q4 (Farthest)"))
+  ) %>%
+  group_by(access_quartile) %>%
+  summarise(
+    n_patients = n(),
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE) * 100,
+    mean_gp_visits = mean(gp_visits_year, na.rm = TRUE),
+    mean_specialist_visits = mean(specialist_visits_year, na.rm = TRUE),
+    mean_cost = mean(total_healthcare_cost, na.rm = TRUE)
+  )
+
+print("Healthcare access disparity analysis:")
+print(access_disparity_analysis)
+
+# Access disparity visualization
+access_disparity_plot <- ggplot(access_disparity_analysis,
+                               aes(x = access_quartile, y = oa_prevalence)) +
+  geom_bar(stat = "identity", fill = "darkred") +
+  labs(
+    title = "OA Prevalence by Healthcare Access Distance",
+    x = "Access Distance Quartile",
+    y = "OA Prevalence (%)"
+  ) +
+  theme_minimal()
+
+print(access_disparity_plot)
+```
+
+---
+
+## Exercise 6: Policy Implications and Recommendations
+
+### 6.1 Geographic Health Policy Analysis
+
+Analyze geographic disparities for health policy recommendations.
+
+```r
+# Policy analysis data
+policy_analysis <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE) * 100,
+    healthcare_access = mean(distance_to_gp, na.rm = TRUE),
+    socioeconomic_status = mean(seifa_score, na.rm = TRUE),
+    healthcare_utilization = mean(total_healthcare_cost, na.rm = TRUE),
+    n_patients = n()
+  ) %>%
+  mutate(
+    # Calculate disparity indices
+    access_disparity = healthcare_access / mean(healthcare_access),
+    prevalence_disparity = oa_prevalence / mean(oa_prevalence),
+    socioeconomic_disparity = socioeconomic_status / mean(socioeconomic_status)
+  ) %>%
+  arrange(desc(oa_prevalence))
+
+print("Policy analysis - geographic disparities:")
+print(policy_analysis)
+
+# Priority areas for intervention
+priority_states <- policy_analysis %>%
+  filter(oa_prevalence > mean(oa_prevalence) & healthcare_access > mean(healthcare_access)) %>%
+  arrange(desc(oa_prevalence))
+
+print("Priority states for healthcare intervention:")
+print(priority_states)
+```
+
+### 6.2 Resource Allocation Recommendations
+
+Develop recommendations for geographic resource allocation.
+
+```r
+# Resource allocation analysis
+resource_allocation <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    population_size = n(),
+    oa_burden = sum(osteoarthritis, na.rm = TRUE),
+    current_resources = mean(gp_visits_year + specialist_visits_year, na.rm = TRUE),
+    access_barrier = mean(distance_to_gp > 20, na.rm = TRUE)
+  ) %>%
+  mutate(
+    # Calculate resource needs
+    resource_need_index = (oa_burden / population_size) * access_barrier,
+    recommended_allocation = resource_need_index / sum(resource_need_index) * 100
+  ) %>%
+  arrange(desc(recommended_allocation))
+
+print("Resource allocation recommendations:")
+print(resource_allocation)
+
+# Resource allocation visualization
+allocation_plot <- ggplot(resource_allocation,
+                         aes(x = reorder(state, recommended_allocation),
+                             y = recommended_allocation)) +
+  geom_bar(stat = "identity", fill = "darkgreen") +
+  coord_flip() +
+  labs(
+    title = "Recommended Healthcare Resource Allocation by State",
+    x = "State",
+    y = "Recommended Allocation (%)"
+  ) +
+  theme_minimal()
+
+print(allocation_plot)
+```
+
+### 6.3 Equity Analysis
+
+Analyze geographic equity in health outcomes and access.
+
+```r
+# Equity analysis
+equity_analysis <- geographic_data %>%
+  mutate(
+    income_quartile = cut(household_income,
+                         breaks = quantile(household_income, probs = 0:4/4, na.rm = TRUE),
+                         labels = c("Q1 (Lowest)", "Q2", "Q3", "Q4 (Highest)"))
+  ) %>%
+  group_by(state, income_quartile) %>%
+  summarise(
+    oa_prevalence = mean(osteoarthritis, na.rm = TRUE) * 100,
+    mean_distance = mean(distance_to_gp, na.rm = TRUE),
+    mean_visits = mean(gp_visits_year, na.rm = TRUE),
+    n_patients = n()
+  ) %>%
+  filter(n_patients > 10)
+
+print("Equity analysis - OA prevalence by income quartile:")
+print(equity_analysis)
+
+# Equity visualization
+equity_plot <- ggplot(equity_analysis,
+                     aes(x = income_quartile, y = oa_prevalence, fill = state)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "OA Prevalence by Income Quartile and State",
+    x = "Income Quartile",
+    y = "OA Prevalence (%)",
+    fill = "State"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+print(equity_plot)
+
+# Equity metrics
+equity_metrics <- geographic_data %>%
+  group_by(state) %>%
+  summarise(
+    # Concentration index for OA prevalence by income
+    concentration_index = cor(seq(1, n()), household_income, method = "spearman"),
+    # Access equity
+    access_equity = 1 - sd(distance_to_gp, na.rm = TRUE) / mean(distance_to_gp, na.rm = TRUE)
+  )
+
+print("Equity metrics by state:")
+print(equity_metrics)
+```
+
+---
+
+## Key Takeaways
+
+1. **Geographic Patterns**: Health outcomes show significant geographic variation across Australian states and territories
+2. **Access Disparities**: Distance to healthcare services strongly influences utilization and outcomes
+3. **Socioeconomic Factors**: Income, education, and employment status correlate with geographic health disparities
+4. **Spatial Clustering**: Health outcomes tend to cluster geographically, indicating spatial autocorrelation
+5. **Policy Implications**: Geographic analysis informs targeted healthcare resource allocation and policy development
+
+## Next Steps
+
+- **Advanced Spatial Methods**: Learn spatial regression and geographically weighted regression
+- **Real Geographic Data**: Apply techniques to actual Australian health datasets
+- **Interactive Mapping**: Create web-based interactive health maps
+- **Temporal Geographic Analysis**: Analyze how geographic patterns change over time
+
+## Additional Resources
+
+- [Spatial Epidemiology](https://www.sciencedirect.com/topics/medicine-and-dentistry/spatial-epidemiology)
+- [Geographic Information Systems in Public Health](https://www.cdc.gov/dhdsp/maps/gisx/resources.html)
+- [Australian Institute of Health and Welfare Geographic Data](https://www.aihw.gov.au/reports-data/health-welfare-services)
+
+---
+
+*This tutorial is part of the AUS-OA educational series demonstrating geographic health disparities analysis techniques.*</content>
+<parameter name="filePath">\\wsl.localhost\Ubuntu\home\doughnut\github\aus_oa_public\tutorials\tutorial_04_geographic_disparities\tutorial_exercises.Rmd
