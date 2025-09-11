@@ -40,7 +40,7 @@
 - Added onboarding checklist and presentation materials
 - Enhanced API documentation and examples
 
-*Released on 2025-09-11*
+*Released on 2025-09-12 - Package successfully built and ready for CRAN submission*
 
 # ausoa NEWS
 

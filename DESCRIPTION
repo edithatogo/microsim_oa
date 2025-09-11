@@ -1,61 +1,9 @@
-﻿Package: ausoa
+Package: ausoa
 Title: A Microsimulation Model of Osteoarthritis in Australia
 Version: 2.2.0
-Authors@R: c(
-    person("AUS-OA", "Team", role = c("aut", "cre"), email = "dylan.mordaunt@vuw.ac.nz")
-  )
+Author: AUS-OA Team <dylan.mordaunt@vuw.ac.nz>
 Maintainer: Dylan Mordaunt <dylan.mordaunt@vuw.ac.nz>
-Description: A dynamic discrete time microsimulation model specifically focused on osteoarthritis health economics and policy evaluation in Australia.
-    This enhanced fork includes advanced OA-specific modeling capabilities including
-    complication risk prediction, healthcare system modeling, and comprehensive
-    educational resources for OA research.
-    Original upstream repository: https://github.com/UnimelbHealthEconomics/AUS_OA_public
-License: GPL-3 + file LICENSE
-URL: https://github.com/edithatogo/microsim_oa, https://github.com/UnimelbHealthEconomics/AUS_OA_public (upstream)
-BugReports: https://github.com/edithatogo/microsim_oa/issues
+Description: A dynamic discrete time microsimulation model for osteoarthritis health economics.
+License: GPL-3
 Depends: R (>= 4.0.0)
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
-Imports:
-    dplyr,
-    forcats,
-    ggplot2,
-    stringr,
-    tidyr,
-    yaml,
-    purrr,
-    here,
-    data.table,
-    rlang,
-    scales,
-    magrittr,
-    readr,
-    readxl,
-    ragg,
-    arrow
-Suggests:
-    testthat (>= 3.0.0),
-    covr,
-    pkgdown,
-    lintr,
-    styler,
-    knitr,
-    rmarkdown,
-    rcmdcheck,
-    devtools,
-    HDInterval,
-    pdp,
-    caret,
-    mockery,
-    pROC,
-    bench,
-    goodpractice,
-    profvis,
-    rhub,
-    spelling,
-    cyclocomp,
-    pkgdepends,
-    cranlogs
-VignetteBuilder: knitr
-Config/testthat/edition: 3

@@ -14,8 +14,11 @@ if (!require("devtools")) {
 
 # Clean previous builds
 cat("Cleaning previous builds...\n")
-if (file.exists("ausoa_2.0.1.tar.gz")) {
-  file.remove("ausoa_2.0.1.tar.gz")
+# Remove any existing tar.gz files
+existing_files <- list.files(pattern = "ausoa_.*\\.tar\\.gz")
+if (length(existing_files) > 0) {
+  file.remove(existing_files)
+  cat("Removed", length(existing_files), "existing package files\n")
 }
 
 # Run document to ensure man files are up to date
