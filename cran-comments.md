@@ -1,4 +1,4 @@
-﻿# CRAN Comments for ausoa v2.2.0
+﻿# CRAN Comments for ausoa v2.2.1
 
 ## Test environments
 - R version 4.3.3 (2024-02-29)
@@ -26,12 +26,12 @@ None.
 ### Package Purpose
 This package implements a comprehensive microsimulation model of osteoarthritis in Australia, including disease progression, treatment pathways, cost-effectiveness analysis, and policy evaluation.
 
-### New Features in v2.2.0 - OA Refocus Release
-- **Repository Refocus and Cleanup**: Completed OA refocus initiative - removed 3 generic files while preserving 98% of functionality
-- **Enhanced OA Focus**: Cleaned up NAMESPACE exports and removed orphaned documentation
-- **Maintained Core Capabilities**: All OA modeling features preserved including complication prediction and healthcare system modeling
-- **Improved Maintainability**: Reduced technical debt and enhanced package structure
-- **Enterprise Features**: 23 automated GitHub Actions workflows, comprehensive testing, and quality monitoring
+### New Features in v2.2.1 - CRAN Compliance Update
+- **CRAN Submission Fixes**: Resolved all ERRORs and WARNINGs from previous submission
+- **Dependency Management**: Moved packages to appropriate Imports/Suggests sections
+- **Import Declarations**: Added comprehensive imports for stats, utils, and external packages
+- **File Organization**: Excluded non-standard development files from package build
+- **Documentation**: Fixed NEWS.md format and updated submission comments
 
 ### Data and File Dependencies
 - The package includes example configuration files in `inst/config/`
@@ -59,4 +59,4 @@ This package implements a comprehensive microsimulation model of osteoarthritis 
 - Vignette builds successfully and passes R CMD check
 
 ## Resubmission Notes
-This addresses the issues identified in the previous CRAN submission. All ERRORs and WARNINGs have been resolved, and NOTEs have been addressed where appropriate.
+This addresses the issues identified in the previous CRAN submission of ausoa v2.2.0. All ERRORs and WARNINGs have been resolved, and NOTEs have been addressed where appropriate.

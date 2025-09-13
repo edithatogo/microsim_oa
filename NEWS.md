@@ -1,4 +1,13 @@
-﻿
+﻿# ausoa 2.2.1
+
+## CRAN Submission Fixes
+
+- Fixed CRAN submission issues: moved dependencies to Imports, added missing imports, excluded non-standard files
+- Resolved test failures due to optional dependencies not being available during CRAN checks
+- Fixed NEWS.md format issues and removed unparseable sections
+- Added comprehensive imports for stats and utils functions in NAMESPACE
+- Updated cran-comments.md for resubmission
+
 # ausoa 2.2.0
 
 ## Repository Refocus and Cleanup
@@ -8,38 +17,3 @@
 - Enhanced repository focus on osteoarthritis health economics
 - Maintained all core OA modeling capabilities including complication prediction and healthcare system modeling
 - Improved package maintainability and reduced technical debt
-
-## Bug Fixes and Improvements
-
-- Enhanced automated testing and CI/CD workflows (23 new GitHub Actions)
-- Improved code quality monitoring and health scoring
-- Added comprehensive performance profiling capabilities
-- Implemented automated documentation deployment
-- Enhanced developer experience with automated setup tools
-- Added repository health monitoring and alerting system
-- Improved release management automation
-- Added enterprise-grade security scanning
-- Enhanced dependency management and updates
-- Added advanced analytics and reporting capabilities
-
-## Technical Enhancements
-
-- Repository transformed to enterprise-grade development environment
-- 10/10 testing strategy with complete automation
-- Proactive monitoring and alerting system
-- Automated quality gates and validation
-- Comprehensive training materials and documentation
-- Performance regression detection
-- Automated release validation and deployment
-
-## Documentation
-
-- Added comprehensive team training guide
-- Created workflow overview and cheat sheets
-- Implemented automated documentation deployment
-- Added onboarding checklist and presentation materials
-- Enhanced API documentation and examples
-
-*Released on 2025-09-12 - Package successfully built and ready for CRAN submission*
-
-
