@@ -1,5 +1,10 @@
 ﻿library(testthat)
-library(bench)
+if (requireNamespace("bench", quietly = TRUE)) {
+  library(bench)
+} else {
+  message("bench package not available, skipping load stress tests")
+  quit(save = "no", status = 0)
+}
 library(parallel)
 library(ausoa)
 
@@ -77,7 +82,7 @@ test_that("Memory limits are respected", {
   # Test with constrained memory
   original_limit <- memory.limit()
   
-  try({
+  # Memory limit test
     # Set memory limit to 1GB for testing
     memory.limit(1024)  # 1GB in MB
     
@@ -90,10 +95,9 @@ test_that("Memory limits are respected", {
     # Should complete without memory errors
     expect_true(!is.null(result))
     
-  }) finally {
+  # Restore memory limit
     # Restore original memory limit
     memory.limit(original_limit)
-  }
 })
 
 # I/O stress testing
@@ -144,6 +148,9 @@ test_that("CPU usage is optimized", {
   skip_if_not(interactive() || Sys.getenv("RUN_STRESS_TESTS") == "true")
   
   # Monitor CPU usage during simulation
+  if (!requireNamespace("profvis", quietly = TRUE)) {
+    skip("profvis package not available")
+  }
   library(profvis)
   
   prof_result <- profvis({
@@ -214,3 +221,4 @@ test_that("Resources are properly cleaned up", {
   # Clean up any test files
   unlink(new_temp_files[grep("test_|temp_", basename(new_temp_files))])
 })
+

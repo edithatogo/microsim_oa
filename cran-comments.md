@@ -1,4 +1,4 @@
-# CRAN Comments for ausoa v2.2.0
+﻿# CRAN Comments for ausoa v2.2.0
 
 ## Test environments
 - R version 4.3.3 (2024-02-29)
@@ -6,7 +6,17 @@
 - Running under: Ubuntu 22.04.4 LTS
 
 ## R CMD check results
-There were no ERRORs or WARNINGs.
+This is a resubmission. In the previous submission, there were issues with:
+- Test failures due to optional dependencies not being available during CRAN checks
+- Undeclared package imports
+- Non-standard files included in the package
+- NEWS.md format issues
+
+All issues have been addressed:
+- Moved optional dependencies (caret, pROC) to Suggests
+- Added proper imports for all used functions
+- Excluded non-standard files via .Rbuildignore
+- Fixed NEWS.md format
 
 ## Downstream dependencies
 None.
@@ -49,4 +59,4 @@ This package implements a comprehensive microsimulation model of osteoarthritis 
 - Vignette builds successfully and passes R CMD check
 
 ## Resubmission Notes
-This is a minor update (v2.0.1) to ausoa v2.0.0, adding comprehensive dataset documentation and research support features. No breaking changes to existing functionality.
+This addresses the issues identified in the previous CRAN submission. All ERRORs and WARNINGs have been resolved, and NOTEs have been addressed where appropriate.

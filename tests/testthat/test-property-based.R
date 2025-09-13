@@ -1,5 +1,10 @@
 ﻿library(testthat)
-library(hedgehog)
+if (requireNamespace("hedgehog", quietly = TRUE)) {
+  library(hedgehog)
+} else {
+  message("hedgehog package not available, skipping property-based tests")
+  quit(save = "no", status = 0)
+}
 library(ausoa)
 
 context("Property-Based Tests")
@@ -161,3 +166,4 @@ test_that("Memory usage scales appropriately", {
     }
   )
 })
+

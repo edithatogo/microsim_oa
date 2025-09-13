@@ -245,3 +245,5 @@ test_that("Resource usage follows contracts", {
   # Should return valid results
   expect_true(!is.null(result))
 })
+
+

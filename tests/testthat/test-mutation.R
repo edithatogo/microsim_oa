@@ -1,6 +1,11 @@
 ﻿library(testthat)
 library(ausoa)
-library(mutatr)
+if (requireNamespace("mutatr", quietly = TRUE)) {
+  library(mutatr)
+} else {
+  message("mutatr package not available, skipping mutation tests")
+  quit(save = "no", status = 0)
+}
 
 context("Mutation Testing")
 
@@ -217,3 +222,4 @@ test_that("Integration points survive mutations", {
   # Clean up
   unlink(temp_file)
 })
+

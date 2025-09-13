@@ -14,9 +14,18 @@
 # Load required libraries
 library(data.table)
 library(dplyr)
-library(caret)
+if (requireNamespace("caret", quietly = TRUE)) {
+  library(caret)
+} else {
+  message("caret package not available, skipping predictive modeling tests")
+  quit(save = "no", status = 0)
+}
 library(ggplot2)
-library(pROC)
+if (requireNamespace("pROC", quietly = TRUE)) {
+  library(pROC)
+} else {
+  message("pROC package not available, some tests may be skipped")
+}
 
 # Note: Predictive modeling functions should be available through the ausoa package
 # No need to source files directly

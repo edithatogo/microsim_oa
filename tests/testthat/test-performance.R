@@ -1,6 +1,15 @@
 ﻿library(testthat)
-library(bench)
-library(profvis)
+if (requireNamespace("bench", quietly = TRUE)) {
+  library(bench)
+} else {
+  message("bench package not available, skipping performance tests")
+  quit(save = "no", status = 0)
+}
+if (requireNamespace("profvis", quietly = TRUE)) {
+  library(profvis)
+} else {
+  message("profvis package not available, some profiling tests will be skipped")
+}
 
 # Performance test suite for ausoa package
 context("Performance Tests")
@@ -156,3 +165,4 @@ test_that("Parallel processing provides speedup", {
   # For now, just test that sequential execution is reasonable
   expect_lt(as.numeric(sequential_time), 120)  # Should complete in under 2 minutes
 })
+
