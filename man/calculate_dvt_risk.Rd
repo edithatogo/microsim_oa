@@ -20,20 +20,16 @@ DVT is a major complication following total knee arthroplasty with potential pro
 to pulmonary embolism (PE). The module includes:
 }
 \details{
-\itemize{
-\item Risk stratification based on clinical factors
-\item Prophylaxis strategy modeling (mechanical vs pharmacological)
-\item DVT occurrence and progression to PE
-\item Treatment pathways and outcomes
-\item Cost and QALY impact assessment
-}
+- Risk stratification based on clinical factors
+- Prophylaxis strategy modeling (mechanical vs pharmacological)
+- DVT occurrence and progression to PE
+- Treatment pathways and outcomes
+- Cost and QALY impact assessment
 
 Key Clinical References:
-\itemize{
-\item NICE guidelines for venous thromboembolism prevention
-\item ACCP guidelines for antithrombotic therapy
-\item Australian Orthopaedic Association guidelines
-\item Meta-analyses of DVT prophylaxis effectiveness
+- NICE guidelines for venous thromboembolism prevention
+- ACCP guidelines for antithrombotic therapy
+- Australian Orthopaedic Association guidelines
+- Meta-analyses of DVT prophylaxis effectiveness
 Calculate DVT Risk Stratification
-}
 }

@@ -19,28 +19,22 @@ This module implements detailed modeling of public vs private healthcare pathway
 in the Australian healthcare system. It models differences in:
 }
 \details{
-\itemize{
-\item Access and waiting times
-\item Treatment quality and outcomes
-\item Costs and cost-effectiveness
-\item Resource utilization
-\item Patient satisfaction and experience
-}
+- Access and waiting times
+- Treatment quality and outcomes
+- Costs and cost-effectiveness
+- Resource utilization
+- Patient satisfaction and experience
 
 Key Features:
-\itemize{
-\item Pathway-specific outcome modifiers
-\item Cost differential modeling
-\item Quality of care adjustments
-\item Access and equity considerations
-\item Integration with existing simulation framework
-}
+- Pathway-specific outcome modifiers
+- Cost differential modeling
+- Quality of care adjustments
+- Access and equity considerations
+- Integration with existing simulation framework
 
 Australian Healthcare Context:
-\itemize{
-\item Public system: Universal coverage, longer waits, standardized care
-\item Private system: Faster access, choice of provider, potential quality differences
-\item Mixed system: Patients can choose or be directed to different pathways
+- Public system: Universal coverage, longer waits, standardized care
+- Private system: Faster access, choice of provider, potential quality differences
+- Mixed system: Patients can choose or be directed to different pathways
 Calculate Pathway-Specific Outcome Modifiers
-}
 }

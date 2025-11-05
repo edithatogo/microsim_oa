@@ -1,0 +1,74 @@
+---
+title: "AUS-OA Microsimulation Model: Technical Documentation"
+author: "AUS-OA Development Team"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::gitbook:
+    config:
+      toc:
+        collapse: subsection
+        scroll_highlight: yes
+        smooth_link: yes
+      toolbar:
+        position: static
+  bookdown::pdf_book:
+    includes:
+      in_header: preamble.tex
+    latex_engine: xelatex
+    citation_package: natbib
+    keep_tex: yes
+  bookdown::epub_book: default
+documentclass: book
+bibliography: [book.bib]
+biblio-style: apalike
+link-citations: yes
+github-repo: edithatogo/microsim_oa
+description: "Comprehensive technical documentation for the AUS-OA microsimulation model of osteoarthritis in Australia."
+---
+
+# Welcome to AUS-OA {-}
+
+The AUS-OA (Australian Osteoarthritis) microsimulation model is a sophisticated tool for modeling the progression of osteoarthritis and evaluating health economic outcomes in the Australian population. This documentation provides comprehensive information about the model's architecture, implementation, and usage.
+
+## Overview
+
+AUS-OA is a dynamic discrete-time microsimulation model designed to evaluate osteoarthritis health economics and policy interventions in Australia. The model simulates individual life trajectories with respect to osteoarthritis progression, treatment interventions, and economic outcomes.
+
+## Intended Audience
+
+This documentation is intended for:
+
+- Researchers wanting to understand the model architecture
+- Policymakers evaluating health interventions
+- Developers looking to extend the model
+- Users wanting to run simulations
+
+## Document Structure
+
+This book is organized as follows:
+
+- Chapter 1: Introduction to the model
+- Chapter 2: Model architecture and components
+- Chapter 3: Data requirements and input formats
+- Chapter 4: Running simulations
+- Chapter 5: Model validation and results
+- Chapter 6: Extending the model
+- Chapter 7: Troubleshooting and support
+
+```{r include=FALSE}
+# Set global options for the book
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "figures/"
+)
+```
+
+## Prerequisites
+
+To effectively use AUS-OA, you should have:
+
+- R (version 4.0.0 or higher)
+- Basic knowledge of R programming
+- Understanding of microsimulation concepts
+- Domain knowledge of osteoarthritis and health economics

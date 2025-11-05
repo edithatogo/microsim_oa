@@ -18,12 +18,10 @@ Analysis (PSA) framework within the AUS-OA simulation model.
 }
 \details{
 Key Functions:
-\itemize{
-\item integrate_psa_framework(): Main integration function
-\item run_psa_analysis(): Execute PSA with convergence diagnostics
-\item generate_psa_report(): Create comprehensive PSA reports
-\item validate_psa_results(): Validate PSA results and convergence
-\item create_ceac(): Generate Cost-Effectiveness Acceptability Curves
+- integrate_psa_framework(): Main integration function
+- run_psa_analysis(): Execute PSA with convergence diagnostics
+- generate_psa_report(): Create comprehensive PSA reports
+- validate_psa_results(): Validate PSA results and convergence
+- create_ceac(): Generate Cost-Effectiveness Acceptability Curves
 Extract PSA Parameters from Configuration
-}
 }

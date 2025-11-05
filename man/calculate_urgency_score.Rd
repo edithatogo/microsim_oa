@@ -21,20 +21,16 @@ on clinical outcomes and costs.
 }
 \details{
 Key Features:
-\itemize{
-\item Clinical prioritization based on urgency scores
-\item Queue management with capacity constraints
-\item Wait time impacts on outcomes (progression of OA, QALY loss)
-\item Different prioritization schemes (clinical need, age, socioeconomic factors)
-\item Public vs private pathway considerations
-}
+- Clinical prioritization based on urgency scores
+- Queue management with capacity constraints
+- Wait time impacts on outcomes (progression of OA, QALY loss)
+- Different prioritization schemes (clinical need, age, socioeconomic factors)
+- Public vs private pathway considerations
 
 Clinical References:
-\itemize{
-\item Australian Orthopaedic Association guidelines
-\item NICE osteoarthritis guidelines
-\item Health system capacity modeling literature
-\item Wait time impact studies
+- Australian Orthopaedic Association guidelines
+- NICE osteoarthritis guidelines
+- Health system capacity modeling literature
+- Wait time impact studies
 Calculate Clinical Urgency Score for TKA Prioritization
-}
 }

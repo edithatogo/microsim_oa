@@ -34,7 +34,7 @@ curves with columns: implant_type, time_years, survival_probability}
 }
 \value{
 A list containing the updated attribute matrices and a summary of TKA
-risk.
+  risk.
 }
 \description{
 This function models the probability of receiving a TKA for one simulation

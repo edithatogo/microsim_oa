@@ -10,12 +10,12 @@ update_comorbidities(attribute_matrix, comorbidity_params)
 \item{attribute_matrix}{The main data frame of the simulation population.}
 
 \item{comorbidity_params}{A list of parameters for the comorbidities,
-loaded from a config file. Should contain an \code{enabled} flag and a list
-of \code{conditions}.}
+loaded from a config file. Should contain an `enabled` flag and a list
+of `conditions`.}
 }
 \value{
 The updated attribute_matrix with new comorbidity statuses, QALY
-decrements, and costs.
+  decrements, and costs.
 }
 \description{
 This function updates the prevalence of specified comorbidities and calculates

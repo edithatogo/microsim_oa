@@ -1,0 +1,73 @@
+# Model Architecture {#architecture}
+
+## Overview
+
+The AUS-OA microsimulation model follows a modular architecture designed for flexibility and maintainability. The core components include:
+
+- **Population Engine**: Manages individual characteristics and demographics
+- **Disease Progression Module**: Models osteoarthritis development and progression
+- **Intervention Module**: Applies treatment and policy interventions
+- **Cost Calculation Module**: Computes economic outcomes
+- **Output Generation**: Produces statistics and visualizations
+
+## Core Components
+
+### Population Engine
+
+The population engine maintains the attribute matrix containing individual characteristics:
+
+```{r, eval=FALSE}
+# Example structure of attribute matrix
+attribute_matrix <- data.table(
+  id = 1:n,
+  age = sample(18:100, n, replace = TRUE),
+  sex = sample(c("M", "F"), n, replace = TRUE),
+  bmi = rnorm(n, 25, 5),
+  oa_status = rep(FALSE, n),
+  kl_grade = rep(0, n),
+  tka_status = rep(FALSE, n),
+  thv_status = rep(FALSE, n),
+  utility_score = rep(0.85, n),
+  costs = rep(0, n)
+)
+```
+
+### Disease Progression Module
+
+The disease progression module implements the OA_update function which models the development and progression of osteoarthritis based on various risk factors:
+
+- Age
+- BMI
+- Sex
+- Previous joint replacements
+- Comorbidities
+
+### Intervention Module
+
+This module applies policy interventions and treatment scenarios to the population, including:
+
+- Screening programs
+- Treatment protocols
+- Access to joint replacement surgery
+- Rehabilitation programs
+
+## Data Flow
+
+The model follows this general workflow:
+
+1. Initialize population from input data
+2. For each simulation cycle:
+   a. Update disease status
+   b. Apply interventions
+   c. Calculate costs and outcomes
+   d. Update population attributes
+3. Generate final statistics and outputs
+
+## Parameter Structure
+
+Model parameters are organized in configuration files and include:
+
+- Disease progression coefficients
+- Intervention effectiveness parameters
+- Cost parameters
+- Utility weights

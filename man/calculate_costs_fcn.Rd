@@ -14,8 +14,8 @@ latest events for the current cycle.}
 model configuration file.}
 }
 \value{
-The \code{am_new} data.table with new columns for costs incurred
-during the cycle, broken down by perspective.
+The `am_new` data.table with new columns for costs incurred
+  during the cycle, broken down by perspective.
 }
 \description{
 This function calculates various costs for each individual in the attribute

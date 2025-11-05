@@ -1,0 +1,10 @@
+Package: ausoa
+Title: A Microsimulation Model of Osteoarthritis in Australia
+Version: 2.2.0
+Author: AUS-OA Team <dylan.mordaunt@vuw.ac.nz>
+Maintainer: Dylan Mordaunt <dylan.mordaunt@vuw.ac.nz>
+Description: A dynamic discrete time microsimulation model for osteoarthritis health economics.
+License: GPL-3
+Depends: R (>= 4.0.0)
+Encoding: UTF-8
+RoxygenNote: 7.3.3

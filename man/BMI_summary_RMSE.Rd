@@ -15,7 +15,7 @@ BMI_summary_RMSE(
 BMI data.}
 
 \item{BMI_by_sex_and_year}{A data.frame of simulated BMI data, typically from
-\code{BMI_summary_data()}.}
+`BMI_summary_data()`.}
 
 \item{current.mod.value}{(Not used) A value intended for file naming, currently
 has no effect in the function.}

@@ -13,7 +13,7 @@ get_target_indices(am, target_def)
 }
 \value{
 A logical vector indicating which rows of the attribute matrix
-belong to the target population.
+  belong to the target population.
 }
 \description{
 Get Indices of the Target Population for an Intervention

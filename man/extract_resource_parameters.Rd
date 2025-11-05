@@ -18,11 +18,9 @@ module within the AUS-OA simulation framework.
 }
 \details{
 Key Functions:
-\itemize{
-\item integrate_resource_allocation_module(): Main integration function
-\item extract_resource_parameters(): Parameter extraction from config
-\item update_simulation_with_resources(): Update simulation state with resource effects
-\item summarize_resource_impacts(): Generate resource impact summaries
+- integrate_resource_allocation_module(): Main integration function
+- extract_resource_parameters(): Parameter extraction from config
+- update_simulation_with_resources(): Update simulation state with resource effects
+- summarize_resource_impacts(): Generate resource impact summaries
 Extract Resource Allocation Parameters from Configuration
-}
 }

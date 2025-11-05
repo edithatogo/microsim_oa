@@ -22,11 +22,9 @@ in the AUS-OA microsimulation model, including complication risks and treatment 
 }
 \details{
 Key Functions:
-\itemize{
-\item predict_complication_risk(): ML models for PJI, DVT, revision risks
-\item predict_treatment_response(): Personalized treatment effectiveness
-\item create_risk_stratification(): Patient clustering for risk groups
-\item validate_predictions(): Model performance assessment
+- predict_complication_risk(): ML models for PJI, DVT, revision risks
+- predict_treatment_response(): Personalized treatment effectiveness
+- create_risk_stratification(): Patient clustering for risk groups
+- validate_predictions(): Model performance assessment
 Predict Complication Risk Using ML Models
-}
 }

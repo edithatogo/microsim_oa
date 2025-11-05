@@ -13,7 +13,7 @@ f_get_means_freq_sum(df, group_vars)
 }
 \value{
 A data.frame with summary statistics (mean, frequency, sum) for
-each numeric variable and group combination.
+  each numeric variable and group combination.
 }
 \description{
 Calculates the mean, frequency (count of 1s), and sum for all numeric

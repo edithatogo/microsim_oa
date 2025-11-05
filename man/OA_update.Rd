@@ -21,10 +21,10 @@ utility decrements.}
 }
 \value{
 A list containing two data.tables:
-\item{am_curr}{The input \code{am_curr} with intermediate calculations and an
-updated \code{sf6d_change} column.}
-\item{am_new}{The \code{am_new} data.table with updated OA status (\code{oa}, \code{kl2},
-\code{kl3}, \code{kl4}, \code{kl_score}).}
+  \item{am_curr}{The input `am_curr` with intermediate calculations and an
+  updated `sf6d_change` column.}
+  \item{am_new}{The `am_new` data.table with updated OA status (`oa`, `kl2`,
+  `kl3`, `kl4`, `kl_score`).}
 }
 \description{
 This function models the initiation and progression of osteoarthritis (OA) for

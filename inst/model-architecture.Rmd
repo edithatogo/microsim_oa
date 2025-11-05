@@ -1,0 +1,120 @@
+---
+title: "AUS-OA Model Architecture"
+output: html_document
+---
+
+# AUS-OA Model Architecture
+
+This document visualizes the architecture of the AUS-OA microsimulation model.
+
+```{r setup, include=FALSE}
+library(DiagrammeR)
+library(DiagrammeRsvg)
+library(rsvg)
+```
+
+## Model Flowchart
+
+```{r model-flowchart, echo=FALSE, fig.width=12, fig.height=8}
+grViz("
+digraph model_architecture {
+  
+  # Graph settings
+  graph [layout = dot, rankdir = TB, compound = true]
+  
+  # Node styling
+  node [shape = rectangle, style = filled, fillcolor = lightblue]
+  
+  # Input data nodes
+  subgraph cluster_input {
+    label = 'Input Data'
+    style = dashed
+    color = gray
+    
+    pop_data [label = 'Population Data', fillcolor = lightyellow]
+    param_config [label = 'Model Parameters', fillcolor = lightyellow]
+    coeff_data [label = 'Coefficients', fillcolor = lightyellow]
+  }
+  
+  # Processing nodes
+  subgraph cluster_processing {
+    label = 'Processing Core'
+    style = dashed
+    color = gray
+    
+    init_pop [label = 'Initialize Population', fillcolor = lightgreen]
+    sim_cycle [label = 'Simulation Cycle', fillcolor = lightgreen]
+    oa_update [label = 'OA Update', fillcolor = lightgreen]
+    int_apply [label = 'Apply Interventions', fillcolor = lightgreen]
+    costs_calc [label = 'Calculate Costs', fillcolor = lightgreen]
+  }
+  
+  # Output nodes
+  subgraph cluster_output {
+    label = 'Output Generation'
+    style = dashed
+    color = gray
+    
+    stats_calc [label = 'Calculate Statistics', fillcolor = lightcoral]
+    viz_gen [label = 'Generate Visualizations', fillcolor = lightcoral]
+    results_export [label = 'Export Results', fillcolor = lightcoral]
+  }
+  
+  # Connections
+  pop_data -> init_pop
+  param_config -> init_pop
+  coeff_data -> sim_cycle
+  
+  init_pop -> sim_cycle
+  sim_cycle -> oa_update
+  sim_cycle -> int_apply
+  sim_cycle -> costs_calc
+  
+  oa_update -> sim_cycle [label = 'Next cycle']
+  
+  costs_calc -> stats_calc
+  int_apply -> stats_calc
+  oa_update -> stats_calc
+  
+  stats_calc -> viz_gen
+  viz_gen -> results_export
+}
+")
+```
+
+## Model Dependencies
+
+```{r model-dependencies, echo=FALSE, fig.width=10, fig.height=6}
+grViz("
+digraph model_dependencies {
+  
+  # Graph settings
+  graph [layout = dot, rankdir = LR]
+  
+  # Node styling
+  node [shape = rectangle, style = filled, fillcolor = lightblue]
+  
+  # R packages
+  r_core [label = 'R Core', fillcolor = lightyellow]
+  dplyr [label = 'dplyr', fillcolor = lightyellow]
+  data_table [label = 'data.table', fillcolor = lightyellow]
+  ggplot2 [label = 'ggplot2', fillcolor = lightyellow]
+  
+  # AUS-OA functions
+  run_sim [label = 'run_simulation()', fillcolor = lightgreen]
+  calc_costs [label = 'calculate_costs()', fillcolor = lightgreen]
+  oa_upd [label = 'OA_update()', fillcolor = lightgreen]
+  apply_int [label = 'apply_interventions()', fillcolor = lightgreen]
+  
+  # Connections
+  r_core -> run_sim
+  dplyr -> run_sim
+  dplyr -> calc_costs
+  data_table -> run_sim
+  ggplot2 -> run_sim
+  run_sim -> calc_costs
+  run_sim -> oa_upd
+  run_sim -> apply_int
+}
+")
+```

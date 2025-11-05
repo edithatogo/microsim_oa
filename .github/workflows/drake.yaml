@@ -1,0 +1,49 @@
+name: Drake Workflow
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday at 00:00 UTC
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  drake-workflow:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 1
+          packages: |
+            any::drake
+            any::devtools
+            any::dplyr
+
+      - name: Install package
+        run: |
+          devtools::install(dependencies = TRUE)
+        shell: Rscript {0}
+
+      - name: Run Drake workflow
+        run: |
+          # Load the drake configuration
+          source("inst/drake-config.R")
+          
+          # Run the workflow
+          results <- run_workflow()
+          
+          # Print workflow summary
+          drake::drake_status(make_plan())
+        shell: Rscript {0}
+
+      - name: Cache workflow results
+        uses: actions/upload-artifact@v4
+        with:
+          name: drake-workflow-results
+          path: .drake/

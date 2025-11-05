@@ -14,6 +14,7 @@ Imports:
     caret,
     data.table,
     dplyr,
+    drake,
     forcats,
     ggplot2,
     here,
@@ -41,7 +42,15 @@ Suggests:
     bench,
     profvis,
     hedgehog,
-    mutatr
+    mutatr,
+    goodpractice,
+    rhub,
+    revdepcheck,
+    vdiffr,
+    DiagrammeR,
+    bookdown,
+    validator,
+    gert
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 VignetteBuilder: knitr

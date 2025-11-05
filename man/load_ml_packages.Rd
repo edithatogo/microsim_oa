@@ -3,23 +3,19 @@
 \name{load_ml_packages}
 \alias{load_ml_packages}
 \title{Key Components:
-\itemize{
-\item Predictive Modeling Framework: ML models for outcome prediction
-\item Parameter Estimation: Bayesian and ML-based calibration
-\item Advanced Analytics: Clustering, pattern recognition, reinforcement learning
-\item Model Validation: Explainable AI and performance monitoring
-Load Required ML Packages
-}}
+- Predictive Modeling Framework: ML models for outcome prediction
+- Parameter Estimation: Bayesian and ML-based calibration
+- Advanced Analytics: Clustering, pattern recognition, reinforcement learning
+- Model Validation: Explainable AI and performance monitoring
+Load Required ML Packages}
 \usage{
 load_ml_packages()
 }
 \description{
 Key Components:
-\itemize{
-\item Predictive Modeling Framework: ML models for outcome prediction
-\item Parameter Estimation: Bayesian and ML-based calibration
-\item Advanced Analytics: Clustering, pattern recognition, reinforcement learning
-\item Model Validation: Explainable AI and performance monitoring
+- Predictive Modeling Framework: ML models for outcome prediction
+- Parameter Estimation: Bayesian and ML-based calibration
+- Advanced Analytics: Clustering, pattern recognition, reinforcement learning
+- Model Validation: Explainable AI and performance monitoring
 Load Required ML Packages
-}
 }

@@ -15,21 +15,17 @@ Australian healthcare system within the AUS-OA microsimulation framework.
 }
 \details{
 Key Features:
-\itemize{
-\item Hospital capacity modeling by type (public/private, metro/regional)
-\item Regional capacity variations and referral patterns
-\item Dynamic capacity allocation based on demand
-\item Resource utilization tracking
-\item Capacity constraint impacts on wait times and outcomes
-\item Integration with existing waiting list and pathways modules
-}
+- Hospital capacity modeling by type (public/private, metro/regional)
+- Regional capacity variations and referral patterns
+- Dynamic capacity allocation based on demand
+- Resource utilization tracking
+- Capacity constraint impacts on wait times and outcomes
+- Integration with existing waiting list and pathways modules
 
 Australian Healthcare Context:
-\itemize{
-\item Public hospitals: Government-funded, universal access, capacity constraints
-\item Private hospitals: Fee-for-service, faster access, capacity varies by region
-\item Regional variations: Metro areas have more capacity, rural areas have less
-\item Referral patterns: Complex patients may be referred to specialized centers
+- Public hospitals: Government-funded, universal access, capacity constraints
+- Private hospitals: Fee-for-service, faster access, capacity varies by region
+- Regional variations: Metro areas have more capacity, rural areas have less
+- Referral patterns: Complex patients may be referred to specialized centers
 Define Hospital Types and Capacity Structure
-}
 }

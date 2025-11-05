@@ -13,7 +13,7 @@ latest events for the current cycle.}
 \item{cycle.coefficents}{A list of model coefficients.}
 }
 \value{
-The \code{am_new} data.table with updated \code{pain} and \code{function_score} columns.
+The `am_new` data.table with updated `pain` and `function_score` columns.
 }
 \description{
 This function updates the pain and function scores for each individual in

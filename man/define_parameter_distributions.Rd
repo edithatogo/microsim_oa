@@ -18,22 +18,18 @@ sensitivity analysis within the AUS-OA microsimulation model.
 }
 \details{
 Key Features:
-\itemize{
-\item Monte Carlo parameter sampling with uncertainty distributions
-\item Convergence diagnostics and statistical properties validation
-\item Integration with existing simulation framework
-\item Support for various probability distributions (normal, beta, gamma, etc.)
-\item Efficient sampling algorithms for high-dimensional parameter spaces
-\item Comprehensive PSA result analysis and reporting
-}
+- Monte Carlo parameter sampling with uncertainty distributions
+- Convergence diagnostics and statistical properties validation
+- Integration with existing simulation framework
+- Support for various probability distributions (normal, beta, gamma, etc.)
+- Efficient sampling algorithms for high-dimensional parameter spaces
+- Comprehensive PSA result analysis and reporting
 
 PSA Methodology:
-\itemize{
-\item Parameter uncertainty quantification using evidence-based distributions
-\item Monte Carlo simulation with multiple parameter sets
-\item Convergence assessment using statistical diagnostics
-\item Cost-effectiveness analysis under uncertainty
-\item Probabilistic results interpretation
+- Parameter uncertainty quantification using evidence-based distributions
+- Monte Carlo simulation with multiple parameter sets
+- Convergence assessment using statistical diagnostics
+- Cost-effectiveness analysis under uncertainty
+- Probabilistic results interpretation
 Define Parameter Distributions for PSA
-}
 }

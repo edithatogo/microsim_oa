@@ -10,15 +10,15 @@ stats_per_simulation(sim_storage, sim_number, group_vars)
 \item{sim_storage}{A list where each element is a data.frame representing
 the output of a single simulation run.}
 
-\item{sim_number}{The index of the simulation run to process from \code{sim_storage}.}
+\item{sim_number}{The index of the simulation run to process from `sim_storage`.}
 
 \item{group_vars}{A character vector of variable names to group the summary
 statistics by (e.g., c("year", "sex", "age_group")).}
 }
 \value{
 A data.frame in long format containing the summary statistics (N,
-Mean, Sum) for each variable and group combination for the specified
-simulation run.
+  Mean, Sum) for each variable and group combination for the specified
+  simulation run.
 }
 \description{
 This function takes the output of a single simulation run, filters it for

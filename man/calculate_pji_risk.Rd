@@ -22,32 +22,26 @@ clinical, economic, and quality of life impacts.
 \section{Clinical Pathways}{
 
 PJI is modeled through multiple stages:
-\enumerate{
-\item Early infection (<3 months post-surgery)
-\item Delayed infection (3-12 months post-surgery)
-\item Late infection (>12 months post-surgery)
-\item Chronic infection (persistent/recurrent)
-}
+1. Early infection (<3 months post-surgery)
+2. Delayed infection (3-12 months post-surgery)
+3. Late infection (>12 months post-surgery)
+4. Chronic infection (persistent/recurrent)
 }
 
 \section{Risk Factors}{
 
-\itemize{
-\item Age
-\item BMI
-\item Diabetes
-\item Smoking
-\item Immunosuppression
-\item Surgical complexity
-\item Previous infections
-}
+- Age
+- BMI
+- Diabetes
+- Smoking
+- Immunosuppression
+- Surgical complexity
+- Previous infections
 }
 
 \references{
-\itemize{
-\item Australian Orthopaedic Association National Joint Replacement Registry
-\item International Consensus Meeting on PJI
-\item Various clinical studies on PJI epidemiology and outcomes
+- Australian Orthopaedic Association National Joint Replacement Registry
+- International Consensus Meeting on PJI
+- Various clinical studies on PJI epidemiology and outcomes
 Calculate PJI Risk Stratification
-}
 }

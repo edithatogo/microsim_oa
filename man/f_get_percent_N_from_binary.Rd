@@ -14,7 +14,7 @@ f_get_percent_N_from_binary(df, group_vars)
 }
 \value{
 A data.frame with summary statistics (percentage and frequency) for
-each binary variable and group combination.
+  each binary variable and group combination.
 }
 \description{
 Calculates the percentage and frequency of binary (0/1) variables for each

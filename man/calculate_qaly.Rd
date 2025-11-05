@@ -13,8 +13,8 @@ calculate_qaly(attribute_matrix, utility_params)
 for various health states.}
 }
 \value{
-The updated attribute_matrix with the \code{d_sf6d} column populated with
-the total utility decrement for the cycle.
+The updated attribute_matrix with the `d_sf6d` column populated with
+  the total utility decrement for the cycle.
 }
 \description{
 This function calculates the health utility (SF-6D) for each individual

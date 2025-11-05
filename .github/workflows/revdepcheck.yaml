@@ -1,0 +1,54 @@
+name: Revdepcheck
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'  # Monthly on the 1st at 00:00 UTC
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  revdepcheck:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 1
+          packages: |
+            any::devtools
+            any::revdepcheck
+
+      - name: Set up package
+        run: |
+          devtools::install(dependencies = TRUE)
+        shell: Rscript {0}
+
+      - name: Run reverse dependency check
+        run: |
+          # Create revdep directory
+          dir.create("revdep", showWarnings = FALSE)
+          
+          # Run revdepcheck
+          revdepcheck::revdep_check(
+            quiet = FALSE,
+            num_workers = 4
+          )
+          
+          # Save results
+          revdepcheck::revdep_report_results(
+            "revdep/",
+            show_status = TRUE
+          )
+        shell: Rscript {0}
+
+      - name: Save revdep results
+        uses: actions/upload-artifact@v4
+        with:
+          name: revdep-results
+          path: revdep/

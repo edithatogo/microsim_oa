@@ -18,11 +18,9 @@ pathways module within the AUS-OA simulation framework.
 }
 \details{
 Key Functions:
-\itemize{
-\item integrate_public_private_pathways_module(): Main integration function
-\item extract_pathway_parameters(): Parameter extraction from config
-\item update_simulation_with_pathways(): Update simulation state with pathway effects
-\item summarize_pathway_impacts(): Generate pathway impact summaries
+- integrate_public_private_pathways_module(): Main integration function
+- extract_pathway_parameters(): Parameter extraction from config
+- update_simulation_with_pathways(): Update simulation state with pathway effects
+- summarize_pathway_impacts(): Generate pathway impact summaries
 Extract Public-Private Pathways Parameters from Configuration
-}
 }

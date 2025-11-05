@@ -29,12 +29,10 @@ Sensitivity Analysis (PSA) results in the AUS-OA simulation model.
 }
 \details{
 Key Functions:
-\itemize{
-\item plot_ceac(): Cost-Effectiveness Acceptability Curves
-\item plot_psa_scatter(): PSA scatter plots
-\item plot_tornado_diagram(): Tornado diagrams for parameter influence
-\item plot_convergence_diagnostics(): Convergence assessment plots
-\item create_psa_visualization_report(): Generate complete visualization report
+- plot_ceac(): Cost-Effectiveness Acceptability Curves
+- plot_psa_scatter(): PSA scatter plots
+- plot_tornado_diagram(): Tornado diagrams for parameter influence
+- plot_convergence_diagnostics(): Convergence assessment plots
+- create_psa_visualization_report(): Generate complete visualization report
 Plot Cost-Effectiveness Acceptability Curve (CEAC)
-}
 }

@@ -14,12 +14,12 @@ data for all individuals over all cycles.}
 coefficients for the revision model (names starting with "cr_").}
 }
 \value{
-The input \code{am_all} data.frame with added columns for revision hazards
-and binary indicators for revision events.
+The input `am_all` data.frame with added columns for revision hazards
+  and binary indicators for revision events.
 }
 \description{
 This function calculates the risk of TKA revision for all individuals across
 all cycles in the simulation output. It is a batch-processing alternative
-to the per-cycle \code{revisions_fcn}. The model uses a linear predictor for
+to the per-cycle `revisions_fcn`. The model uses a linear predictor for
 individual risk and a spline function for the baseline hazard over time.
 }

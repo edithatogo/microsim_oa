@@ -19,13 +19,13 @@ coefficients for the current cycle.}
 have columns 'covariate_set' and 'proportion_reduction'.}
 
 \item{coeff_prefix_cycle}{A character string prefix for the coefficient names
-in \code{cycle_coefficients} (e.g., "c").}
+in `cycle_coefficients` (e.g., "c").}
 
 \item{coeff_prefix_cust}{A character string prefix for the coefficient names
-in \code{customisation_data} (e.g., "cal").}
+in `customisation_data` (e.g., "cal").}
 }
 \value{
-The \code{cycle_coefficients} object with the customisations applied.
+The `cycle_coefficients` object with the customisations applied.
 }
 \description{
 This function adjusts a set of model coefficients based on custom
