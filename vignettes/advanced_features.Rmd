@@ -1,253 +1,203 @@
 ---
-title: "Health Economics Analysis with AUS-OA"
-author: "AUS-OA Development Team"
-date: "`r Sys.Date()`"
+title: "Advanced Features of AUS-OA"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Health Economics Analysis with AUS-OA}
+  %\VignetteIndexEntry{Advanced Features of AUS-OA}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  eval = FALSE  # Set to TRUE when actually running the examples
-)
+# Advanced Features of AUS-OA
+
+This vignette covers the advanced features of the AUS-OA package, including parallel processing, performance monitoring, and advanced modeling capabilities.
+
+## Parallel Processing
+
+AUS-OA includes parallel processing capabilities for large-scale simulations:
+
+```{r parallel-example, eval=FALSE}
 library(ausoa)
+library(parallel)
+library(foreach)
+library(doParallel)
+
+# Set up parallel processing
+n_cores <- detectCores() - 1  # Leave 1 core free
+cl <- makeCluster(n_cores)
+registerDoParallel(cl)
+
+# Example of running multiple scenarios in parallel
+scenarios <- list(
+  scenario_1 = list(intervention_effect = 0.05),
+  scenario_2 = list(intervention_effect = 0.10),
+  scenario_3 = list(intervention_effect = 0.15)
+)
+
+# Run scenarios in parallel (pseudo-code example)
+results <- foreach(i = 1:length(scenarios), .packages = 'ausoa') %dopar% {
+  scenario_data <- scenarios[[i]]
+  # run_simulation_with_params(scenario_data)
+  # return(results)
+}
+
+stopCluster(cl)
 ```
 
-# Health Economics Analysis with AUS-OA
+## Performance Monitoring
 
-This article demonstrates how to conduct health economics analyses using the AUS-OA microsimulation package, focusing on cost-effectiveness analysis for osteoarthritis interventions.
+The package includes tools for performance monitoring:
 
-## Introduction
+```{r perf-example, eval=FALSE}
+library(bench)
 
-Health economics analysis is a core capability of AUS-OA, enabling evaluation of cost-effectiveness for different OA interventions. This tutorial covers:
+# Benchmark function performance
+perf_results <- mark(
+  calculate_costs_fcn(test_data, config),
+  calculate_qaly(test_data),
+  iterations = 5
+)
 
-1. Cost calculation methodology
-2. Quality-Adjusted Life Year (QALY) assessments
-3. Cost-effectiveness analysis
-4. Budget impact modeling
+print(perf_results)
 
-## Cost Calculation Framework
+# Memory profiling
+library(profmem)
+mem_profile <- profmem({
+  calculate_costs_fcn(test_data, config)
+})
+print(mem_profile)
+```
 
-AUS-OA implements a comprehensive cost calculation framework that captures various cost components:
+## Configuration Management
 
-```{r cost-framework}
-# The cost calculation function
-?calculate_costs_fcn
+AUS-OA provides sophisticated configuration management:
 
-# Example cost configuration
-cost_config <- list(
+```{r config-advanced, eval=FALSE}
+# Create custom configuration
+custom_config <- list(
+  simulation = list(
+    time_horizon = 30,
+    population_size = 5000,
+    start_year = 2025
+  ),
   costs = list(
-    # TKA (Total Knee Arthroplasty) costs
     tka_primary = list(
       hospital_stay = list(value = 15000, perspective = "healthcare_system"),
-      patient_gap = list(value = 2000, perspective = "patient"),
-      annual_review = list(value = 200, perspective = "healthcare_system")
+      patient_gap = list(value = 2000, perspective = "patient")
     ),
-    # Revision surgery costs  
     tka_revision = list(
       hospital_stay = list(value = 20000, perspective = "healthcare_system"),
       patient_gap = list(value = 2500, perspective = "patient")
-    ),
-    # OA management costs
-    oa_management = list(
-      consultation = list(value = 80, perspective = "healthcare_system"),
-      medication = list(value = 1200, perspective = "patient"),
-      physiotherapy = list(value = 1500, perspective = "patient")
-    ),
-    # Complications costs
-    complications = list(
-      dvt = list(value = 3000, perspective = "healthcare_system"),
-      pji = list(value = 8000, perspective = "healthcare_system")
     )
+  ),
+  utilities = list(
+    kl0 = 0.85,
+    kl1 = 0.80,
+    kl2 = 0.72,
+    kl3 = 0.65,
+    kl4 = 0.55,
+    post_tka = 0.78
   )
 )
+
+# Save and load custom configuration
+save_config(custom_config, "custom_config.yaml")
+loaded_config <- load_config("custom_config.yaml")
 ```
 
-## Example: Cost-Effectiveness Analysis
+## Advanced Intervention Types
 
-Let's walk through a complete example of performing a cost-effectiveness analysis:
+The package supports various intervention types:
 
-```{r cea-example}
-# Create baseline population data
-baseline_pop <- data.frame(
-  id = 1:5000,
-  age = sample(50:80, 5000, replace = TRUE),
-  sex = sample(c(0, 1), 5000, replace = TRUE),
-  bmi = rnorm(5000, mean = 30, sd = 6),
-  kl_score = sample(2:4, 5000, replace = TRUE, prob = c(0.4, 0.4, 0.2)),
-  has_tka = sample(c(0, 1), 5000, replace = TRUE, prob = c(0.85, 0.15)),
-  tka_year = sample(2015:2025, 5000, replace = TRUE, prob = rep(1/11, 11)),
-  revision_risk = runif(5000, 0.01, 0.05),
-  qaly = runif(5000, 0.5, 0.8)
-)
-
-# Define intervention: Enhanced rehabilitation program
-intervention_params <- list(
+```{r interventions-advanced, eval=FALSE}
+# Complex intervention with multiple parameters
+complex_intervention <- list(
   enabled = TRUE,
   interventions = list(
-    enhanced_rehab = list(
-      type = "qaly_and_cost_modification",
+    dual_intervention = list(
+      type = "combined_modification",
       start_year = 2025,
       end_year = 2035,
+      target_population = list(
+        min_age = 65,
+        max_age = 80,
+        kl_score_min = 2
+      ),
       parameters = list(
-        qaly_improvement = 0.05,  # 5% improvement in QALY
-        cost_reduction = 0.10    # 10% reduction in management costs
+        uptake_rate = 0.75,
+        effects = list(
+          bmi_reduction = -2.5,
+          qaly_improvement = 0.03,
+          cost_reduction = 0.05
+        )
       )
     )
   )
 )
 
-# Apply intervention to a copy of the population
-intervened_pop <- apply_interventions(
-  baseline_pop,
-  intervention_params,
-  2025
-)
-
-# Calculate costs for both scenarios
-baseline_costs <- calculate_costs_fcn(baseline_pop, cost_config)
-intervened_costs <- calculate_costs_fcn(intervened_pop, cost_config)
-
-# Compare outcomes
-baseline_qaly <- calculate_qaly(baseline_pop)
-intervened_qaly <- calculate_qaly(intervened_pop)
-
-# Calculate incremental cost-effectiveness ratio (ICER)
-incremental_cost <- sum(intervened_costs$cycle_cost_total) - sum(baseline_costs$cycle_cost_total)
-incremental_qaly <- sum(intervened_qaly$qaly_total) - sum(baseline_qaly$qaly_total)
-
-icer <- incremental_cost / incremental_qaly
-cat("ICER (cost per QALY gained):", round(icer, 2), "\n")
+# Apply complex intervention
+# result <- apply_interventions(population, complex_intervention, 2025)
 ```
 
-## Budget Impact Analysis
+## Memory Optimization
 
-AUS-OA can also model budget impact of interventions at the population level:
+For large datasets, memory optimization functions are available:
 
-```{r budget-impact}
-# Define population for budget impact analysis
-state_pop <- data.frame(
-  id = 1:100000,
-  age = sample(45:85, 100000, replace = TRUE),
-  sex = sample(c(0, 1), 100000, replace = TRUE),
-  bmi = rnorm(100000, mean = 29, sd = 6),
-  kl_score = sample(0:4, 100000, replace = TRUE, prob = c(0.25, 0.2, 0.25, 0.2, 0.1)),
-  state_resident = rep(TRUE, 100000)  # All residents of the target state
-)
+```{r memory-opt, eval=FALSE}
+# Optimize data table memory usage
+library(data.table)
+dt <- as.data.table(large_population_data)
 
-# Define intervention: Early intervention program
-early_intervention <- list(
-  enabled = TRUE,
-  interventions = list(
-    early_intervention = list(
-      type = "bmi_modification",
-      start_year = 2025,
-      end_year = 2030,
-      parameters = list(
-        uptake_rate = 0.3,      # 30% uptake among eligible
-        bmi_change = -3.0,      # 3 kg/m² reduction
-        impact_duration = 5     # Effects last 5 years
-      )
-    )
-  )
-)
-
-# Apply intervention with scaled parameters for budget impact
-budget_impact_pop <- apply_interventions(
-  state_pop[1:10000, ],  # Sample for computational efficiency
-  early_intervention,
-  2025
-)
-
-# Calculate budget impact
-pre_intervention_costs <- calculate_costs_fcn(state_pop[1:10000, ], cost_config)
-post_intervention_costs <- calculate_costs_fcn(budget_impact_pop, cost_config)
-
-# Project to full population
-budget_impact <- (sum(post_intervention_costs$cycle_cost_total) - 
-                 sum(pre_intervention_costs$cycle_cost_total)) * 10  # Scale up by 10
-
-cat("Annual budget impact:", round(budget_impact, 2), "\n")
-cat("Budget impact per capita:", round(budget_impact / nrow(state_pop), 4), "\n")
+# Convert to optimized format
+opt_dt <- optimize_dt_memory(dt)
 ```
 
-## Sensitivity Analysis
+## Model Validation and Quality Assurance
 
-For robust decision-making, AUS-OA supports sensitivity analysis:
+```{r validation, eval=FALSE}
+# Validate input data
+validation_errors <- validate_input_data(test_data, 
+  required_columns = c("id", "age", "sex", "bmi"))
 
-```{r sensitivity}
-# Perform one-way sensitivity on key parameter
-sensitivity_analysis <- function(param_values, base_config) {
-  results <- data.frame(
-    param_value = param_values,
-    costs = numeric(length(param_values)),
-    qaly = numeric(length(param_values))
-  )
-  
-  for (i in seq_along(param_values)) {
-    # Modify configuration parameter
-    config_mod <- base_config
-    config_mod$costs$tka_primary$hospital_stay$value <- param_values[i]
-    
-    # Calculate metrics
-    costs <- calculate_costs_fcn(baseline_pop[1:1000, ], config_mod)
-    qaly_vals <- calculate_qaly(baseline_pop[1:1000, ])
-    
-    results$costs[i] <- mean(costs$cycle_cost_total)
-    results$qaly[i] <- mean(qaly_vals$qaly_total)
-  }
-  
-  return(results)
+if (length(validation_errors) == 0) {
+  cat("Data validation passed\n")
+} else {
+  cat("Validation errors found:\n")
+  print(validation_errors)
 }
 
-# Vary TKA cost from $12,000 to $20,000
-param_range <- seq(12000, 20000, by = 1000)
-sens_results <- sensitivity_analysis(param_range, cost_config)
-
-# View results
-head(sens_results)
+# Check data consistency
+consistency_issues <- check_data_consistency(test_data)
+if (length(consistency_issues) > 0) {
+  cat("Consistency issues found:\n")
+  print(consistency_issues)
+}
 ```
 
-## Visualization
+## Error Handling and Validation
 
-Visualizing health economics results is important for communication:
+AUS-OA includes robust error handling:
 
-```{r visualization}
-# Create cost-effectiveness plane (simplified)
-library(ggplot2)
+```{r error-handling, eval=FALSE}
+# Safe wrappers with validation
+safe_result <- tryCatch({
+  calculate_costs_fcn(test_data, config)
+}, error = function(e) {
+  cat("Error in cost calculation:", e$message, "\n")
+  return(NULL)
+})
 
-# Example cost-effectiveness scatter plot
-ce_data <- data.frame(
-  delta_qaly = c(0.02, 0.05, 0.08, 0.03),
-  delta_cost = c(500, 1200, 1800, 800),
-  scenario = c("Conservative", "Moderate", "Aggressive", "Alternative")
-)
-
-ggplot(ce_data, aes(x = delta_qaly, y = delta_cost, color = scenario)) +
-  geom_point(size = 3) +
-  geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
-  geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.5) +
-  labs(
-    title = "Cost-Effectiveness Plane",
-    x = "Incremental QALYs",
-    y = "Incremental Cost ($)"
-  ) +
-  theme_minimal()
+# Alternative with validation
+validated_result <- safe_calculate_costs_fcn(test_data, config)
 ```
 
-## Conclusion
+## Summary
 
-This tutorial has shown how AUS-OA can be used for comprehensive health economics analysis of osteoarthritis interventions. The package provides:
+This vignette demonstrated the advanced features of the AUS-OA package:
 
-- Detailed cost calculation frameworks
-- QALY assessment capabilities
-- Cost-effectiveness analysis tools
-- Budget impact modeling
-- Sensitivity analysis functionality
+- Parallel processing for scalable simulations
+- Performance monitoring and memory optimization
+- Advanced configuration management
+- Complex intervention design
+- Comprehensive validation and error handling
 
-These capabilities enable evidence-based decision making for OA policy and resource allocation. For more details on specific functions, see the package documentation.
+These features enable comprehensive analysis of osteoarthritis interventions in Australia with high performance and reliability.

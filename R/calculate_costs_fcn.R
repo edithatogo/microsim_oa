@@ -11,8 +11,39 @@
 #'
 #' @return The `am_new` data.table with new columns for costs incurred
 #'   during the cycle, broken down by perspective.
-#' @import data.table
 #' @export
+#'
+#' @examples
+#' # Create test data for cost calculation
+#' test_data <- data.frame(
+#'   tka = sample(c(0, 1), 100, replace = TRUE),
+#'   revi = sample(c(0, 1), 100, replace = TRUE, prob = c(0.9, 0.1)),
+#'   oa = rep(1, 100),
+#'   dead = sample(c(0, 1), 100, replace = TRUE, prob = c(0.99, 0.01)),
+#'   ir = sample(c(0, 1), 100, replace = TRUE),
+#'   comp = sample(c(0, 1), 100, replace = TRUE, prob = c(0.8, 0.2)),
+#'   comorbidity_cost = runif(100, 0, 10000),
+#'   intervention_cost = runif(100, 0, 2000),
+#'   stringsAsFactors = FALSE
+#' )
+#' 
+#' # Create a simple cost configuration
+#' cost_config <- list(
+#'   costs = list(
+#'     tka_primary = list(
+#'       hospital_stay = list(value = 15000, perspective = "healthcare_system"),
+#'       patient_gap = list(value = 2000, perspective = "patient")
+#'     ),
+#'     tka_revision = list(
+#'       hospital_stay = list(value = 20000, perspective = "healthcare_system"),
+#'       patient_gap = list(value = 2500, perspective = "patient")
+#'     )
+#'   )
+#' )
+#' 
+#' # Calculate costs
+#' # result <- calculate_costs_fcn(test_data, cost_config)
+
 calculate_costs_fcn <- function(am_new, costs_config) {
   # Ensure am_new is a data.table
   setDT(am_new)

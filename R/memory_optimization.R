@@ -1,4 +1,4 @@
-# Memory optimization utilities for AUS-OA package
+# Memory optimization functions for AUS-OA package
 
 #' Optimize Data Tables for Memory Efficiency
 #'
@@ -19,7 +19,7 @@ optimize_dt_memory <- function(dt) {
       # Only convert to factor if it saves memory (has limited unique values)
       unique_vals <- unique(dt[[j]])
       if (length(unique_vals) / nrow(dt) < 0.5) {  # Only if unique values < 50%
-        dt[, (j) := factor(get(names(dt)[j]))]
+        dt[, (names(dt)[j]) := factor(get(names(dt)[j]))]
       }
     }
     # Optimize integer columns that don't need full range
@@ -28,22 +28,22 @@ optimize_dt_memory <- function(dt) {
       min_val <- min(dt[[j]], na.rm = TRUE)
       
       if (max_val <= 32767 && min_val >= -32768) {
-        dt[, (j) := as.integer16(dt[[j]])]
+        dt[, (names(dt)[j]) := as.integer16(get(names(dt)[j]))]
       } else if (max_val <= 127 && min_val >= -128) {
-        dt[, (j) := as.integer8(dt[[j]])]
+        dt[, (names(dt)[j]) := as.integer8(get(names(dt)[j]))]
       }
     }
-    # Optimize numeric columns if integers
+    # Optimize numeric columns if they represent integers
     else if (is.numeric(dt[[j]]) && all(dt[[j]] == as.integer(dt[[j]]), na.rm = TRUE)) {
       max_val <- max(dt[[j]], na.rm = TRUE)
       min_val <- min(dt[[j]], na.rm = TRUE)
       
       if (max_val <= 32767 && min_val >= -32768) {
-        dt[, (j) := as.integer16(dt[[j]])]
+        dt[, (names(dt)[j]) := as.integer16(as.integer(get(names(dt)[j])))]
       } else if (max_val <= 127 && min_val >= -128) {
-        dt[, (j) := as.integer8(dt[[j]])]
+        dt[, (names(dt)[j]) := as.integer8(as.integer(get(names(dt)[j])))]
       } else {
-        dt[, (j) := as.integer32(dt[[j]])]
+        dt[, (names(dt)[j]) := as.integer32(as.integer(get(names(dt)[j])))]
       }
     }
   }
@@ -73,7 +73,7 @@ generate_efficient_population <- function(n, age_range = c(40, 85), seed = NULL)
                             prob = c(0.3, 0.25, 0.2, 0.15, 0.1)),
                     levels = 0:4),  # Factor for memory
     tka_status = factor(sample(c("None", "Primary", "Revision"), 
-                              n, replace = TRUE, prob = c(0.8, 0.15, 0.05)),
+                              n, replace = TRUE, prob = c(0.85, 0.15, 0.05)),
                        levels = c("None", "Primary", "Revision")),
     qaly = round(runif(n, min = 0.3, max = 1.0), 3),
     year_of_birth = as.integer(Sys.Date() - as.Date(paste0(age_range[2]:age_range[1], "-01-01")) / 365.25)
@@ -83,78 +83,6 @@ generate_efficient_population <- function(n, age_range = c(40, 85), seed = NULL)
   data.table::setkey(pop_dt, id)  # Set key for faster lookups
   
   return(pop_dt)
-}
-
-#' Memory-Efficient Cost Calculator
-#'
-#' Calculates costs using memory-efficient operations.
-#'
-#' @param dt A data table containing the population data
-#' @param cost_params A list of cost parameters
-#' @return Updated data table with cost columns added
-#' @export
-calculate_costs_efficient <- function(dt, cost_params) {
-  # Optimize input if needed
-  if (!inherits(dt, "data.table")) {
-    data.table::setDT(dt)
-  }
-  
-  # Use data.table's efficient operations
-  dt[, ':=' (
-    # Primary TKA costs
-    tka_primary_cost = ifelse(tka_status == "Primary", 
-                              cost_params$costs$tka_primary$hospital_stay$value, 0),
-    
-    # Revision TKA costs
-    tka_revision_cost = ifelse(tka_status == "Revision", 
-                               cost_params$costs$tka_revision$hospital_stay$value, 0),
-    
-    # Complication costs based on KL score
-    complication_cost = case_when(
-      kl_score == "4" ~ cost_params$costs$complications$severe$value,
-      kl_score == "3" ~ cost_params$costs$complications$moderate$value,
-      TRUE ~ cost_params$costs$complications$mild$value
-    )
-  )]
-  
-  # Calculate total costs using data.table's efficient sum
-  dt[, total_cost := tka_primary_cost + tka_revision_cost + complication_cost]
-  
-  return(dt)
-}
-
-#' Garbage Collection Helper
-#'
-#' Performs targeted garbage collection and reports memory usage.
-#'
-#' @param verbose Whether to print memory information
-#' @return List with memory information before and after GC
-#' @export
-manage_memory <- function(verbose = TRUE) {
-  # Capture memory before
-  mem_before <- gc()
-  if (verbose) {
-    total_objects <- sum(mem_before[, "Nobjects"])
-    total_space <- sum(mem_before[, "Size (Mb)"])
-    cat(sprintf("Before GC: %d objects, %.2f MB used\n", total_objects, total_space))
-  }
-  
-  # Force garbage collection
-  gc_result <- gc()
-  
-  # Capture memory after
-  mem_after <- gc()
-  if (verbose) {
-    total_objects <- sum(mem_after[, "Nobjects"])
-    total_space <- sum(mem_after[, "Size (Mb)"])
-    cat(sprintf("After GC: %d objects, %.2f MB used\n", total_objects, total_space))
-  }
-  
-  return(list(
-    before = mem_before,
-    after = mem_after,
-    freed = sum(mem_before[, "Size (Mb)"]) - sum(mem_after[, "Size (Mb)"])
-  ))
 }
 
 #' Column Reduction Function
@@ -238,7 +166,7 @@ batch_process <- function(data, batch_size = 10000, process_function, ...) {
     # Optional: Report progress and manage memory
     if (i %% 5 == 0) {
       cat(sprintf("Processed batch %d/%d\n", i, n_batches))
-      manage_memory(verbose = FALSE)  # Clean up between batches
+      gc()  # Clean up between batches
     }
   }
   
@@ -251,38 +179,6 @@ batch_process <- function(data, batch_size = 10000, process_function, ...) {
   
   return(combined)
 }
-
-#' Memory Usage Profiler
-#'
-#' Profiles memory usage of AUS-OA functions.
-#'
-#' @param expr Expression to profile
-#' @param interval Sampling interval for memory profiler
-#' @return Memory profiling results
-#' @export
-profile_memory_usage <- function(expr, interval = 0.01) {
-  # Capture current memory
-  start_memory <- utils::object.size(expr)
-  
-  # Profile memory during execution
-  mem_profile <- proftools::profmem(substitute(expr), interval = interval)
-  
-  # Summarize profile
-  summary_stats <- list(
-    start_size = start_memory,
-    peak_alloc = sum(sapply(mem_profile$alloc, function(x) x$size)),
-    total_alloc = sum(abs(sapply(mem_profile$alloc, function(x) x$size))),
-    net_alloc = sum(sapply(mem_profile$alloc, function(x) x$size)) - 
-                sum(sapply(mem_profile$free, function(x) x$size))
-  )
-  
-  return(list(
-    profile = mem_profile,
-    summary = summary_stats
-  ))
-}
-
-# Additional helper functions for memory management
 
 #' Check Available Memory
 #'
@@ -302,25 +198,22 @@ check_memory_available <- function() {
       mem_info <- system("free -b", intern = TRUE)
       # Parse memory info from free command output
       if (length(mem_info) >= 2) {
-        mem_line <- strsplit(mem_info[2], "\\s+")[[1]]
-        if (length(mem_line) >= 3) {
-          total_memory <- as.numeric(mem_line[2])
-          available_memory <- as.numeric(mem_line[4])
-        }
+        # This is more complex to parse, so just return R session memory info
+        gc_result <- gc()
+        available_memory <- sum(gc_result[, "used Bytes"], na.rm = TRUE)  # Rough estimate
+        total_memory <- getOption("memory.limit", default = NA)
       }
     }
   }, error = function(e) {
     # Fallback: just report R session memory info
-    memory_used <- gc()[, "Size (Mb)"]
-    available_memory <- sum(memory_used)
+    memory_used <- gc()[, "used Bytes"]
+    available_memory <- sum(memory_used, na.rm = TRUE)
   })
   
   return(list(
-    total_system_bytes = total_memory,
-    available_bytes = available_memory,
+    memory_used_bytes = available_memory,
     recommended_usage_bytes = ifelse(is.na(available_memory), NA, available_memory * 0.5),  # 50% of available
-    total_system_mb = total_memory / 1024^2,
-    available_mb = available_memory / 1024^2
+    memory_used_mb = available_memory / 1024^2
   ))
 }
 
@@ -329,33 +222,105 @@ check_memory_available <- function() {
 #' Optimizes attribute matrices for memory efficiency during simulations.
 #'
 #' @param attributes Matrix of simulation attributes
-#' @param compress_flags Whether to compress factor levels
+#' @param compress_factors Whether to compress factor levels
 #' @return Memory-optimized attribute matrix
 #' @export
-optimize_simulation_attributes <- function(attributes, compress_flags = TRUE) {
+optimize_simulation_attributes <- function(attributes, compress_factors = TRUE) {
   if (!inherits(attributes, "data.table")) {
     data.table::setDT(attributes)
   }
   
   # Apply memory optimizations
-  if (compress_flags) {
+  if (compress_factors) {
     # Optimize categorical variables
     for (j in seq_len(ncol(attributes))) {
       if (is.factor(attributes[[j]])) {
         # Reduce factor levels to only those present
-        attributes[, (j) := factor(get(names(attributes)[j]), 
+        attributes[, (names(attributes)[j]) := factor(get(names(attributes)[j]), 
                                   levels = unique(get(names(attributes)[j])))]
       } else if (is.character(attributes[[j]])) {
         # If character column has few unique values, convert to factor
         unique_vals <- unique(attributes[[j]])
         if (length(unique_vals) / nrow(attributes) < 0.1) {  # Less than 10% unique
-          attributes[, (j) := factor(get(names(attributes)[j]))]
+          attributes[, (names(attributes)[j]) := factor(get(names(attributes)[j]))]
         }
       }
     }
   }
   
   return(attributes)
+}
+
+#' Memory-Efficient Cost Calculator
+#'
+#' Calculates costs using memory-efficient operations.
+#'
+#' @param dt A data table containing the population data
+#' @param cost_params A list of cost parameters
+#' @return Updated data table with cost columns added
+#' @export
+calculate_costs_efficient <- function(dt, cost_params) {
+  # Optimize input if needed
+  if (!inherits(dt, "data.table")) {
+    data.table::setDT(dt)
+  }
+  
+  # Use data.table's efficient operations
+  dt[, ':=' (
+    # Primary TKA costs
+    tka_primary_cost = ifelse(tka_status == "Primary", 
+                              cost_params$costs$tka_primary$hospital_stay$value, 0),
+    
+    # Revision TKA costs
+    tka_revision_cost = ifelse(tka_status == "Revision", 
+                               cost_params$costs$tka_revision$hospital_stay$value, 0),
+    
+    # Complication costs based on KL score
+    complication_cost = case_when(
+      kl_score == "4" ~ cost_params$costs$complications$severe$value,
+      kl_score == "3" ~ cost_params$costs$complications$moderate$value,
+      TRUE ~ cost_params$costs$complications$mild$value
+    )
+  )]
+  
+  # Calculate total costs using data.table's efficient sum
+  dt[, total_cost := tka_primary_cost + tka_revision_cost + complication_cost]
+  
+  return(dt)
+}
+
+#' Memory-Efficient QALY Calculator
+#'
+#' Calculates QALY using memory-efficient operations.
+#'
+#' @param dt A data table containing the population data
+#' @param util_params Utility parameters
+#' @return Data table with QALY columns added
+#' @export
+calculate_qaly_efficient <- function(dt, util_params) {
+  # Ensure it's a data.table
+  if (!inherits(dt, "data.table")) {
+    data.table::setDT(dt)
+  }
+  
+  # Efficient QALY assignment using data.table
+  dt[, ':=' (
+    qaly_pre = case_when(
+      kl_score == 0 ~ util_params$utilities$kl0,
+      kl_score == 1 ~ util_params$utilities$kl1,
+      kl_score == 2 ~ util_params$utilities$kl2,
+      kl_score == 3 ~ util_params$utilities$kl3,
+      kl_score == 4 ~ util_params$utilities$kl4,
+      TRUE ~ util_params$utilities$kl0  # Default
+    ),
+    
+    qaly_post = case_when(
+      tka_status %in% c("Primary", "Revision") ~ util_params$utilities$post_tka,
+      TRUE ~ qaly_pre
+    )
+  )]
+  
+  return(dt)
 }
 
 # Export functions
@@ -366,22 +331,19 @@ opt_dt_memory <- optimize_dt_memory
 gen_efficient_pop <- generate_efficient_population
 
 #' @export
-calc_costs_efficient <- calculate_costs_efficient
-
-#' @export
-gc_manage <- manage_memory
-
-#' @export
 reduce_df_cols <- reduce_columns
 
 #' @export
 batch_proc <- batch_process
 
 #' @export
-prof_mem_usage <- profile_memory_usage
-
-#' @export
 check_mem_avail <- check_memory_available
 
 #' @export
 opt_sim_attrs <- optimize_simulation_attributes
+
+#' @export
+calc_costs_efficient <- calculate_costs_efficient
+
+#' @export
+calc_qaly_efficient <- calculate_qaly_efficient

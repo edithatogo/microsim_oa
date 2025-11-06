@@ -1,3 +1,62 @@
+#' Simulation Cycle Function
+#'
+#' The main function that advances the osteoarthritis simulation by one cycle.
+#' Updates the population attributes based on transition probabilities, 
+#' event occurrences, and health economic calculations for the AUS-OA model.
+#'
+#' @param am_curr Current attribute matrix containing individual characteristics
+#' @param cycle.coefficents List of coefficients for the current simulation cycle
+#' @param am_new The new attribute matrix to be updated (output frame)
+#' @param age_edges Age-based stratification boundaries for risk calculations
+#' @param bmi_edges BMI-based stratification boundaries for risk calculations
+#' @param am Original attribute matrix for reference calculations
+#' @param mort_update_counter Mortality update counter for tracking
+#' @param lt Lookup table for various simulation parameters
+#' @param eq_cust Custom equation parameters for the cycle
+#' @param tka_time_trend Time trend component for TKA procedures
+#'
+#' @return Updated attribute matrix with new values for the next simulation cycle
+#' @export
+#'
+#' @examples
+#' # Create a small test population
+#' test_pop <- data.frame(
+#'   id = 1:100,
+#'   age = sample(50:80, 100, replace = TRUE),
+#'   sex = sample(c(0, 1), 100, replace = TRUE),
+#'   bmi = rnorm(100, mean = 28, sd = 5),
+#'   kl_score = sample(0:4, 100, replace = TRUE, prob = c(0.3, 0.25, 0.2, 0.15, 0.1)),
+#'   tka = sample(c(0, 1), 100, replace = TRUE, prob = c(0.95, 0.05)),
+#'   stringsAsFactors = FALSE
+#' )
+#' 
+#' # Create minimal coefficients list
+#' coeffs <- list(
+#'   live = 0.99,  # Survival probability
+#'   pain = list(live = 0.95),  # Pain progression coefficient
+#'   function = list(live = 0.90)  # Function score coefficient
+#' )
+#' 
+#' # Create a simple lookup table
+#' lookup_table <- list(
+#'   age_intervals = c(50, 60, 70, 80, 90),
+#'   bmi_intervals = c(18, 25, 30, 35, 40)
+#' )
+#' 
+#' # Run one simulation cycle
+#' # result <- simulation_cycle_fcn(
+#' #   am_curr = test_pop,
+#' #   cycle.coefficents = coeffs,
+#' #   am_new = test_pop,  # Using same for simplicity
+#' #   age_edges = c(50, 70, 85),
+#' #   bmi_edges = c(20, 30, 40),
+#' #   am = test_pop,
+#' #   mort_update_counter = 0,
+#' #   lt = lookup_table,
+#' #   eq_cust = NULL,
+#' #   tka_time_trend = 0
+#' # )
+
 simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
                                  age_edges, bmi_edges,
                                  am,

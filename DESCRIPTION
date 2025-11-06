@@ -1,56 +1,40 @@
 Package: ausoa
 Title: A Microsimulation Model of Osteoarthritis in Australia
 Version: 2.2.1
-Author: AUS-OA Team <dylan.mordaunt@vuw.ac.nz>
-Maintainer: Dylan Mordaunt <dylan.mordaunt@vuw.ac.nz>
-Description: A dynamic discrete time microsimulation model for osteoarthritis
-    health economics and policy evaluation in Australia.
+Date: 2025-02-28
+Authors@R: c(
+    person("Dylan", "Mordaunt", email = "dylan.mordaunt@vuw.ac.nz", role = c("aut", "cre", "maint")),
+    person("AUS-OA", "Team", role = "ctb")
+)
+Description: AUS-OA is a dynamic discrete time microsimulation model specifically designed 
+    for osteoarthritis (OA) health economics and policy evaluation in Australia. 
+    It provides policymakers and researchers with advanced capacity to evaluate 
+    the clinical, economic, and quality-of-life impacts of OA interventions across Australia.
 License: GPL-3
 URL: https://github.com/edithatogo/microsim_oa
 BugReports: https://github.com/edithatogo/microsim_oa/issues
-Depends: R (>= 4.0.0)
-Imports:
-    arrow,
-    caret,
+Depends: 
+    R (>= 4.0.0)
+Imports: 
     data.table,
     dplyr,
-    drake,
-    forcats,
     ggplot2,
-    here,
     magrittr,
-    pdp,
     purrr,
-    ragg,
-    readr,
-    readxl,
     rlang,
-    scales,
     stats,
-    stringr,
-    tidyr,
     utils,
-    yaml
-Suggests:
+    yaml,
+    parallel,
+    foreach,
+    doParallel,
+    bench,
+    profmem
+Suggests: 
     testthat,
     covr,
-    pkgdown,
     knitr,
-    rmarkdown,
-    devtools,
-    pROC,
-    bench,
-    profvis,
-    hedgehog,
-    mutatr,
-    goodpractice,
-    rhub,
-    revdepcheck,
-    vdiffr,
-    DiagrammeR,
-    bookdown,
-    validator,
-    gert
+    rmarkdown
+VignetteBuilder: knitr
 Encoding: UTF-8
 RoxygenNote: 7.3.3
-VignetteBuilder: knitr

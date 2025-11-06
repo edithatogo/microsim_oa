@@ -1,7 +1,8 @@
 #' Performance Monitoring for AUS-OA Package
 #'
 #' Benchmark key functions for performance and memory usage
-#' @importFrom bench bench_mark system_time memory_usage
+#' @name performance_monitoring
+#' @importFrom bench mark press system_time
 #' @importFrom profmem profmem
 NULL
 
@@ -171,18 +172,22 @@ run_performance_benchmarks <- function(iterations = 3) {
 #' @return Comparison results
 compare_function_performance <- function(func1, func2, data, iterations = 5) {
   # Benchmark both functions
-  bench_result <- bench::press(
-    function = list(func1 = func1, func2 = func2),
-    {
-      bench::mark(
-        function[[1]](data),
-        iterations = iterations,
-        check = FALSE
-      )
-    }
-  )
+  # Use bench::press with a different name to avoid conflict with reserved word
+  fun_list <- list(func1 = func1, func2 = func2)
   
-  return(bench_result)
+  result_list <- list()
+  for (i in seq_along(fun_list)) {
+    func_name <- names(fun_list)[i]
+    func <- fun_list[[i]]
+    
+    result_list[[func_name]] <- bench::mark(
+      func(data),
+      iterations = iterations,
+      check = FALSE
+    )
+  }
+  
+  return(result_list)
 }
 
 #' Generate performance report

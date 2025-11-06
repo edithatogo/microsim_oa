@@ -5,14 +5,14 @@
 AUS-OA is a dynamic discrete-time microsimulation model specifically designed for osteoarthritis (OA) health economics and policy evaluation in Australia. It provides policymakers and researchers with advanced capacity to evaluate the clinical, economic, and quality-of-life impacts of OA interventions across Australia.
 
 <!-- CI/CD badges -->
+<!-- Badges -->
 [![R-CMD-check](https://github.com/edithatogo/microsim_oa/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/edithatogo/microsim_oa/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/edithatogo/microsim_oa/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/edithatogo/microsim_oa/actions/workflows/pkgdown.yaml)
-[![Quality Score](https://img.shields.io/badge/Quality-95/100-brightgreen.svg)](https://github.com/edithatogo/microsim_oa)
-[![Codecov](https://codecov.io/github/edithatogo/microsim_oa/coverage.svg?branch=main)](https://codecov.io/gh/edithatogo/microsim_oa)
-[![Security Scan](https://github.com/edithatogo/microsim_oa/actions/workflows/security-enhanced.yaml/badge.svg)](https://github.com/edithatogo/microsim_oa/actions/workflows/security-enhanced.yaml)
-[![Quality Metrics](https://github.com/edithatogo/microsim_oa/actions/workflows/quality-metrics.yaml/badge.svg)](https://github.com/edithatogo/microsim_oa/actions/workflows/quality-metrics.yaml)
+[![Test Coverage](https://codecov.io/gh/edithatogo/microsim_oa/branch/main/graph/badge.svg)](https://codecov.io/gh/edithatogo/microsim_oa)
+[![CodeFactor](https://www.codefactor.io/repository/github/edithatogo/microsim_oa/badge)](https://www.codefactor.io/repository/github/edithatogo/microsim_oa)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-**Live Site:** https://edithatogo.github.io/microsim_oa/
+**Documentation:** https://edithatogo.github.io/microsim_oa/
 
 ## Quality Control Features
 

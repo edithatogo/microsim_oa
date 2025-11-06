@@ -1,0 +1,237 @@
+---
+title: "AUS-OA Tutorials and Examples"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{AUS-OA Tutorials and Examples}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Tutorials for AUS-OA Package
+
+This vignette provides comprehensive tutorials for using the AUS-OA package for osteoarthritis microsimulation modeling.
+
+## Tutorial 1: Basic Usage
+
+### Loading the Package
+
+```{r load-package, eval=FALSE}
+library(ausoa)
+```
+
+### Running a Basic Simulation
+
+The simplest way to run a simulation is to use the core functions:
+
+```{r basic-simulation, eval=FALSE}
+# Create a test population
+test_pop <- data.frame(
+  id = 1:1000,
+  age = sample(50:80, 1000, replace = TRUE),
+  sex = sample(c(0, 1), 1000, replace = TRUE),
+  bmi = rnorm(1000, mean = 28, sd = 5),
+  kl_score = sample(0:4, 1000, replace = TRUE, prob = c(0.3, 0.25, 0.2, 0.15, 0.1))
+)
+
+# Load configuration
+config <- load_config()
+
+# Run a basic simulation cycle
+result <- simulation_cycle_fcn(test_pop, config$coefficients, test_pop,
+                               age_edges = c(50, 60, 70, 80),
+                               bmi_edges = c(20, 25, 30, 35),
+                               am = test_pop,
+                               mort_update_counter = 0,
+                               lt = list(),
+                               eq_cust = NULL,
+                               tka_time_trend = 0)
+
+head(result)
+```
+
+## Tutorial 2: Cost Analysis
+
+### Calculate Healthcare Costs
+
+```{r cost-analysis, eval=FALSE}
+# Calculate costs using the cost function
+cost_data <- data.frame(
+  tka = sample(c(0, 1), 1000, replace = TRUE, prob = c(0.9, 0.1)),
+  revi = sample(c(0, 1), 1000, replace = TRUE, prob = c(0.95, 0.05)),
+  oa = rep(1, 1000),
+  dead = rep(0, 1000),
+  ir = sample(c(0, 1), 1000, replace = TRUE),
+  comp = sample(c(0, 1), 1000, replace = TRUE, prob = c(0.8, 0.2))
+)
+
+cost_config <- list(
+  costs = list(
+    tka_primary = list(
+      hospital_stay = list(value = 15000, perspective = "healthcare_system"),
+      patient_gap = list(value = 2000, perspective = "patient")
+    ),
+    tka_revision = list(
+      hospital_stay = list(value = 20000, perspective = "healthcare_system"),
+      patient_gap = list(value = 2500, perspective = "patient")
+    )
+  )
+)
+
+costs_result <- calculate_costs_fcn(cost_data, cost_config)
+head(costs_result[, c("tka", "revi", "cycle_cost_total")])
+```
+
+## Tutorial 3: Intervention Analysis
+
+### Apply Policy Interventions
+
+```{r intervention-analysis, eval=FALSE}
+# Define interventions
+interventions <- list(
+  enabled = TRUE,
+  interventions = list(
+    bmi_intervention = list(
+      type = "bmi_modification",
+      start_year = 2025,
+      end_year = 2030,
+      parameters = list(uptake_rate = 0.6, bmi_change = -2.0)
+    )
+  )
+)
+
+# Apply interventions to population
+test_population <- data.frame(
+  id = 1:500,
+  age = sample(55:75, 500, replace = TRUE),
+  sex = sample(c(0, 1), 500, replace = TRUE),
+  bmi = rnorm(500, mean = 30, sd = 5),
+  kl_score = sample(2:4, 500, replace = TRUE, prob = c(0.4, 0.4, 0.2))
+)
+
+intervened_pop <- apply_interventions(test_population, interventions, 2025)
+
+# Compare BMI before and after intervention
+mean_bmi_before <- mean(test_population$bmi)
+mean_bmi_after <- mean(intervened_pop$bmi)
+
+cat("Mean BMI before intervention:", mean_bmi_before, "\n")
+cat("Mean BMI after intervention:", mean_bmi_after, "\n")
+```
+
+## Tutorial 4: Model Configuration
+
+### Loading and Customizing Configuration
+
+```{r config-management, eval=FALSE}
+# Load default configuration
+default_config <- load_config()
+
+# View key sections
+names(default_config)
+
+# Override specific parameters
+custom_config <- default_config
+custom_config$simulation$time_horizon <- 30
+custom_config$simulation$population_size <- 5000
+
+# Save custom configuration
+save_config(custom_config, "my_custom_config.yaml")
+
+# Load the saved configuration
+loaded_config <- load_and_validate_config("my_custom_config.yaml")
+```
+
+## Tutorial 5: Quality-Adjusted Life Years (QALY) Analysis
+
+### Calculate QALY values
+
+```{r qaly-analysis, eval=FALSE}
+# Calculate QALY for population
+qaly_test_data <- test_population  # Use test data from previous example
+qaly_test_data$kellgren_lawrence <- qaly_test_data$kl_score
+qaly_test_data$tkr <- sample(c(0, 1), nrow(qaly_test_data), replace = TRUE, prob = c(0.9, 0.1))
+
+qaly_result <- calculate_qaly(qaly_test_data)
+head(qaly_result[c("id", "qaly_pre", "qaly_post")])
+
+# Summarize QALY outcomes
+avg_qaly <- mean(qaly_result$qaly_pre, na.rm = TRUE)
+cat("Average pre-intervention QALY:", avg_qaly, "\n")
+```
+
+## Tutorial 6: Advanced Analysis
+
+### Performing Sensitivity Analysis
+
+```{r sensitivity-analysis, eval=FALSE}
+# Run multiple cycles to evaluate parameter sensitivity
+base_params <- list(
+  tka_annual_risk = 0.02,
+  revision_annual_risk = 0.03
+)
+
+alternative_params <- list(
+  tka_annual_risk = 0.03,  # Higher risk
+  revision_annual_risk = 0.04  # Higher revision risk
+)
+
+# Function to run sensitivity simulation
+run_sensitivity_analysis <- function(params, n_cycles = 5) {
+  # Create test population
+  pop_data <- data.frame(
+    id = 1:200,
+    age = sample(60:75, 200, replace = TRUE),
+    sex = sample(c(0, 1), 200, replace = TRUE),
+    bmi = rnorm(200, mean = 29, sd = 4),
+    kl_score = sample(2:4, 200, replace = TRUE)
+  )
+  
+  # Run simulation with specified parameters
+  for (i in 1:n_cycles) {
+    pop_data <- simulation_cycle_fcn(
+      pop_data, 
+      create_config_from_parameters(annual_tka_risk = params$tka_annual_risk, 
+                                   annual_revision_risk = params$revision_annual_risk),
+      pop_data,
+      age_edges = c(60, 70),
+      bmi_edges = c(25, 35),
+      am = pop_data,
+      mort_update_counter = 0,
+      lt = list(),
+      eq_cust = NULL,
+      tka_time_trend = 0
+    )
+  }
+  
+  return(pop_data)
+}
+
+# Compare results between parameter sets
+results_base <- run_sensitivity_analysis(base_params)
+results_alt <- run_sensitivity_analysis(alternative_params)
+
+# Compare TKA rates
+base_tka_rate <- mean(results_base$tka, na.rm = TRUE)
+alt_tka_rate <- mean(results_alt$tka, na.rm = TRUE)
+
+cat("Base TKA rate:", base_tka_rate, "\n")
+cat("Alternative TKA rate:", alt_tka_rate, "\n")
+```
+
+## Best Practices
+
+1. **Always validate your data** before running simulations using `validate_dataset()`
+2. **Use appropriate configuration files** that match your analysis objectives
+3. **Test with small populations first** before scaling up to large simulations
+4. **Save intermediate results** to allow for recovery in case of interruptions
+5. **Document your assumptions and parameters** for reproducibility
+
+## Common Use Cases
+
+- **Policy Evaluation**: Assessing impact of interventions on healthcare outcomes
+- **Cost-Effectiveness Analysis**: Comparing different treatment strategies
+- **Prevalence Projection**: Forecasting future OA burden
+- **Resource Allocation**: Planning healthcare service delivery
+- **Equity Analysis**: Evaluating differential impacts across population groups
+
+For more detailed examples, see the `tests/testthat/` directory and function documentation.

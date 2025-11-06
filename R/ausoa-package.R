@@ -44,7 +44,8 @@
 #' \code{\link{simulation_cycle_fcn}}, \code{\link{calculate_costs_fcn}}, 
 #' \code{\link{calculate_qaly}}, \code{\link{apply_interventions}}
 #'
-#' @docType package
+#' @keywords internal
+"_PACKAGE"
 #' @name ausoa-package
 #' @aliases ausoa
 NULL

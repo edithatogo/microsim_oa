@@ -1,6 +1,6 @@
-# Parallel Processing Capabilities for AUS-OA Package
+# Parallel processing capabilities for AUS-OA package
 
-# Load required libraries for parallel processing
+# Load required parallel libraries
 library(parallel)
 library(foreach)
 library(doParallel)
@@ -46,41 +46,30 @@ run_parallel_simulations <- function(scenarios, n_cores = NULL, export_vars = NU
   ) %dopar% {
     scenario <- scenarios[[i]]
     
-    # Run the simulation with the current scenario
-    tryCatch({
-      # Load configuration for this scenario
-      scenario_config <- if (is.character(scenario$config_file)) {
-        load_config(scenario$config_file)
-      } else {
-        scenario$config
-      }
-      
-      # Create population for this scenario (simplified)
-      pop_data <- scenario$population
-      if (is.null(pop_data)) {
-        pop_data <- generate_efficient_population(scenario$n_pop %||% 1000)
-      }
-      
-      # Run simulation cycles
-      result <- run_single_simulation(pop_data, scenario$years %||% 10, scenario_config)
-      
-      # Return results with scenario ID
-      list(
-        scenario_id = scenario$id %||% i,
-        config = scenario_config,
-        results = result,
-        completed = TRUE,
-        error = NULL
-      )
-    }, error = function(e) {
-      list(
-        scenario_id = scenario$id %||% i,
-        config = NULL,
-        results = NULL,
-        completed = FALSE,
-        error = e$message
-      )
-    })
+    # Load configuration for this scenario
+    scenario_config <- if (is.character(scenario$config_path)) {
+      load_config(scenario$config_path)
+    } else {
+      scenario$config
+    }
+    
+    # Create population for this scenario (simplified)
+    pop_data <- scenario$population
+    if (is.null(pop_data)) {
+      pop_data <- generate_efficient_population(scenario$n_pop %||% 1000)
+    }
+    
+    # Run simulation cycles
+    result <- run_single_simulation(pop_data, scenario$years %||% 10, scenario_config)
+    
+    # Return results with scenario ID
+    list(
+      scenario_id = scenario$id %||% i,
+      config = scenario_config,
+      results = result,
+      completed = TRUE,
+      error = NULL
+    )
   }
   
   # Stop the cluster
@@ -107,16 +96,22 @@ run_single_simulation <- function(pop_data, n_years, config) {
   # Run simulation cycles
   for (year in 1:n_years) {
     # Apply simulation cycle function
-    current_pop <- simulation_cycle_fcn(current_pop, config)
+    current_pop <- simulation_cycle_fcn(current_pop, config$coefficients, current_pop,
+                                      age_edges = c(50, 60, 70, 80),
+                                      bmi_edges = c(25, 30, 35),
+                                      am = current_pop,
+                                      mort_update_counter = 0,
+                                      lt = list(),
+                                      eq_cust = NULL,
+                                      tka_time_trend = 0)
     
     # Collect results for this cycle
     cycle_summary <- list(
       year = year,
       population_size = nrow(current_pop),
       mean_age = mean(current_pop$age, na.rm = TRUE),
-      tka_rate = mean(current_pop$tka_status == "Primary" | 
-                     current_pop$tka_status == "Revision", na.rm = TRUE),
-      mean_cost = mean(current_pop$total_costs, na.rm = TRUE),
+      tka_rate = mean(current_pop$tka_status %in% c("Primary", "Revision"), na.rm = TRUE),
+      mean_cost = mean(current_pop$total_cost, na.rm = TRUE),
       mean_qaly = mean(current_pop$qaly, na.rm = TRUE)
     )
     
@@ -130,7 +125,66 @@ run_single_simulation <- function(pop_data, n_years, config) {
   ))
 }
 
-#' Parallel Bootstrapping for Uncertainty Analysis
+#' Parallel Cost Calculation
+#'
+#' Calculates costs in parallel to speed up processing for large populations.
+#'
+#' @param population_data Large population dataset
+#' @param cost_configs List of cost configurations to apply
+#' @param n_cores Number of cores to use
+#' @return Combined cost calculation results
+#' @export
+parallel_cost_calculation <- function(population_data, cost_configs, n_cores = NULL) {
+  if (is.null(n_cores)) {
+    n_cores <- min(8, parallel::detectCores() - 1)  # Use up to 8 cores
+  }
+  
+  # Split data into chunks for parallel processing
+  n_chunks <- n_cores * 2  # Create more chunks than cores for better load balancing
+  chunk_size <- ceiling(nrow(population_data) / n_chunks)
+  
+  # Create data chunks
+  data_chunks <- list()
+  for (i in 1:n_chunks) {
+    start_row <- (i - 1) * chunk_size + 1
+    end_row <- min(i * chunk_size, nrow(population_data))
+    data_chunks[[i]] <- population_data[start_row:end_row, ]
+  }
+  
+  # Set up parallel processing
+  cl <- parallel::makeCluster(n_cores)
+  doParallel::registerDoParallel(cl)
+  
+  # Export necessary functions
+  parallel::clusterExport(cl, 
+                         varlist = c("calculate_costs_fcn", "cost_configs"),
+                         envir = environment())
+  
+  # Process chunks in parallel
+  chunk_results <- foreach::foreach(
+    chunk = data_chunks,
+    .packages = c("data.table", "ausoa")
+  ) %dopar% {
+    # Calculate costs for this chunk
+    tryCatch({
+      calc_result <- calculate_costs_fcn(chunk, cost_configs)
+      return(calc_result)
+    }, error = function(e) {
+      warning("Error in cost calculation for chunk: ", e$message)
+      return(chunk)  # Return original chunk with no cost columns if error
+    })
+  }
+  
+  # Stop cluster
+  parallel::stopCluster(cl)
+  
+  # Combine results
+  combined_result <- data.table::rbindlist(chunk_results)
+  
+  return(combined_result)
+}
+
+#' Parallel Bootstrap for Uncertainty Analysis
 #'
 #' Performs bootstrap resampling in parallel for uncertainty analysis.
 #'
@@ -204,72 +258,13 @@ parallel_bootstrap <- function(data, n_boot = 1000, statistic, n_cores = NULL, .
   return(results)
 }
 
-#' Parallel Cost Calculation
-#'
-#' Calculates costs in parallel to speed up processing for large populations.
-#'
-#' @param population_data Large population dataset
-#' @param cost_configs List of cost configurations to apply
-#' @param n_cores Number of cores to use
-#' @return Combined cost calculation results
-#' @export
-parallel_cost_calculation <- function(population_data, cost_configs, n_cores = NULL) {
-  if (is.null(n_cores)) {
-    n_cores <- min(8, parallel::detectCores() - 1)  # Use up to 8 cores
-  }
-  
-  # Split data into chunks for parallel processing
-  n_chunks <- n_cores * 2  # Create more chunks than cores for better load balancing
-  chunk_size <- ceiling(nrow(population_data) / n_chunks)
-  
-  # Create data chunks
-  data_chunks <- list()
-  for (i in 1:n_chunks) {
-    start_row <- (i - 1) * chunk_size + 1
-    end_row <- min(i * chunk_size, nrow(population_data))
-    data_chunks[[i]] <- population_data[start_row:end_row, ]
-  }
-  
-  # Set up parallel processing
-  cl <- parallel::makeCluster(n_cores)
-  doParallel::registerDoParallel(cl)
-  
-  # Export necessary functions
-  parallel::clusterExport(cl, 
-                         varlist = c("calculate_costs_fcn", "cost_configs"),
-                         envir = environment())
-  
-  # Process chunks in parallel
-  chunk_results <- foreach::foreach(
-    chunk = data_chunks,
-    .packages = c("data.table", "ausoa")
-  ) %dopar% {
-    # Calculate costs for this chunk
-    tryCatch({
-      calc_result <- calculate_costs_fcn(chunk, cost_configs)
-      return(calc_result)
-    }, error = function(e) {
-      warning("Error in cost calculation for chunk: ", e$message)
-      return(chunk)  # Return original chunk with no cost columns if error
-    })
-  }
-  
-  # Stop cluster
-  parallel::stopCluster(cl)
-  
-  # Combine results
-  combined_result <- data.table::rbindlist(chunk_results)
-  
-  return(combined_result)
-}
-
 #' Parallel PSA (Probabilistic Sensitivity Analysis)
 #'
 #' Runs probabilistic sensitivity analysis in parallel across parameter sets.
 #'
 #' @param param_samples Matrix/data frame of parameter samples from distributions
 #' @param base_config Base configuration to modify for each sample
-#' @param n_cores Number of CPU cores to use
+#' @param n_cores Number of cores to use
 #' @param run_function Function to run for each parameter set
 #' @return Results for each parameter combination
 #' @export
@@ -352,6 +347,7 @@ modify_config_with_params <- function(base_config, param_set) {
   
   return(modified_config)
 }
+
 
 #' Parallel Cohort Analysis
 #'
@@ -488,7 +484,7 @@ parallel_internal_function <- function(fun_name, data_list, n_cores = NULL, ...)
 
 # Export functions
 parallel_simulations <- run_parallel_simulations
-run_parallel_psa_analysis <- run_parallel_psa
+run_parallel_psa_analysis <- parallel_psa
 parallel_cost_analysis <- parallel_cost_calculation
 parallel_bootstrap_analysis <- parallel_bootstrap
 parallel_cohort_eval <- parallel_cohort_analysis
