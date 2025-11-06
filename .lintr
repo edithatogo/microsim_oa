@@ -1,35 +1,58 @@
-﻿linters: with_defaults(
-  # Code style
+# Lintr configuration for AUS-OA package
+# This file specifies the code style rules that lintr will enforce
+
+list(
+  # Line width should be reasonable
   line_length_linter(120),
+  
+  # Functions should have documentation
+  documentation_linter(),
+  
+  # No trailing semicolons
+  trailing_semicolon_linter(),
+  
+  # No trailing whitespace
   trailing_whitespace_linter(),
-  trailing_blank_lines_linter(),
   
-  # Best practices
-  cyclocomp_linter(50),
-  object_usage_linter(),
-  unused_import_linter(),
+  # Good spacing around operators
+  spaces_inside_linter(),
+  spaces_left_parentheses_linter(),
   
-  # Security
+  # Proper assignment usage  
+  assignment_linter(),
+  
+  # No tabs
   no_tab_linter(),
-  no_single_quotes_linter(),
   
-  # Performance
-  vector_logic_linter(),
+  # No absolute paths in code
+  no_absolute_paths_linter(),
   
-  # Documentation
-  todo_comment_linter(),
+  # No non-ASCII characters in strings/comments
+  no_ascii_control_chars_linter(),
   
-  # Custom exclusions for specific files
-  exclusions: list(
-    "R/zzz.R" = list(
-      line_length_linter = NULL,
-      cyclocomp_linter = NULL
-    ),
-    "tests/testthat/" = list(
-      line_length_linter = NULL,
-      cyclocomp_linter = NULL
-    )
+  # Proper brace style
+  closed_curly_linter(),
+  
+  # T and F should be TRUE and FALSE
+  T_and_F_symbol_linter(),
+  
+  # No redundant parentheses
+  parenthesis_linter(),
+  
+  # Comments should start with space
+  commented_code_linter(),
+  
+  # Proper indentation
+  # This is handled by default with standard R indentation rules
+  object_name_linter(
+    style = "any_case",  # Allow snake_case, camelCase, or kebab-case
+    severity = "warning"
+  ),
+  
+  # Function naming conventions
+  object_name_linter(
+    type = "function",
+    style = "snake_case",  # Functions should use snake_case
+    severity = "warning"
   )
 )
-
-encoding: "UTF-8"

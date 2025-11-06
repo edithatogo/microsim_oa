@@ -1,0 +1,194 @@
+---
+title: "Getting Started with AUS-OA Microsimulation"
+author: "AUS-OA Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with AUS-OA Microsimulation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE  # Set to TRUE when actually running the examples
+)
+library(ausoa)
+```
+
+# Getting Started with AUS-OA
+
+This article introduces the AUS-OA package for osteoarthritis microsimulation modeling. It provides a gentle introduction to the core concepts and functions.
+
+## Introduction
+
+AUS-OA is a dynamic discrete-time microsimulation model specifically designed for osteoarthritis (OA) health economics and policy evaluation in Australia. It enables researchers and policymakers to evaluate the clinical, economic, and quality-of-life impacts of OA interventions.
+
+## Core Concepts
+
+The AUS-OA model operates on these principles:
+
+1. **Individual-based simulation**: Each person in the population is tracked over time
+2. **Event-driven progression**: OA status, surgeries, and outcomes evolve based on probabilities
+3. **Economic analysis**: Costs and quality-adjusted life years (QALYs) are tracked
+4. **Policy evaluation**: Interventions can be applied and evaluated
+
+## Basic Usage
+
+### Loading Configuration
+
+AUS-OA uses YAML configuration files to specify simulation parameters:
+
+```{r load-config}
+# Load the default configuration
+config <- load_config()
+
+# View the configuration structure
+str(config)
+```
+
+### Creating Population Data
+
+Population data represents the initial state of individuals in the simulation:
+
+```{r create-population}
+# Create a small test population
+test_population <- data.frame(
+  id = 1:1000,                        # Unique identifier for each individual
+  age = sample(40:85, 1000, replace = TRUE),  # Age in years
+  sex = sample(c(0, 1), 1000, replace = TRUE), # Sex (0=female, 1=male)
+  bmi = rnorm(1000, mean = 28, sd = 5),       # Body Mass Index
+  kl_score = sample(0:4, 1000, replace = TRUE, prob = c(0.4, 0.25, 0.2, 0.1, 0.05)), # Kellgren-Lawrence score
+  qaly = runif(1000, 0.6, 1.0),              # Current QALY value
+  cost = runif(1000, 500, 5000)               # Current annual costs
+)
+```
+
+### Running a Simple Simulation
+
+While the full simulation cycle is complex, let's look at how individual components work:
+
+```{r basic-calculations}
+# Calculate QALYs for the population
+qaly_result <- calculate_qaly(test_population)
+
+# Apply an intervention
+intervention_params <- list(
+  enabled = TRUE,
+  interventions = list(
+    bmi_intervention = list(
+      type = "bmi_modification",
+      start_year = 2025,
+      end_year = 2030,
+      parameters = list(uptake_rate = 0.6, bmi_change = -2.0)
+    )
+  )
+)
+
+# Apply interventions
+intervened_pop <- apply_interventions(
+  test_population, 
+  intervention_params, 
+  year = 2025
+)
+```
+
+### Cost Analysis
+
+Calculate healthcare costs based on the population state:
+
+```{r cost-analysis}
+# Define cost parameters
+cost_config <- list(
+  costs = list(
+    tka_primary = list(
+      hospital_stay = list(value = 15000, perspective = "healthcare_system"),
+      patient_gap = list(value = 2000, perspective = "patient")
+    ),
+    tka_revision = list(
+      hospital_stay = list(value = 20000, perspective = "healthcare_system"),
+      patient_gap = list(value = 2500, perspective = "patient")
+    )
+  )
+)
+
+# Calculate costs
+cost_data <- test_population  # Subset as needed
+costs_result <- calculate_costs_fcn(cost_data, cost_config)
+```
+
+## Advanced Features
+
+### Configuration Management
+
+AUS-OA provides robust configuration management:
+
+```{r config-management}
+# Create configuration from parameters
+custom_config <- create_config_from_parameters(
+  time_horizon = 30,
+  population_size = 5000,
+  tka_primary_cost = 18000
+)
+
+# Update specific sections
+updated_config <- update_config_section(
+  custom_config,
+  "simulation",
+  list(verbose = TRUE, seed = 12345)
+)
+```
+
+### Validation and Error Handling
+
+The package includes comprehensive validation:
+
+```{r validation}
+# Validate input data
+validation_errors <- validate_input_data(
+  test_population, 
+  required_columns = c("id", "age", "sex", "bmi")
+)
+
+if (length(validation_errors) > 0) {
+  cat("Validation errors found:\n")
+  cat(paste("-", validation_errors, collapse = "\n"))
+}
+
+# Safely run function with validation
+safe_result <- safe_apply_interventions(
+  test_population,
+  intervention_params,
+  year = 2025
+)
+```
+
+## Performance Monitoring
+
+AUS-OA includes performance monitoring capabilities:
+
+```{r performance}
+# Benchmark function execution
+library(bench)
+
+# Time a function call
+timing_result <- mark({
+  calculate_qaly(test_population[1:100, ])
+})
+
+print(timing_result)
+```
+
+## Conclusion
+
+This tutorial provided an introduction to the AUS-OA microsimulation package. The package offers comprehensive functionality for OA modeling including:
+
+- Individual-based simulation of OA progression
+- Healthcare cost and QALY calculations
+- Intervention evaluation capabilities
+- Robust configuration and validation systems
+- Performance monitoring tools
+
+For more advanced usage, see our other articles and the function reference documentation.

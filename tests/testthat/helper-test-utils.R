@@ -1,168 +1,168 @@
-# Helper functions for AUS-OA testing
+# Test data helpers for ausoa package
+# Provides standardized test fixtures for consistent testing
 
-# Generate synthetic population data for testing
+# Generate a basic test population
 generate_test_population <- function(n = 100, seed = 123) {
   set.seed(seed)
+  
   data.frame(
     id = 1:n,
-    age = sample(45:85, n, replace = TRUE),
-    sex = sample(c("[1] Male", "[2] Female"), n, replace = TRUE),
-    bmi = rnorm(n, 28, 4),
-    d_sf6d = rnorm(n, -0.01, 0.005),
-    tkai = runif(n, 0, 0.1),
-    oa_state = sample(0:4, n, replace = TRUE),
-    kl0 = rep(0, n),
-    kl1 = rep(0, n),
-    kl2 = rep(0, n),
-    kl3 = rep(0, n),
-    kl4 = rep(0, n),
-    year12 = sample(0:1, n, replace = TRUE)
+    age = sample(40:85, n, replace = TRUE),
+    sex = sample(c(0, 1), n, replace = TRUE),  # 0 = female, 1 = male
+    bmi = rnorm(n, mean = 28, sd = 5),
+    kl_score = sample(0:4, n, replace = TRUE, prob = c(0.3, 0.25, 0.2, 0.15, 0.1)), # KL scores with realistic distribution
+    tka_status = sample(c(0, 1), n, replace = TRUE, prob = c(0.95, 0.05)), # Most haven't had TKA
+    revision_status = sample(c(0, 1), n, replace = TRUE, prob = c(0.98, 0.02)), # Even fewer have had revision
+    comorbidities = sample(c(0, 1, 2, 3), n, replace = TRUE, prob = c(0.4, 0.3, 0.2, 0.1)),
+    qaly = runif(n, min = 0.6, max = 1.0),  # Quality adjusted life years
+    cost = runif(n, min = 1000, max = 100000), # Annual costs
+    stringsAsFactors = FALSE
   )
 }
 
-# Verify simulation result structure
-verify_simulation_result <- function(result) {
-  # Check that result is not null
-  expect_false(is.null(result))
-  
-  # Check that result has expected type
-  expect_true(is.data.frame(result) || is.list(result) || is.vector(result))
-  
-  # If it's a data frame, check basic structure
-  if (is.data.frame(result)) {
-    expect_gt(nrow(result), 0)
-    expect_gt(ncol(result), 0)
-  }
-  
-  # If it's a list, check for non-zero length
-  if (is.list(result)) {
-    expect_gt(length(result), 0)
-  }
-}
-
-# Benchmark function execution time
-benchmark_function <- function(func, ..., iterations = 5) {
-  times <- system.time({
-    for (i in 1:iterations) {
-      result <- func(...)
-    }
-  })
-  
+# Generate test configuration
+generate_test_config <- function() {
   list(
-    elapsed = times[3] / iterations,  # Average time per iteration
-    result = result
-  )
-}
-
-# Check memory usage of a function
-check_memory_usage <- function(func, ...) {
-  # Get initial memory stats
-  gc()
-  initial_mem <- sum(gc()[, "used"])
-  
-  # Execute function
-  result <- func(...)
-  
-  # Get final memory stats
-  final_mem <- sum(gc()[, "used"])
-  
-  list(
-    memory_increase = final_mem - initial_mem,
-    result = result
-  )
-}
-
-# Generate various test scenarios
-generate_test_scenarios <- function() {
-  list(
-    base_case = list(
-      population_size = 100,
-      time_horizon = 5,
-      scenario = "base_case"
-    ),
-    intervention = list(
-      population_size = 100,
-      time_horizon = 5,
-      scenario = "intervention"
-    ),
-    large_pop = list(
-      population_size = 1000,
-      time_horizon = 3,
-      scenario = "base_case"
-    )
-  )
-}
-
-# Check if running in CI environment
-is_ci_environment <- function() {
-  ci_vars <- c("CI", "CONTINUOUS_INTEGRATION", "GITHUB_ACTIONS", "TRAVIS", "CIRCLECI", "GITLAB_CI")
-  any(sapply(ci_vars, function(var) Sys.getenv(var, unset = "false") %in% c("true", "1", "yes", "TRUE")))
-}
-
-# Skip tests that require specific environment
-skip_if_not_stress_env <- function() {
-  test_env <- Sys.getenv("RUN_STRESS_TESTS", unset = "false")
-  skip_if_not(test_env %in% c("true", "1", "yes", "TRUE"), 
-              message = "Set RUN_STRESS_TESTS=true to run stress tests")
-}
-
-# Skip tests that require performance testing
-skip_if_not_performance_env <- function() {
-  test_env <- Sys.getenv("RUN_PERFORMANCE_TESTS", unset = "false")
-  skip_if_not(test_env %in% c("true", "1", "yes", "TRUE"), 
-              message = "Set RUN_PERFORMANCE_TESTS=true to run performance tests")
-}
-
-# Create temporary configuration for testing
-create_test_config <- function() {
-  temp_dir <- tempdir()
-  config_file <- file.path(temp_dir, "test_config.yaml")
-  
-  # Write minimal configuration
-  config_content <- list(
     simulation = list(
-      default_cycles = 5,
-      time_horizon = 10
+      time_horizon = 20,
+      start_year = 2025,
+      population_size = 1000
     ),
     costs = list(
       tka_primary = list(
-        hospital_stay = list(value = 18000, perspective = "healthcare_system")
+        hospital_stay = list(value = 15000, perspective = "healthcare_system"),
+        patient_gap = list(value = 2000, perspective = "patient")
+      ),
+      tka_revision = list(
+        hospital_stay = list(value = 20000, perspective = "healthcare_system"),
+        patient_gap = list(value = 2500, perspective = "patient")
+      )
+    ),
+    utilities = list(
+      kl0 = 0.85,
+      kl1 = 0.80,
+      kl2 = 0.72,
+      kl3 = 0.65,
+      kl4 = 0.55,
+      post_tka = 0.78
+    ),
+    risks = list(
+      tka_annual = 0.02,  # 2% annual probability of TKA
+      revision_annual = 0.03  # 3% annual risk of revision after TKA
+    )
+  )
+}
+
+# Generate test intervention parameters
+generate_test_interventions <- function() {
+  list(
+    enabled = TRUE,
+    interventions = list(
+      bmi_reduction = list(
+        type = "bmi_modification",
+        start_year = 2025,
+        end_year = 2030,
+        target_population = list(min_age = 50, max_age = 80),
+        parameters = list(
+          uptake_rate = 0.6,
+          bmi_change = -2.0
+        )
+      ),
+      qaly_improvement = list(
+        type = "qaly_and_cost_modification",
+        start_year = 2026,
+        end_year = 2032,
+        target_population = list(min_age = 60),
+        parameters = list(
+          uptake_rate = 0.75,
+          qaly_improvement = 0.05
+        )
+      ),
+      tka_risk_reduction = list(
+        type = "tka_risk_modification",
+        start_year = 2027,
+        end_year = 2035,
+        target_population = list(min_age = 65),
+        parameters = list(
+          uptake_rate = 0.5,
+          risk_reduction = 0.15
+        )
       )
     )
   )
-  
-  # Convert to YAML format (simplified)
-  yaml_lines <- c(
-    "simulation:",
-    "  default_cycles: 5",
-    "  time_horizon: 10",
-    "costs:",
-    "  tka_primary:",
-    "    hospital_stay:",
-    "      value: 18000",
-    "      perspective: healthcare_system"
-  )
-  
-  writeLines(yaml_lines, config_file)
-  config_file
 }
 
-# Compare two simulation results for similarity (allowing for stochastic variation)
-compare_simulation_results <- function(result1, result2, tolerance = 0.1) {
-  # Both should be non-null
-  expect_false(is.null(result1))
-  expect_false(is.null(result2))
+# Generate a minimal test dataset
+generate_minimal_test_data <- function() {
+  data.frame(
+    id = 1:10,
+    age = c(60, 65, 70, 75, 80, 62, 68, 72, 78, 82),
+    sex = c(0, 1, 1, 0, 1, 0, 1, 0, 0, 1),
+    bmi = c(25, 28, 30, 32, 35, 26, 29, 31, 33, 36),
+    kl_score = c(1, 2, 2, 3, 3, 1, 2, 3, 3, 4),
+    tka_status = c(0, 0, 1, 1, 0, 0, 1, 1, 1, 0),
+    stringsAsFactors = FALSE
+  )
+}
+
+# Test data with costs structure
+generate_cost_test_data <- function() {
+  data.frame(
+    id = 1:20,
+    age = rep(65:75, length.out = 20),
+    sex = rep(c(0, 1), length.out = 20),
+    tka = c(rep(0, 10), rep(1, 10)),
+    revi = c(rep(0, 15), rep(1, 5)),
+    oa = rep(1, 20),
+    dead = c(rep(0, 18), rep(1, 2)),
+    ir = c(rep(0, 5), rep(1, 5), rep(0, 5), rep(1, 5)),
+    comp = c(rep(0, 16), rep(1, 4)),
+    comorbidity_cost = runif(20, 0, 1000),
+    intervention_cost = runif(20, 0, 500),
+    stringsAsFactors = FALSE
+  )
+}
+
+# Save test datasets to fixtures directory
+save_test_fixtures <- function() {
+  # Create test population
+  test_pop <- generate_test_population(50)
+  saveRDS(test_pop, file.path("tests/testthat/fixtures", "test_population.rds"))
   
-  # Compare structures
-  expect_identical(is.data.frame(result1), is.data.frame(result2))
-  expect_identical(is.list(result1), is.list(result2))
+  # Save minimal test data
+  min_data <- generate_minimal_test_data()
+  saveRDS(min_data, file.path("tests/testthat/fixtures", "minimal_test_data.rds"))
   
-  if (is.data.frame(result1) && is.data.frame(result2)) {
-    expect_equal(nrow(result1), nrow(result2))
-    expect_equal(ncol(result1), ncol(result2))
-    # For stochastic simulations, exact equality isn't expected
-  } else if (is.numeric(result1) && is.numeric(result2)) {
-    # For summary statistics, use tolerance
-    expect_equal(result1, result2, tolerance = tolerance)
+  # Save cost test data
+  cost_data <- generate_cost_test_data()
+  saveRDS(cost_data, file.path("tests/testthat/fixtures", "cost_test_data.rds"))
+  
+  # Save configuration
+  config <- generate_test_config()
+  saveRDS(config, file.path("tests/testthat/fixtures", "test_config.rds"))
+  
+  # Save intervention parameters
+  interventions <- generate_test_interventions()
+  saveRDS(interventions, file.path("tests/testthat/fixtures", "test_interventions.rds"))
+  
+  cat("Test fixtures saved to tests/testthat/fixtures/\n")
+}
+
+# Function to load test data
+load_test_fixture <- function(fixture_name) {
+  fixture_path <- file.path("tests/testthat/fixtures", paste0(fixture_name, ".rds"))
+  if (file.exists(fixture_path)) {
+    return(readRDS(fixture_path))
+  } else {
+    stop("Fixture ", fixture_name, " does not exist at ", fixture_path)
+  }
+}
+
+# Run this once to create all fixtures
+if (getRversion() >= "3.0.0") {
+  # Only run if we're not in a check environment
+  if (!nzchar(Sys.getenv("R_CHECKING", unset = ""))) {
+    # Create all fixtures (uncomment if needed)
+    # save_test_fixtures()
   }
 }

@@ -1,10 +1,21 @@
-﻿url: https://edithatogo.github.io/microsim_oa/
+title: "AUS-OA"
+url: https://edithatogo.github.io/microsim_oa/
 template:
   bootstrap: 5
-  bootswatch: cosmo
+  bootswatch: flatly
+  ganalytics: UA-XXXXXXXX-X
+  params:
+    docsearch:
+      api_key: YOUR_API_KEY
+      index_name: YOUR_INDEX_NAME
+
+development:
+  mode: auto
+  version_label: default
+  version_tooltip: "Development Version"
 
 navbar:
-  title: "AUS OA Microsimulation"
+  title: "AUS-OA"
   left:
     - text: "Home"
       href: index.html
@@ -13,64 +24,90 @@ navbar:
     - text: "Articles"
       menu:
         - text: "Getting Started"
-          href: articles/getting-started.html
-        - text: "Advanced Usage"
-          href: articles/advanced-usage.html
+          href: articles/getting_started.html
+        - text: "Advanced Features"
+          href: articles/advanced_features.html
+        - text: "Case Studies"
+          href: articles/case_studies.html
     - text: "News"
       href: news/index.html
+    - text: "Tutorials"
+      menu:
+        - text: "Basic Modeling"
+          href: articles/tutorial_01_basic_modeling.html
+        - text: "Healthcare Utilization"
+          href: articles/tutorial_02_healthcare_utilization.html
+        - text: "Disease Progression"
+          href: articles/tutorial_03_disease_progression.html
+  - text: "Changelog"
+    href: news/index.html
+  right:
+    - icon: fa-github
+      href: https://github.com/edithatogo/microsim_oa
 
 reference:
-  - title: "Core Functions"
+  - title: "Core Simulation Functions"
     contents:
-      - starts_with("run_")
-      - starts_with("analyze_")
-      - starts_with("apply_")
+      - starts_with("simulation_cycle")
+      - calculate_costs_fcn
+      - calculate_qaly
+      - calculate_revision_risk_fcn
+      - apply_interventions
+      - OA_update
+      - TKA_update_fcn
+      - TKA_revisions
+      - update_comorbidities
+      - update_pros_fcn
   - title: "Data Management"
     contents:
-      - starts_with("load_")
-      - starts_with("save_")
-      - starts_with("convert_")
-  - title: "Visualization"
+      - starts_with("read")
+      - starts_with("convert")
+      - starts_with("get")
+      - load_config
+      - starts_with("acquire")
+      - validate_dataset
+      - starts_with("prepare")
+  - title: "Intervention and Policy Functions"
     contents:
-      - starts_with("plot_")
-      - starts_with("visualize_")
-      - ends_with("_plot")
-  - title: "Utilities"
+      - apply_coefficient_customisations
+      - apply_policy_levers
+      - starts_with("apply_")
+  - title: "Health Economics"
+    contents:
+      - starts_with("calculate_")
+      - starts_with("cost")
+      - starts_with("qaly")
+  - title: "Validation and Utilities"
+    contents:
+      - starts_with("validate")
+      - starts_with("check")
+      - starts_with("f_plot")
+      - starts_with("f_get")
+  - title: "Performance and Monitoring"
+    contents:
+      - starts_with("benchmark")
+      - starts_with("prof")
+      - starts_with("run_perf")
+      - starts_with("compare_perf")
+      - starts_with("gen_perf_report")
+  - title: "Error Handling and Validation"
+    contents:
+      - starts_with("validate_input")
+      - starts_with("validate_config")
+      - starts_with("validate_intervention")
+      - starts_with("safe_")
+      - starts_with("check_")
+  - title: "Configuration Management"
+    contents:
+      - starts_with("create_config")
+      - starts_with("save_config")
+      - starts_with("load_and_validate_config")
+      - starts_with("get_default_config")
+      - starts_with("get_config_section")
+      - starts_with("update_config_section")
+      - starts_with("validate_entire_config")
+  - title: "Quality Assurance"
     contents:
       - starts_with("check_")
       - starts_with("validate_")
-      - starts_with("test_")
-
-articles:
-  - title: "User Guides"
-    contents:
-      - getting-started
-      - data-integration-examples
-      - mock-data-guide
-  - title: "Technical Documentation"
-    contents:
-      - oa-datasets-quick-guide
-      - oa-datasets-summary
-      - feature-matrix-v4
-      - public-oa-datasets
-
-development:
-  mode: auto
-
-repo:
-  url:
-    home: https://github.com/edithatogo/microsim_oa/
-    source: https://github.com/edithatogo/microsim_oa/blob/main/
-    issue: https://github.com/edithatogo/microsim_oa/issues/
-    user: https://github.com/edithatogo/
-
-authors:
-  Edith A. Togonon:
-    href: https://github.com/edithatogo
-
-footer:
-  structure:
-    left: developed_by
-    right: built_with
-  left: "Developed by Edith A. Togonon"
-  right: "Built with pkgdown & GitHub Actions"
+      - starts_with("safe_")

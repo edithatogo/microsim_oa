@@ -1,0 +1,253 @@
+---
+title: "Health Economics Analysis with AUS-OA"
+author: "AUS-OA Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Health Economics Analysis with AUS-OA}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE  # Set to TRUE when actually running the examples
+)
+library(ausoa)
+```
+
+# Health Economics Analysis with AUS-OA
+
+This article demonstrates how to conduct health economics analyses using the AUS-OA microsimulation package, focusing on cost-effectiveness analysis for osteoarthritis interventions.
+
+## Introduction
+
+Health economics analysis is a core capability of AUS-OA, enabling evaluation of cost-effectiveness for different OA interventions. This tutorial covers:
+
+1. Cost calculation methodology
+2. Quality-Adjusted Life Year (QALY) assessments
+3. Cost-effectiveness analysis
+4. Budget impact modeling
+
+## Cost Calculation Framework
+
+AUS-OA implements a comprehensive cost calculation framework that captures various cost components:
+
+```{r cost-framework}
+# The cost calculation function
+?calculate_costs_fcn
+
+# Example cost configuration
+cost_config <- list(
+  costs = list(
+    # TKA (Total Knee Arthroplasty) costs
+    tka_primary = list(
+      hospital_stay = list(value = 15000, perspective = "healthcare_system"),
+      patient_gap = list(value = 2000, perspective = "patient"),
+      annual_review = list(value = 200, perspective = "healthcare_system")
+    ),
+    # Revision surgery costs  
+    tka_revision = list(
+      hospital_stay = list(value = 20000, perspective = "healthcare_system"),
+      patient_gap = list(value = 2500, perspective = "patient")
+    ),
+    # OA management costs
+    oa_management = list(
+      consultation = list(value = 80, perspective = "healthcare_system"),
+      medication = list(value = 1200, perspective = "patient"),
+      physiotherapy = list(value = 1500, perspective = "patient")
+    ),
+    # Complications costs
+    complications = list(
+      dvt = list(value = 3000, perspective = "healthcare_system"),
+      pji = list(value = 8000, perspective = "healthcare_system")
+    )
+  )
+)
+```
+
+## Example: Cost-Effectiveness Analysis
+
+Let's walk through a complete example of performing a cost-effectiveness analysis:
+
+```{r cea-example}
+# Create baseline population data
+baseline_pop <- data.frame(
+  id = 1:5000,
+  age = sample(50:80, 5000, replace = TRUE),
+  sex = sample(c(0, 1), 5000, replace = TRUE),
+  bmi = rnorm(5000, mean = 30, sd = 6),
+  kl_score = sample(2:4, 5000, replace = TRUE, prob = c(0.4, 0.4, 0.2)),
+  has_tka = sample(c(0, 1), 5000, replace = TRUE, prob = c(0.85, 0.15)),
+  tka_year = sample(2015:2025, 5000, replace = TRUE, prob = rep(1/11, 11)),
+  revision_risk = runif(5000, 0.01, 0.05),
+  qaly = runif(5000, 0.5, 0.8)
+)
+
+# Define intervention: Enhanced rehabilitation program
+intervention_params <- list(
+  enabled = TRUE,
+  interventions = list(
+    enhanced_rehab = list(
+      type = "qaly_and_cost_modification",
+      start_year = 2025,
+      end_year = 2035,
+      parameters = list(
+        qaly_improvement = 0.05,  # 5% improvement in QALY
+        cost_reduction = 0.10    # 10% reduction in management costs
+      )
+    )
+  )
+)
+
+# Apply intervention to a copy of the population
+intervened_pop <- apply_interventions(
+  baseline_pop,
+  intervention_params,
+  2025
+)
+
+# Calculate costs for both scenarios
+baseline_costs <- calculate_costs_fcn(baseline_pop, cost_config)
+intervened_costs <- calculate_costs_fcn(intervened_pop, cost_config)
+
+# Compare outcomes
+baseline_qaly <- calculate_qaly(baseline_pop)
+intervened_qaly <- calculate_qaly(intervened_pop)
+
+# Calculate incremental cost-effectiveness ratio (ICER)
+incremental_cost <- sum(intervened_costs$cycle_cost_total) - sum(baseline_costs$cycle_cost_total)
+incremental_qaly <- sum(intervened_qaly$qaly_total) - sum(baseline_qaly$qaly_total)
+
+icer <- incremental_cost / incremental_qaly
+cat("ICER (cost per QALY gained):", round(icer, 2), "\n")
+```
+
+## Budget Impact Analysis
+
+AUS-OA can also model budget impact of interventions at the population level:
+
+```{r budget-impact}
+# Define population for budget impact analysis
+state_pop <- data.frame(
+  id = 1:100000,
+  age = sample(45:85, 100000, replace = TRUE),
+  sex = sample(c(0, 1), 100000, replace = TRUE),
+  bmi = rnorm(100000, mean = 29, sd = 6),
+  kl_score = sample(0:4, 100000, replace = TRUE, prob = c(0.25, 0.2, 0.25, 0.2, 0.1)),
+  state_resident = rep(TRUE, 100000)  # All residents of the target state
+)
+
+# Define intervention: Early intervention program
+early_intervention <- list(
+  enabled = TRUE,
+  interventions = list(
+    early_intervention = list(
+      type = "bmi_modification",
+      start_year = 2025,
+      end_year = 2030,
+      parameters = list(
+        uptake_rate = 0.3,      # 30% uptake among eligible
+        bmi_change = -3.0,      # 3 kg/m² reduction
+        impact_duration = 5     # Effects last 5 years
+      )
+    )
+  )
+)
+
+# Apply intervention with scaled parameters for budget impact
+budget_impact_pop <- apply_interventions(
+  state_pop[1:10000, ],  # Sample for computational efficiency
+  early_intervention,
+  2025
+)
+
+# Calculate budget impact
+pre_intervention_costs <- calculate_costs_fcn(state_pop[1:10000, ], cost_config)
+post_intervention_costs <- calculate_costs_fcn(budget_impact_pop, cost_config)
+
+# Project to full population
+budget_impact <- (sum(post_intervention_costs$cycle_cost_total) - 
+                 sum(pre_intervention_costs$cycle_cost_total)) * 10  # Scale up by 10
+
+cat("Annual budget impact:", round(budget_impact, 2), "\n")
+cat("Budget impact per capita:", round(budget_impact / nrow(state_pop), 4), "\n")
+```
+
+## Sensitivity Analysis
+
+For robust decision-making, AUS-OA supports sensitivity analysis:
+
+```{r sensitivity}
+# Perform one-way sensitivity on key parameter
+sensitivity_analysis <- function(param_values, base_config) {
+  results <- data.frame(
+    param_value = param_values,
+    costs = numeric(length(param_values)),
+    qaly = numeric(length(param_values))
+  )
+  
+  for (i in seq_along(param_values)) {
+    # Modify configuration parameter
+    config_mod <- base_config
+    config_mod$costs$tka_primary$hospital_stay$value <- param_values[i]
+    
+    # Calculate metrics
+    costs <- calculate_costs_fcn(baseline_pop[1:1000, ], config_mod)
+    qaly_vals <- calculate_qaly(baseline_pop[1:1000, ])
+    
+    results$costs[i] <- mean(costs$cycle_cost_total)
+    results$qaly[i] <- mean(qaly_vals$qaly_total)
+  }
+  
+  return(results)
+}
+
+# Vary TKA cost from $12,000 to $20,000
+param_range <- seq(12000, 20000, by = 1000)
+sens_results <- sensitivity_analysis(param_range, cost_config)
+
+# View results
+head(sens_results)
+```
+
+## Visualization
+
+Visualizing health economics results is important for communication:
+
+```{r visualization}
+# Create cost-effectiveness plane (simplified)
+library(ggplot2)
+
+# Example cost-effectiveness scatter plot
+ce_data <- data.frame(
+  delta_qaly = c(0.02, 0.05, 0.08, 0.03),
+  delta_cost = c(500, 1200, 1800, 800),
+  scenario = c("Conservative", "Moderate", "Aggressive", "Alternative")
+)
+
+ggplot(ce_data, aes(x = delta_qaly, y = delta_cost, color = scenario)) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.5) +
+  labs(
+    title = "Cost-Effectiveness Plane",
+    x = "Incremental QALYs",
+    y = "Incremental Cost ($)"
+  ) +
+  theme_minimal()
+```
+
+## Conclusion
+
+This tutorial has shown how AUS-OA can be used for comprehensive health economics analysis of osteoarthritis interventions. The package provides:
+
+- Detailed cost calculation frameworks
+- QALY assessment capabilities
+- Cost-effectiveness analysis tools
+- Budget impact modeling
+- Sensitivity analysis functionality
+
+These capabilities enable evidence-based decision making for OA policy and resource allocation. For more details on specific functions, see the package documentation.

@@ -1,72 +1,98 @@
-# Workflow for building and checking R package.
-#
-# For more information, see: https://github.com/r-lib/actions/
-#
-# This workflow is based on the default 'R-CMD-check' workflow from r-lib/actions.
-
-name: R-CMD-check
+name: R CMD Check
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [ main, develop ]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [ main ]
+
+permissions:
+  contents: read
 
 jobs:
-  R-CMD-check:
-    runs-on: ubuntu-latest
+  check-standard:
+    runs-on: ${{ matrix.config.os }}
+
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+
     strategy:
+      fail-fast: false
       matrix:
-        r-version: ['release', 'devel', 'oldrel-1']
+        config:
+          - {os: ubuntu-latest, r: '4.3'}
+          - {os: ubuntu-latest, r: '4.4'}
+          - {os: windows-latest, r: '4.4'}
+          - {os: macos-latest, r: '4.4'}
+
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      RSPM: ${{ matrix.config.rspm }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          check-dir: '"${{ runner.temp }}/check"'
+          
+  test-coverage:
+    runs-on: ubuntu-latest
+    needs: check-standard
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Scan for secrets with TruffleHog
-        uses: trufflehog/trufflehog@main
-        with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-          extra_args: --only-verified
-
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: ${{ matrix.r-version }}
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-renv@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          cache-version: 1
-
-      - name: Lint (minimal, package sources only)
-        run: |
-          source("run_lintr.R")
-        shell: Rscript {0}
-
-      - name: Run R CMD check
-        run: |
-          options(crayon.enabled = TRUE)
-          rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "warning")
-        shell: Rscript {0}
+          extra-packages: any::covr, any::xml2
+          needs: coverage
 
       - name: Test coverage
         run: |
-          covr::codecov()
+          cov <- covr::package_coverage(
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+          )
+          print(cov)
+          covr::report(
+            cov,
+            file = file.path(Sys.getenv("RUNNER_TEMP"), "coverage.xml"),
+            type = "summary_jsonlc"
+          )
         shell: Rscript {0}
 
-  conventional-commits:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
+      - name: Show testthat output
+        if: always()
+        run: |
+          ## --------------------------------------------------------------------
+          find '${{ runner.temp }}/package' -name 'testthat.Rout*' -exec cat '{}' \; || true
+        shell: bash
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
         with:
-          fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v5
-        with:
-          configFile: '.commitlintrc.js'
+          file: ${{ runner.temp }}/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

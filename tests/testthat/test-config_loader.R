@@ -1,4 +1,4 @@
-test_that("config_loader loads configuration correctly", {
+test_that("load_config loads configuration correctly", {
   # Create a temporary config file for testing
   temp_config <- tempfile(fileext = ".yaml")
   config_data <- list(
@@ -15,7 +15,7 @@ test_that("config_loader loads configuration correctly", {
   yaml::write_yaml(config_data, temp_config)
   
   # Test loading the configuration
-  config <- config_loader(temp_config)
+  config <- load_config(temp_config)
   
   # Check that the configuration is loaded correctly
   expect_type(config, "list")
@@ -28,7 +28,7 @@ test_that("config_loader loads configuration correctly", {
   unlink(temp_config)
 })
 
-test_that("config_loader handles missing file gracefully", {
+test_that("load_config handles missing file gracefully", {
   # Test with non-existent file
-  expect_error(config_loader("non_existent_file.yaml"))
+  expect_error(load_config("non_existent_file.yaml"))
 })

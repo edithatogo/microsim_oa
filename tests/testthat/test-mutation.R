@@ -1,225 +1,215 @@
-﻿library(testthat)
+# Mutation testing for ausoa package
+# These tests verify that function behavior is robust to minor changes
+
+library(testthat)
 library(ausoa)
-if (requireNamespace("mutatr", quietly = TRUE)) {
-  library(mutatr)
-} else {
-  message("mutatr package not available, skipping mutation tests")
-  quit(save = "no", status = 0)
-}
 
-context("Mutation Testing")
-
-# Mutation testing for critical functions
-test_that("Critical functions survive mutations", {
-  skip_if_not(interactive() || Sys.getenv("RUN_MUTATION_TESTS") == "true")
-  
-  # Test simulation_cycle_fcn with mutations
-  original_function <- simulation_cycle_fcn
-  
-  # Create mutated versions
-  mutations <- list(
-    # Mutation 1: Change arithmetic operators
-    function(population_data, time_horizon, scenario) {
-      # Original: population_data * time_horizon
-      # Mutated: population_data + time_horizon
-      result <- original_function(population_data, time_horizon, scenario)
-      if (is.numeric(result)) {
-        result <- result * 0.9  # Slightly modify result
-      }
-      result
-    },
-    
-    # Mutation 2: Change comparison operators
-    function(population_data, time_horizon, scenario) {
-      result <- original_function(population_data, time_horizon, scenario)
-      # Introduce subtle bug in comparison
-      if (is.list(result) && length(result) > 0) {
-        result[[1]] <- result[[1]] * 1.01  # 1% change
-      }
-      result
-    },
-    
-    # Mutation 3: Change logical operators
-    function(population_data, time_horizon, scenario) {
-      result <- original_function(population_data, time_horizon, scenario)
-      # Introduce logical error
-      if (is.data.frame(result)) {
-        result[1, ] <- result[1, ] * 0.99  # 1% change
-      }
-      result
-    }
+test_that("calculate_costs_fcn is robust to parameter variations", {
+  # Create baseline test data
+  baseline_data <- data.frame(
+    tka = c(0, 1, 0, 1),
+    revi = c(0, 0, 1, 0),
+    oa = c(1, 1, 1, 1),
+    dead = c(0, 0, 0, 0),
+    ir = c(1, 0, 1, 0),
+    comp = c(0, 0, 0, 1),
+    comorbidity_cost = c(1000, 1500, 2000, 2500),
+    intervention_cost = c(0, 100, 0, 200)
   )
   
-  # Test that mutations are caught by existing tests
-  for (i in seq_along(mutations)) {
-    mutated_result <- mutations[[i]](100, 5, "base_case")
-    
-    # The mutation should produce different results
-    original_result <- original_function(100, 5, "base_case")
-    
-    # Results should be different (mutation detected)
-    expect_false(identical(mutated_result, original_result))
-  }
-})
-
-# Test suite robustness against mutations
-test_that("Test suite detects mutations", {
-  # This test verifies that our test suite would catch common mutations
-  
-  # Test with slightly modified inputs
-  original_result <- simulation_cycle_fcn(100, 5, "base_case")
-  
-  # Test with mutated inputs
-  mutated_results <- list(
-    simulation_cycle_fcn(101, 5, "base_case"),  # +1 to population
-    simulation_cycle_fcn(100, 6, "base_case"),  # +1 to time_horizon
-    simulation_cycle_fcn(100, 5, "intervention")  # Different scenario
-  )
-  
-  # At least one mutation should be detected
-  differences_detected <- sapply(mutated_results, function(x) {
-    !identical(x, original_result)
-  })
-  
-  expect_true(any(differences_detected))
-})
-
-# Edge case mutation testing
-test_that("Edge cases survive mutations", {
-  # Test edge cases with mutations
-  
-  edge_cases <- list(
-    list(population = 1, time = 1, scenario = "base_case"),
-    list(population = 1000, time = 1, scenario = "base_case"),
-    list(population = 1, time = 50, scenario = "base_case"),
-    list(population = 1000, time = 50, scenario = "base_case")
-  )
-  
-  for (case in edge_cases) {
-    original <- simulation_cycle_fcn(
-      case, case, case
-    )
-    
-    # Test with small mutations
-    mutated <- simulation_cycle_fcn(
-      case + 1, case, case
-    )
-    
-    # Should detect the difference
-    expect_false(identical(original, mutated))
-  }
-})
-
-# Performance mutation testing
-test_that("Performance is affected by mutations", {
-  skip_if_not(interactive() || Sys.getenv("RUN_MUTATION_TESTS") == "true")
-  
-  library(bench)
-  
-  # Compare performance of original vs mutated function
-  original_perf <- bench::mark(
-    simulation_cycle_fcn(100, 5, "base_case"),
-    iterations = 10,
-    check = FALSE
-  )
-  
-  # Create a mutated version that does extra work
-  mutated_function <- function(pop, time, scenario) {
-    result <- simulation_cycle_fcn(pop, time, scenario)
-    Sys.sleep(0.01)  # Add small delay
-    result
-  }
-  
-  mutated_perf <- bench::mark(
-    mutated_function(100, 5, "base_case"),
-    iterations = 10,
-    check = FALSE
-  )
-  
-  # Mutated version should be slower
-  expect_gt(mutated_perf, original_perf)
-})
-
-# Memory mutation testing
-test_that("Memory usage changes with mutations", {
-  skip_if_not(interactive() || Sys.getenv("RUN_MUTATION_TESTS") == "true")
-  
-  # Test memory usage of original function
-  mem_original <- profmem::profmem({
-    result1 <- simulation_cycle_fcn(100, 5, "base_case")
-  })
-  
-  # Create mutated version that uses more memory
-  mutated_function <- function(pop, time, scenario) {
-    result <- simulation_cycle_fcn(pop, time, scenario)
-    # Add memory overhead
-    temp_data <- rep(1, 100000)  # Allocate extra memory
-    rm(temp_data)
-    result
-  }
-  
-  mem_mutated <- profmem::profmem({
-    result2 <- mutated_function(100, 5, "base_case")
-  })
-  
-  # Mutated version should use more memory
-  expect_gte(sum(mem_mutated), sum(mem_original))
-})
-
-# Robustness mutation testing
-test_that("Robustness against input mutations", {
-  # Test that function handles mutated inputs gracefully
-  
-  # Test with various input mutations
-  test_cases <- list(
-    list(pop = 100, time = 5, scenario = "base_case"),
-    list(pop = 0, time = 5, scenario = "base_case"),  # Edge case
-    list(pop = -100, time = 5, scenario = "base_case"),  # Invalid
-    list(pop = 100, time = 0, scenario = "base_case"),  # Edge case
-    list(pop = 100, time = -5, scenario = "base_case"),  # Invalid
-    list(pop = 100, time = 5, scenario = NULL),  # Invalid
-    list(pop = 100, time = 5, scenario = 123),  # Invalid type
-    list(pop = "100", time = 5, scenario = "base_case"),  # Wrong type
-    list(pop = 100, time = "5", scenario = "base_case"),  # Wrong type
-  )
-  
-  for (case in test_cases) {
-    if (case > 0 && case > 0 && is.character(case)) {
-      # Valid case
-      result <- simulation_cycle_fcn(case, case, case)
-      expect_true(!is.null(result))
-    } else {
-      # Invalid case - should handle gracefully
-      expect_error(
-        simulation_cycle_fcn(case, case, case)
+  baseline_config <- list(
+    costs = list(
+      tka_primary = list(
+        hospital_stay = list(value = 15000, perspective = "healthcare_system"),
+        patient_gap = list(value = 2000, perspective = "patient")
       )
-    }
+    )
+  )
+  
+  # Baseline result
+  baseline_result <- calculate_costs_fcn(baseline_data, baseline_config)
+  
+  expect_false(is.null(baseline_result))
+  expect_true(is.data.frame(baseline_result))
+  
+  # Test with slightly varied input
+  variant_data <- baseline_data
+  variant_data$comorbidity_cost <- variant_data$comorbidity_cost * 1.05  # 5% increase
+  
+  variant_result <- calculate_costs_fcn(variant_data, baseline_config)
+  
+  # Results should have same structure
+  expect_equal(nrow(variant_result), nrow(baseline_result))
+  expect_true(all(names(baseline_result) %in% names(variant_result)))
+  
+  # Cost should have increased appropriately
+  if ("cycle_cost_total" %in% names(baseline_result) && 
+      "cycle_cost_total" %in% names(variant_result)) {
+    expect_true(mean(variant_result$cycle_cost_total, na.rm = TRUE) >= 
+                mean(baseline_result$cycle_cost_total, na.rm = TRUE))
   }
 })
 
-# Integration mutation testing
-test_that("Integration points survive mutations", {
-  # Test that mutations at integration points are detected
+test_that("apply_interventions is robust to parameter variations", {
+  # Create baseline test data
+  baseline_data <- data.frame(
+    id = 1:10,
+    age = c(60, 65, 70, 75, 80, 62, 68, 72, 78, 82),
+    sex = c(0, 1, 1, 0, 1, 0, 1, 0, 0, 1),
+    bmi = c(25, 28, 30, 32, 35, 26, 29, 31, 33, 36)
+  )
   
-  # Test file I/O mutations
-  temp_file <- tempfile(fileext = ".rds")
+  baseline_interventions <- list(
+    enabled = TRUE,
+    interventions = list(
+      test_intervention = list(
+        type = "bmi_modification", 
+        start_year = 2025,
+        end_year = 2030,
+        parameters = list(
+          uptake_rate = 0.6,
+          bmi_change = -1.5
+        )
+      )
+    )
+  )
   
-  # Save original data
-  original_data <- list(test = 1:10)
-  saveRDS(original_data, temp_file)
+  # Baseline result
+  baseline_result <- apply_interventions(baseline_data, baseline_interventions, 2025)
   
-  # Load and verify
-  loaded_data <- readRDS(temp_file)
-  expect_equal(original_data, loaded_data)
+  expect_false(is.null(baseline_result))
+  expect_true(is.data.frame(baseline_result))
+  expect_equal(nrow(baseline_result), nrow(baseline_data))
   
-  # Test with mutated file
-  mutated_data <- list(test = 2:11)  # Mutation: +1 to each element
-  saveRDS(mutated_data, temp_file)
+  # Test with variant parameters
+  variant_interventions <- baseline_interventions
+  variant_interventions$interventions$test_intervention$parameters$bmi_change <- -2.0  # Changed from -1.5 to -2.0
   
-  loaded_mutated <- readRDS(temp_file)
-  expect_false(identical(original_data, loaded_mutated))
+  variant_result <- apply_interventions(baseline_data, variant_interventions, 2025)
   
-  # Clean up
-  unlink(temp_file)
+  expect_false(is.null(variant_result))
+  expect_true(is.data.frame(variant_result))
+  expect_equal(nrow(variant_result), nrow(baseline_data))
+  
+  # With greater bmi reduction, bmi should be lower on average
+  if ("bmi" %in% names(baseline_result) && "bmi" %in% names(variant_result)) {
+    avg_bmi_baseline <- mean(baseline_result$bmi, na.rm = TRUE)
+    avg_bmi_variant <- mean(variant_result$bmi, na.rm = TRUE)
+    
+    # The variant should have lower BMI on average due to stronger intervention
+    expect_true(avg_bmi_variant <= avg_bmi_baseline)
+  }
 })
 
+test_that("load_config handles edge cases gracefully", {
+  # Create a temporary config file
+  temp_config <- tempfile(fileext = ".yaml")
+  
+  # Test 1: Config with additional fields shouldn't break
+  extended_config <- list(
+    parameters = list(
+      age_min = 18,
+      age_max = 100,
+      sim_years = 20
+    ),
+    paths = list(
+      input_dir = "input",
+      output_dir = "output"
+    ),
+    extra_field = "this should be ignored"  # Additional field
+  )
+  
+  yaml::write_yaml(extended_config, temp_config)
+  
+  # This should not fail
+  result <- load_config(temp_config)
+  expect_false(is.null(result))
+  expect_type(result, "list")
+  
+  # Should still contain expected fields
+  expect_true("parameters" %in% names(result))
+  expect_true("paths" %in% names(result))
+  
+  unlink(temp_config)
+})
+
+test_that("Function behavior is predictable with different inputs", {
+  # Test that functions behave consistently with various input sizes
+  sizes <- c(10, 50, 100)  # Different data sizes to test
+  
+  for (size in sizes) {
+    # Create test data of different sizes
+    test_data <- data.frame(
+      id = 1:size,
+      age = sample(40:80, size, replace = TRUE),
+      sex = sample(c(0, 1), size, replace = TRUE),
+      bmi = runif(size, 20, 40)
+    )
+    
+    # Create simple intervention
+    interventions <- list(
+      enabled = TRUE,
+      interventions = list(
+        simple_intervention = list(
+          type = "bmi_modification",
+          start_year = 2025,
+          end_year = 2030,
+          parameters = list(uptake_rate = 0.5, bmi_change = -1.0)
+        )
+      )
+    )
+    
+    # Apply intervention
+    result <- suppressWarnings(apply_interventions(test_data, interventions, 2025))
+    
+    # Should return consistently structured results
+    expect_false(is.null(result))
+    expect_true(is.data.frame(result))
+    expect_equal(nrow(result), nrow(test_data))
+    expect_true(all(c("id", "age", "sex", "bmi") %in% names(result)))
+  }
+})
+
+test_that("Functions handle boundary values appropriately", {
+  # Test with boundary values to ensure robustness
+  
+  # Edge case: minimal data
+  minimal_data <- data.frame(
+    id = 1,
+    age = 65,
+    sex = 1,
+    bmi = 25.0
+  )
+  
+  interventions <- list(
+    enabled = TRUE,
+    interventions = list(
+      minimal_intervention = list(
+        type = "bmi_modification",
+        start_year = 2025,
+        end_year = 2030,
+        parameters = list(uptake_rate = 1.0, bmi_change = -0.5)
+      )
+    )
+  )
+  
+  result <- apply_interventions(minimal_data, interventions, 2025)
+  
+  expect_false(is.null(result))
+  expect_true(is.data.frame(result))
+  expect_equal(nrow(result), 1)
+  
+  # Edge case: maximum values
+  max_data <- data.frame(
+    id = 1:5,
+    age = 100,  # Maximum age
+    sex = 1,
+    bmi = 100  # High BMI
+  )
+  
+  result_max <- apply_interventions(max_data, interventions, 2025)
+  
+  expect_false(is.null(result_max))
+  expect_true(is.data.frame(result_max))
+  expect_equal(nrow(result_max), 5)
+})

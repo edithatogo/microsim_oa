@@ -1,114 +1,147 @@
-# Property-based testing for AUS-OA functions
-# Using testthat for property-based testing (similar to hypothesis)
+# Property-based tests using hedgehog for ausoa package
+library(testthat)
+library(hedgehog)
+library(ausoa)
 
-test_that("calculate_costs_fcn has consistent properties", {
-  # Test properties that should always hold for cost calculations
+test_that("apply_interventions properties", {
+  # Define generators for test inputs
+  gen_population <- gen_vector(gen_named_list(
+    id = gen_integer(1, 10000),
+    age = gen_integer(18, 100),
+    sex = gen_integer(0, 1),
+    bmi = gen_double(15, 50)
+  ), 1, 100)
   
-  # Property 1: Costs should be non-negative
-  test_that("costs are always non-negative", {
-    # Generate random valid test data
-    for (i in 1:10) {
-      n <- sample(50:200, 1)
-      test_data <- data.frame(
-        id = 1:n,
-        age = sample(40:80, n, replace = TRUE),
-        has_tka = sample(c(TRUE, FALSE), n, replace = TRUE),
-        has_tha = sample(c(TRUE, FALSE), n, replace = TRUE),
-        oa_severity = sample(1:4, n, replace = TRUE),
-        stringsAsFactors = FALSE
+  gen_intervention_params <- gen_named_list(
+    enabled = gen_bool(),
+    interventions = gen_list(
+      gen_named_list(
+        type = gen_sample_one(c("bmi_modification", "qaly_and_cost_modification")),
+        start_year = gen_integer(2020, 2050),
+        end_year = gen_integer(2020, 2050),
+        parameters = gen_named_list(
+          uptake_rate = gen_double(0, 1),
+          bmi_change = gen_double(-10, 10)
+        )
+      ),
+      1, 3
+    )
+  )
+  
+  # Property: apply_interventions should preserve number of rows
+  test_property(50,  # Run 50 tests
+    population = gen_population,
+    intervention_params = gen_intervention_params,
+    current_year = gen_integer(2020, 2050)
+  ) %>% 
+  expect_property({
+    # Generate a basic intervention to test with
+    basic_interventions <- list(
+      enabled = TRUE,
+      interventions = list(
+        bmi_intervention = list(
+          type = "bmi_modification",
+          start_year = 2020,
+          end_year = 2050,
+          parameters = list(uptake_rate = 0.5, bmi_change = -1.0)
+        )
       )
-      
-      # Calculate costs (assuming function exists)
-      # costs <- calculate_costs_fcn(test_data)
-      
-      # Verify costs are non-negative
-      # expect_true(all(costs >= 0))
+    )
+    
+    original_nrow <- nrow(population)
+    result <- apply_interventions(population, basic_interventions, current_year)
+    
+    # Property: number of rows should be preserved
+    expect_equal(nrow(result), original_nrow)
+    
+    # Property: should have same columns (or at least the same primary ones)
+    expect_true(all(c("id", "age", "sex", "bmi") %in% names(result)))
+  })
+})
+
+test_that("calculate_costs_fcn properties", {
+  # Define generators for test inputs
+  gen_cost_data <- gen_vector(gen_named_list(
+    tka = gen_integer(0, 1),
+    revi = gen_integer(0, 1),
+    oa = gen_integer(0, 1),
+    dead = gen_integer(0, 1),
+    ir = gen_integer(0, 1),
+    comp = gen_integer(0, 1),
+    comorbidity_cost = gen_double(0, 10000),
+    intervention_cost = gen_double(0, 5000)
+  ), 5, 50)
+  
+  test_property(30,  # Run 30 tests
+    mock_data = gen_cost_data
+  ) %>% 
+  expect_property({
+    # Create a basic config
+    mock_config <- list(
+      costs = list(
+        tka_primary = list(
+          hospital_stay = list(value = 15000, perspective = "healthcare_system"),
+          patient_gap = list(value = 2000, perspective = "patient")
+        )
+      )
+    )
+    
+    result <- calculate_costs_fcn(mock_data, mock_config)
+    
+    # Property: should return a data frame with same number of rows as input
+    expect_equal(nrow(result), nrow(mock_data))
+    
+    # Property: costs should be non-negative
+    if ("cycle_cost_total" %in% names(result)) {
+      expect_true(all(result$cycle_cost_total >= 0, na.rm = TRUE))
     }
   })
-  
-  # Property 2: Adding more procedures should not decrease total cost
-  test_that("adding procedures doesn't decrease cost", {
-    # Base case
-    base_data <- data.frame(
-      id = 1:50,
-      age = rep(65, 50),
-      has_tka = rep(FALSE, 50),
-      has_tha = rep(FALSE, 50),
-      oa_severity = rep(2, 50),
-      stringsAsFactors = FALSE
-    )
-    
-    # Extended case with procedures
-    extended_data <- base_data
-    extended_data$has_tka[1:10] <- TRUE
-    
-    # Calculate costs for both
-    # base_costs <- calculate_costs_fcn(base_data)
-    # extended_costs <- calculate_costs_fcn(extended_data)
-    
-    # Total costs with procedures should be >= base costs
-    # expect_true(sum(extended_costs) >= sum(base_costs))
-  })
 })
 
-test_that("OA_update_fcn maintains population properties", {
-  # Property: Population size should remain constant
-  test_that("population size remains constant", {
-    # Create test population
-    pop_size <- 100
-    test_pop <- data.table::data.table(
-      id = 1:pop_size,
-      age = sample(50:80, pop_size, replace = TRUE),
-      sex = sample(c("M", "F"), pop_size, replace = TRUE),
-      kl_score = sample(0:2, pop_size, replace = TRUE),
-      oa = sample(c(TRUE, FALSE), pop_size, replace = TRUE),
-      stringsAsFactors = FALSE
+test_that("load_config properties", {
+  # Define generators for config files
+  gen_config_list <- gen_named_list(
+    parameters = gen_named_list(
+      age_min = gen_integer(0, 50),
+      age_max = gen_integer(60, 120),
+      sim_years = gen_integer(1, 50)
+    ),
+    paths = gen_named_list(
+      input_dir = gen_string("input"),
+      output_dir = gen_string("output")
     )
-    
-    # Initialize next cycle data
-    next_pop <- copy(test_pop)
-    
-    # Apply OA update (assuming function exists)
-    # result <- OA_update_fcn(test_pop, next_pop, list(), data.frame())
-    
-    # Population size should remain the same
-    # expect_equal(nrow(result$am_new), nrow(test_pop))
-  })
+  )
   
-  # Property: Age should increase by appropriate amount
-  test_that("age increases appropriately", {
-    # Create test population with known ages
-    test_pop <- data.table::data.table(
-      id = 1:50,
-      age = rep(65, 50),
-      sex = rep("M", 50),
-      kl_score = rep(0, 50),
-      stringsAsFactors = FALSE
-    )
+  test_property(20,  # Run 20 tests
+    config_data = gen_config_list
+  ) %>% 
+  expect_property({
+    # Create temporary YAML file
+    temp_config <- tempfile(fileext = ".yaml")
     
-    next_pop <- copy(test_pop)
+    # Write the config data to the temp file
+    result <- tryCatch({
+      yaml::write_yaml(config_data, temp_config)
+      
+      # Load the config
+      loaded_config <- load_config(temp_config)
+      
+      # Property: should return a list
+      expect_type(loaded_config, "list")
+      
+      # Property: should preserve basic structure
+      expect_true("parameters" %in% names(loaded_config) || 
+                 "paths" %in% names(loaded_config))
+      
+      TRUE
+    }, error = function(e) {
+      # If there's an error, the property doesn't hold
+      FALSE
+    })
     
-    # Apply OA update (assuming function exists)
-    # result <- OA_update_fcn(test_pop, next_pop, list(), data.frame())
+    # Clean up
+    unlink(temp_config)
     
-    # After one cycle, ages should typically increase by 1
-    # Differences might occur due to mortality, but for alive individuals...
-    # This test would check that aging is happening properly
-  })
-})
-
-test_that("utility functions maintain expected properties", {
-  # Property: Validation functions should detect actual errors
-  test_that("validation detects errors", {
-    # Create data with intentional errors
-    bad_data <- data.frame(
-      age = c(-5, 150, 25),  # Invalid ages
-      sex = c("M", "F", "X"),  # Invalid sex
-      stringsAsFactors = FALSE
-    )
-    
-    # Test that validation appropriately flags issues
-    # validation_result <- validate_input_data(bad_data)
-    # expect_true(any(summary(validation_result)$ok == FALSE))
+    expect_true(result)
   })
 })

@@ -1,168 +1,112 @@
-﻿library(testthat)
-if (requireNamespace("bench", quietly = TRUE)) {
-  library(bench)
-} else {
-  message("bench package not available, skipping performance tests")
-  quit(save = "no", status = 0)
-}
-if (requireNamespace("profvis", quietly = TRUE)) {
-  library(profvis)
-} else {
-  message("profvis package not available, some profiling tests will be skipped")
-}
+# Performance benchmarking tests for ausoa package
 
-# Performance test suite for ausoa package
-context("Performance Tests")
+library(testthat)
+library(bench)
+library(ausoa)
 
-# Load test data if available
-test_data <- if (file.exists("../../input/test_data.rds")) {
-  readRDS("../../input/test_data.rds")
-} else {
-  # Generate synthetic test data
-  list(
-    population_size = 1000,
-    time_horizon = 10,
-    scenarios = c("base_case", "intervention")
+test_that("Core functions meet performance requirements", {
+  # Create smaller test data for CI/CD
+  test_data <- data.frame(
+    id = 1:100,
+    age = sample(40:80, 100, replace = TRUE),
+    sex = sample(c(0, 1), 100, replace = TRUE),
+    bmi = rnorm(100, mean = 28, sd = 5),
+    kl_score = sample(0:4, 100, replace = TRUE, prob = c(0.3, 0.25, 0.2, 0.15, 0.1)),
+    stringsAsFactors = FALSE
   )
-}
-
-# Benchmark core simulation functions
-test_that("Core simulation performance is acceptable", {
-  # Skip if performance testing is disabled
-  skip_if_not(interactive() || Sys.getenv("RUN_PERFORMANCE_TESTS") == "true")
   
-  # Benchmark simulation cycle function
+  # Test calculate_qaly performance
   bench_result <- bench::mark(
-    simulation_result <- ausoa::simulation_cycle_fcn(
-      population_data = test_data,
-      time_horizon = test_data,
-      scenario = "base_case"
-    ),
-    iterations = 5,
+    result <- calculate_qaly(test_data),
+    iterations = 3,
     check = FALSE
   )
   
-  # Assert performance requirements
-  expect_lt(bench_result, 30)  # Should complete in under 30 seconds
-  expect_lt(bench_result, 60)     # Should never exceed 60 seconds
+  # Should execute quickly (median time < 200ms for 100 records)
+  median_time <- median(bench_result$time)
+  median_time_ms <- median_time / 1e6  # Convert nanoseconds to milliseconds
+  expect_lt(median_time_ms, 200)  # Less than 200ms
   
-  # Save benchmark results for regression testing
-  if (!dir.exists("../../output")) dir.create("../../output")
-  saveRDS(bench_result, file.path("../../output", "benchmark_results.rds"))
-})
-
-# Memory usage tests
-test_that("Memory usage is within acceptable limits", {
-  skip_if_not(interactive() || Sys.getenv("RUN_PERFORMANCE_TESTS") == "true")
-  
-  # Profile memory usage
-  profvis_result <- profvis::profvis({
-    simulation_result <- ausoa::simulation_cycle_fcn(
-      population_data = test_data,
-      time_horizon = test_data,
-      scenario = "base_case"
+  # Test apply_interventions performance
+  interventions <- list(
+    enabled = TRUE,
+    interventions = list(
+      test_intervention = list(
+        type = "bmi_modification",
+        start_year = 2025,
+        end_year = 2030,
+        parameters = list(uptake_rate = 0.5, bmi_change = -1.0)
+      )
     )
-  })
+  )
   
-  # Check memory allocation (rough estimate)
-  memory_mb <- as.numeric(profvis_result) / 1024 / 1024
-  expect_lt(memory_mb, 500)  # Should use less than 500MB
+  bench_result2 <- bench::mark(
+    result <- apply_interventions(test_data, interventions, 2025),
+    iterations = 3,
+    check = FALSE
+  )
   
-  # Save profiling results
-  saveRDS(profvis_result, file.path("../../output", "memory_profile.rds"))
+  median_time2 <- median(bench_result2$time)
+  median_time2_ms <- median_time2 / 1e6
+  expect_lt(median_time2_ms, 200)  # Less than 200ms
 })
 
-# Scalability tests
-test_that("Performance scales appropriately with input size", {
-  skip_if_not(interactive() || Sys.getenv("RUN_PERFORMANCE_TESTS") == "true")
+test_that("Memory usage is reasonable", {
+  # Create test data of increasing sizes to check scalability
+  sizes <- c(50, 100, 200)
   
-  # Test different population sizes
-  sizes <- c(100, 500, 1000, 2000)
-  
-  scaling_results <- lapply(sizes, function(size) {
-    bench::mark(
-      ausoa::simulation_cycle_fcn(
-        population_data = size,
-        time_horizon = 5,
-        scenario = "base_case"
-      ),
-      iterations = 3,
+  for (size in sizes) {
+    test_data <- data.frame(
+      id = 1:size,
+      age = sample(40:80, size, replace = TRUE),
+      sex = sample(c(0, 1), size, replace = TRUE),
+      bmi = rnorm(size, mean = 28, sd = 5),
+      stringsAsFactors = FALSE
+    )
+    
+    # Benchmark memory usage
+    bench_result <- bench::mark(
+      result <- calculate_qaly(test_data),
+      iterations = 2,
+      filter_gc = FALSE,  # Keep GC info for memory measurement
       check = FALSE
     )
-  })
-  
-  # Check that scaling is roughly linear or better
-  scaling_ratios <- sapply(2:length(scaling_results), function(i) {
-    scaling_results[[i]] / scaling_results[[i-1]]
-  })
-  
-  # Performance should scale reasonably (not worse than quadratic)
-  expect_lt(max(scaling_ratios), 4)  # Allow some performance degradation but not exponential
-  
-  # Save scaling results
-  saveRDS(list(sizes = sizes, times = scaling_results), 
-          file.path("../../output", "scaling_results.rds"))
+    
+    # Memory should scale reasonably (less than quadratic growth expected)
+    # Just make sure no excessive memory allocation occurs
+    max_memory <- max(bench_result$mem_alloc)
+    expect_lt(max_memory, 100 * 1024^2)  # Less than 100MB
+  }
 })
 
-# I/O performance tests
-test_that("File I/O operations are efficient", {
-  skip_if_not(interactive() || Sys.getenv("RUN_PERFORMANCE_TESTS") == "true")
-  
-  # Create temporary files for testing
-  temp_dir <- tempdir()
-  temp_file <- file.path(temp_dir, "test_output.rds")
-  
-  # Benchmark file writing
-  write_bench <- bench::mark(
-    saveRDS(test_data, temp_file),
-    iterations = 10
+test_that("Cost calculation scales appropriately", {
+  # Create test cost data 
+  cost_data <- data.frame(
+    tka = rep(c(0, 1), 50),
+    revi = rep(c(0, 1), each = 50),
+    oa = rep(1, 100),
+    dead = rep(0, 100),
+    ir = rep(c(0, 1), 50),
+    comp = rep(c(0, 1), each = 50),
+    comorbidity_cost = runif(100, 0, 5000),
+    intervention_cost = runif(100, 0, 1000),
+    stringsAsFactors = FALSE
   )
   
-  # Benchmark file reading
-  read_bench <- bench::mark(
-    data <- readRDS(temp_file),
-    iterations = 10
-  )
-  
-  # Assert I/O performance
-  expect_lt(write_bench, 1.0)  # Should write in under 1 second
-  expect_lt(read_bench, 0.5)   # Should read in under 0.5 seconds
-  
-  # Clean up
-  unlink(temp_file)
-})
-
-# Parallel processing tests (if applicable)
-test_that("Parallel processing provides speedup", {
-  skip_if_not(interactive() || Sys.getenv("RUN_PERFORMANCE_TESTS") == "true")
-  
-  # Test sequential vs parallel execution
-  sequential_time <- bench::mark(
-    lapply(1:4, function(i) {
-      ausoa::simulation_cycle_fcn(
-        population_data = 500,
-        time_horizon = 3,
-        scenario = "base_case"
+  config <- list(
+    costs = list(
+      tka_primary = list(
+        hospital_stay = list(value = 15000, perspective = "healthcare_system")
       )
-    }),
-    iterations = 2,
+    )
+  )
+  
+  bench_result <- bench::mark(
+    result <- calculate_costs_fcn(cost_data, config),
+    iterations = 3,
     check = FALSE
   )
   
-  # Note: This would need to be adapted based on your actual parallel implementation
-  # parallel_time <- bench::mark(
-  #   parallel::mclapply(1:4, function(i) {
-  #     ausoa::simulation_cycle_fcn(
-  #       population_data = 500,
-  #       time_horizon = 3,
-  #       scenario = "base_case"
-  #     )
-  #   }, mc.cores = 2),
-  #   iterations = 2,
-  #   check = FALSE
-  # )
-  
-  # For now, just test that sequential execution is reasonable
-  expect_lt(as.numeric(sequential_time), 120)  # Should complete in under 2 minutes
+  median_time <- median(bench_result$time) / 1e6  # Convert to ms
+  expect_lt(median_time, 100)  # Less than 100ms for cost calculations
 })
-
