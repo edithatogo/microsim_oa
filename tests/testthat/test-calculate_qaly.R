@@ -9,15 +9,15 @@ test_that("calculate_qaly works correctly", {
     time_in_state = rep(1, 10),
     stringsAsFactors = FALSE
   )
-  
+
   # Test the exported calculate_qaly function
   expect_true(exists("calculate_qaly"))
   expect_type(calculate_qaly, "closure")
-  
+
   # Basic call test (using actual parameters that function expects)
   # Since we don't know exact parameters, test that the function exists and can be called
   # with basic input structure
-  expect_true(TRUE)  # Placeholder to confirm function exists
+  expect_true(TRUE) # Placeholder to confirm function exists
 })
 
 test_that("calculate_qaly handles different input structures", {

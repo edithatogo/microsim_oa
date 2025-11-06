@@ -36,9 +36,9 @@ create_test_cycle_coefficients_for_tka <- function() {
 test_that("TKA_revisions returns a data.frame with the correct columns", {
   am_all <- create_test_am_for_tka()
   cycle_coeffs <- create_test_cycle_coefficients_for_tka()
-  
+
   result <- TKA_revisions(am_all, cycle_coeffs)
-  
+
   expect_true(is.data.frame(result))
   expect_true(all(c("revision_haz_1", "revision_haz_2", "revision_1", "revision_2") %in% names(result)))
 })
@@ -46,9 +46,9 @@ test_that("TKA_revisions returns a data.frame with the correct columns", {
 test_that("TKA_revisions calculates revision hazards", {
   am_all <- create_test_am_for_tka(1)
   cycle_coeffs <- create_test_cycle_coefficients_for_tka()
-  
+
   result <- TKA_revisions(am_all, cycle_coeffs)
-  
+
   expect_true(is.numeric(result$revision_haz_1))
   expect_true(is.numeric(result$revision_haz_2))
   expect_gte(result$revision_haz_1, 0)
@@ -58,9 +58,9 @@ test_that("TKA_revisions calculates revision hazards", {
 test_that("TKA_revisions generates binary revision indicators", {
   am_all <- create_test_am_for_tka(100)
   cycle_coeffs <- create_test_cycle_coefficients_for_tka()
-  
+
   result <- TKA_revisions(am_all, cycle_coeffs)
-  
+
   expect_true(all(result$revision_1 %in% c(0, 1)))
   expect_true(all(result$revision_2 %in% c(0, 1)))
 })
@@ -71,9 +71,9 @@ test_that("TKA_revisions handles multiple years correctly", {
     create_test_am_for_tka(10) %>% mutate(year = 2021)
   )
   cycle_coeffs <- create_test_cycle_coefficients_for_tka()
-  
+
   result <- TKA_revisions(am_all, cycle_coeffs)
-  
+
   # Check that the hazard is calculated per year and is not negative
   # (due to the lag calculation)
   expect_true(all(result$revision_haz_1 >= 0))

@@ -42,8 +42,10 @@ test_parameter_distributions <- function() {
   for (i in 1:ncol(param_matrix)) {
     param_name <- colnames(param_matrix)[i]
     samples <- param_matrix[, i]
-    cat(sprintf("%s - Mean: %.2f, SD: %.2f, Range: %.2f - %.2f\n",
-                param_name, mean(samples), sd(samples), min(samples), max(samples)))
+    cat(sprintf(
+      "%s - Mean: %.2f, SD: %.2f, Range: %.2f - %.2f\n",
+      param_name, mean(samples), sd(samples), min(samples), max(samples)
+    ))
   }
 
   cat("Parameter distribution tests completed.\n\n")
@@ -83,7 +85,7 @@ test_monte_carlo_framework <- function() {
 
   # Run Monte Carlo simulation
   results <- run_psa_simulation(param_matrix, test_simulation, cycle_count = 1)
-  cat("Monte Carlo results - Successful simulations:", sum(sapply(results$simulation_results, function(x) if(is.list(x)) x$successful else FALSE)), "\n")
+  cat("Monte Carlo results - Successful simulations:", sum(sapply(results$simulation_results, function(x) if (is.list(x)) x$successful else FALSE)), "\n")
 
   cat("Monte Carlo framework tests completed.\n\n")
 }
@@ -167,8 +169,10 @@ test_visualization_functions <- function() {
 
   psa_results <- list(
     simulation_results = test_results,
-    parameter_matrix = matrix(rnorm(n_simulations * 4), nrow = n_simulations,
-                             dimnames = list(NULL, c("param1", "param2", "param3", "param4"))),
+    parameter_matrix = matrix(rnorm(n_simulations * 4),
+      nrow = n_simulations,
+      dimnames = list(NULL, c("param1", "param2", "param3", "param4"))
+    ),
     distributions = list(
       param1 = list(type = "normal"),
       param2 = list(type = "beta"),
@@ -186,8 +190,10 @@ test_visualization_functions <- function() {
   }
 
   # Test scatter plot data preparation
-  successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                              psa_results$simulation_results)
+  successful_results <- Filter(
+    function(x) is.list(x) && !("error" %in% names(x)),
+    psa_results$simulation_results
+  )
   if (length(successful_results) > 0) {
     cat("PSA scatter plot data prepared successfully.\n")
   }
@@ -447,36 +453,38 @@ run_uncertainty_analysis_tests <- function() {
 
   start_time <- Sys.time()
 
-  tryCatch({
-    # Test uncertainty analysis functions
-    analysis_results <- test_uncertainty_analysis()
+  tryCatch(
+    {
+      # Test uncertainty analysis functions
+      analysis_results <- test_uncertainty_analysis()
 
-    # Test visualization functions
-    viz_results <- test_uncertainty_visualization()
+      # Test visualization functions
+      viz_results <- test_uncertainty_visualization()
 
-    end_time <- Sys.time()
-    duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
+      end_time <- Sys.time()
+      duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
 
-    cat("========================================\n")
-    cat("UNCERTAINTY ANALYSIS TESTS COMPLETED!\n")
-    cat("========================================\n")
-    cat("Total duration:", sprintf("%.2f seconds\n", duration), "\n")
-    cat("Uncertainty analysis components validated:\n")
-    cat("- Parameter influence analysis: WORKING\n")
-    cat("- Parameter correlation analysis: WORKING\n")
-    cat("- Sensitivity analysis: WORKING\n")
-    cat("- Comprehensive uncertainty analysis: WORKING\n")
-    cat("- Tornado diagram visualization: WORKING\n")
-    cat("- Correlation visualization: WORKING\n")
-    cat("- Sensitivity visualization: WORKING\n")
-    cat("- Report generation: WORKING\n")
-
-  }, error = function(e) {
-    cat("========================================\n")
-    cat("UNCERTAINTY ANALYSIS TESTS FAILED!\n")
-    cat("========================================\n")
-    cat("Error:", e$message, "\n")
-  })
+      cat("========================================\n")
+      cat("UNCERTAINTY ANALYSIS TESTS COMPLETED!\n")
+      cat("========================================\n")
+      cat("Total duration:", sprintf("%.2f seconds\n", duration), "\n")
+      cat("Uncertainty analysis components validated:\n")
+      cat("- Parameter influence analysis: WORKING\n")
+      cat("- Parameter correlation analysis: WORKING\n")
+      cat("- Sensitivity analysis: WORKING\n")
+      cat("- Comprehensive uncertainty analysis: WORKING\n")
+      cat("- Tornado diagram visualization: WORKING\n")
+      cat("- Correlation visualization: WORKING\n")
+      cat("- Sensitivity visualization: WORKING\n")
+      cat("- Report generation: WORKING\n")
+    },
+    error = function(e) {
+      cat("========================================\n")
+      cat("UNCERTAINTY ANALYSIS TESTS FAILED!\n")
+      cat("========================================\n")
+      cat("Error:", e$message, "\n")
+    }
+  )
 }
 
 #' Run Complete PSA Framework Test Suite
@@ -488,62 +496,76 @@ run_complete_test_suite <- function() {
 
   start_time <- Sys.time()
 
-  tryCatch({
-    # Run individual test functions
-    test_parameter_distributions()
-    test_monte_carlo_framework()
-    # Skip convergence diagnostics for now due to data structure issues
-    cat("=== Testing Convergence Diagnostics ===\n")
-    tryCatch({
-      test_convergence_diagnostics()
-      cat("Convergence diagnostics tests completed.\n\n")
-    }, error = function(e) {
-      cat("Convergence diagnostics test failed:", e$message, "\n\n")
-    })
-    # test_ceac_generation()
-    cat("=== Testing CEAC Generation ===\n")
-    tryCatch({
-      test_ceac_generation()
-      cat("CEAC generation tests completed.\n\n")
-    }, error = function(e) {
-      cat("CEAC generation test failed:", e$message, "\n\n")
-    })
-    # test_visualization_functions()
-    cat("=== Testing Visualization Functions ===\n")
-    tryCatch({
-      test_visualization_functions()
-      cat("Visualization function tests completed.\n\n")
-    }, error = function(e) {
-      cat("Visualization functions test failed:", e$message, "\n\n")
-    })
-    # test_integration_framework()
-    cat("=== Testing Integration Framework ===\n")
-    tryCatch({
-      test_integration_framework()
-      cat("Integration framework tests completed.\n\n")
-    }, error = function(e) {
-      cat("Integration framework test failed:", e$message, "\n\n")
-    })
+  tryCatch(
+    {
+      # Run individual test functions
+      test_parameter_distributions()
+      test_monte_carlo_framework()
+      # Skip convergence diagnostics for now due to data structure issues
+      cat("=== Testing Convergence Diagnostics ===\n")
+      tryCatch(
+        {
+          test_convergence_diagnostics()
+          cat("Convergence diagnostics tests completed.\n\n")
+        },
+        error = function(e) {
+          cat("Convergence diagnostics test failed:", e$message, "\n\n")
+        }
+      )
+      # test_ceac_generation()
+      cat("=== Testing CEAC Generation ===\n")
+      tryCatch(
+        {
+          test_ceac_generation()
+          cat("CEAC generation tests completed.\n\n")
+        },
+        error = function(e) {
+          cat("CEAC generation test failed:", e$message, "\n\n")
+        }
+      )
+      # test_visualization_functions()
+      cat("=== Testing Visualization Functions ===\n")
+      tryCatch(
+        {
+          test_visualization_functions()
+          cat("Visualization function tests completed.\n\n")
+        },
+        error = function(e) {
+          cat("Visualization functions test failed:", e$message, "\n\n")
+        }
+      )
+      # test_integration_framework()
+      cat("=== Testing Integration Framework ===\n")
+      tryCatch(
+        {
+          test_integration_framework()
+          cat("Integration framework tests completed.\n\n")
+        },
+        error = function(e) {
+          cat("Integration framework test failed:", e$message, "\n\n")
+        }
+      )
 
-    # Summary
-    end_time <- Sys.time()
-    duration <- difftime(end_time, start_time, units = "secs")
+      # Summary
+      end_time <- Sys.time()
+      duration <- difftime(end_time, start_time, units = "secs")
 
-    cat("========================================\n")
-    cat("Test Suite Completed Successfully!\n")
-    cat("========================================\n")
-    cat("Total duration:", sprintf("%.2f seconds\n", as.numeric(duration)))
-    cat("Core PSA framework components validated.\n")
-    cat("Note: Some advanced tests skipped due to data structure issues.\n")
-
-  }, error = function(e) {
-    cat("========================================\n")
-    cat("TEST SUITE FAILED!\n")
-    cat("========================================\n")
-    cat("Error:", e$message, "\n")
-    cat("Call stack:\n")
-    print(sys.calls())
-  })
+      cat("========================================\n")
+      cat("Test Suite Completed Successfully!\n")
+      cat("========================================\n")
+      cat("Total duration:", sprintf("%.2f seconds\n", as.numeric(duration)))
+      cat("Core PSA framework components validated.\n")
+      cat("Note: Some advanced tests skipped due to data structure issues.\n")
+    },
+    error = function(e) {
+      cat("========================================\n")
+      cat("TEST SUITE FAILED!\n")
+      cat("========================================\n")
+      cat("Error:", e$message, "\n")
+      cat("Call stack:\n")
+      print(sys.calls())
+    }
+  )
 }
 
 # Run the test suite if this script is executed directly
@@ -555,35 +577,37 @@ if (sys.nframe() == 0) {
 
   start_time <- Sys.time()
 
-  tryCatch({
-    # Run core test functions
-    test_parameter_distributions()
-    test_monte_carlo_framework()
+  tryCatch(
+    {
+      # Run core test functions
+      test_parameter_distributions()
+      test_monte_carlo_framework()
 
-    # Run uncertainty analysis tests
-    cat("\n--- Running Uncertainty Analysis Tests ---\n")
-    run_uncertainty_analysis_tests()
+      # Run uncertainty analysis tests
+      cat("\n--- Running Uncertainty Analysis Tests ---\n")
+      run_uncertainty_analysis_tests()
 
-    # Summary
-    end_time <- Sys.time()
-    duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
+      # Summary
+      end_time <- Sys.time()
+      duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
 
-    cat("========================================\n")
-    cat("COMPLETE TEST SUITE COMPLETED SUCCESSFULLY!\n")
-    cat("========================================\n")
-    cat("Total duration:", sprintf("%.2f seconds\n", duration), "\n")
-    cat("PSA framework components validated:\n")
-    cat("- Parameter distribution functions: WORKING\n")
-    cat("- Monte Carlo simulation framework: WORKING\n")
-    cat("- Uncertainty analysis functions: WORKING\n")
-    cat("- Visualization functions: WORKING\n")
-    cat("- Report generation: WORKING\n")
-    cat("- Note: Advanced integration tests may have data structure issues\n")
-
-  }, error = function(e) {
-    cat("========================================\n")
-    cat("TEST SUITE FAILED!\n")
-    cat("========================================\n")
-    cat("Error:", e$message, "\n")
-  })
+      cat("========================================\n")
+      cat("COMPLETE TEST SUITE COMPLETED SUCCESSFULLY!\n")
+      cat("========================================\n")
+      cat("Total duration:", sprintf("%.2f seconds\n", duration), "\n")
+      cat("PSA framework components validated:\n")
+      cat("- Parameter distribution functions: WORKING\n")
+      cat("- Monte Carlo simulation framework: WORKING\n")
+      cat("- Uncertainty analysis functions: WORKING\n")
+      cat("- Visualization functions: WORKING\n")
+      cat("- Report generation: WORKING\n")
+      cat("- Note: Advanced integration tests may have data structure issues\n")
+    },
+    error = function(e) {
+      cat("========================================\n")
+      cat("TEST SUITE FAILED!\n")
+      cat("========================================\n")
+      cat("Error:", e$message, "\n")
+    }
+  )
 }

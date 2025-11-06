@@ -24,35 +24,35 @@ define_hospital_types <- function() {
   hospital_types <- list(
     public_metro = list(
       name = "Public Metropolitan",
-      capacity_modifier = 1.2,  # 20% more capacity than baseline
+      capacity_modifier = 1.2, # 20% more capacity than baseline
       specialization_level = "comprehensive",
-      referral_acceptance = 0.9,  # High acceptance rate
-      cost_modifier = 1.0,  # Baseline costs
-      quality_modifier = 1.0   # Baseline quality
+      referral_acceptance = 0.9, # High acceptance rate
+      cost_modifier = 1.0, # Baseline costs
+      quality_modifier = 1.0 # Baseline quality
     ),
     public_regional = list(
       name = "Public Regional",
-      capacity_modifier = 0.8,  # 20% less capacity than baseline
+      capacity_modifier = 0.8, # 20% less capacity than baseline
       specialization_level = "general",
-      referral_acceptance = 0.7,  # Moderate acceptance
-      cost_modifier = 0.95,  # Slightly lower costs
-      quality_modifier = 0.98   # Slightly lower quality
+      referral_acceptance = 0.7, # Moderate acceptance
+      cost_modifier = 0.95, # Slightly lower costs
+      quality_modifier = 0.98 # Slightly lower quality
     ),
     private_metro = list(
       name = "Private Metropolitan",
-      capacity_modifier = 1.1,  # 10% more capacity
+      capacity_modifier = 1.1, # 10% more capacity
       specialization_level = "specialized",
-      referral_acceptance = 0.6,  # Selective acceptance
-      cost_modifier = 1.5,  # Higher costs
-      quality_modifier = 1.05   # Higher quality
+      referral_acceptance = 0.6, # Selective acceptance
+      cost_modifier = 1.5, # Higher costs
+      quality_modifier = 1.05 # Higher quality
     ),
     private_regional = list(
       name = "Private Regional",
-      capacity_modifier = 0.6,  # 40% less capacity
+      capacity_modifier = 0.6, # 40% less capacity
       specialization_level = "limited",
-      referral_acceptance = 0.4,  # Low acceptance
-      cost_modifier = 1.3,  # Moderate costs
-      quality_modifier = 1.02   # Slightly higher quality
+      referral_acceptance = 0.4, # Low acceptance
+      cost_modifier = 1.3, # Moderate costs
+      quality_modifier = 1.02 # Slightly higher quality
     )
   )
 
@@ -67,19 +67,19 @@ define_hospital_types <- function() {
 calculate_regional_capacity <- function(total_capacity, regional_params) {
   # Regional population distribution (approximate Australian distribution)
   regional_distribution <- list(
-    metro = regional_params$metro_population_proportion$live,      # ~70% in metro areas
+    metro = regional_params$metro_population_proportion$live, # ~70% in metro areas
     regional = regional_params$regional_population_proportion$live # ~30% in regional areas
   )
 
   # Hospital type distribution within regions
   hospital_distribution <- list(
     metro = list(
-      public = regional_params$metro_public_hospital_proportion$live,    # ~60% public in metro
-      private = regional_params$metro_private_hospital_proportion$live   # ~40% private in metro
+      public = regional_params$metro_public_hospital_proportion$live, # ~60% public in metro
+      private = regional_params$metro_private_hospital_proportion$live # ~40% private in metro
     ),
     regional = list(
-      public = regional_params$regional_public_hospital_proportion$live,   # ~80% public in regional
-      private = regional_params$regional_private_hospital_proportion$live  # ~20% private in regional
+      public = regional_params$regional_public_hospital_proportion$live, # ~80% public in regional
+      private = regional_params$regional_private_hospital_proportion$live # ~20% private in regional
     )
   )
 
@@ -111,7 +111,7 @@ model_referral_patterns <- function(patients, hospital_types, referral_params) {
   # Initialize referral outcomes
   patients$referral_needed <- FALSE
   patients$referral_accepted <- FALSE
-  patients$final_hospital_type <- patients$care_pathway  # Default to current pathway
+  patients$final_hospital_type <- patients$care_pathway # Default to current pathway
 
   # Identify patients who may need referral (complex cases)
   complex_criteria <- list(
@@ -227,17 +227,17 @@ model_capacity_constraints <- function(patients, utilization, constraint_params)
       if (util_info$is_constrained) {
         # Calculate delay impact
         delay_months <- util_info$constraint_severity *
-                       constraint_params$delay_per_capacity_unit$live
+          constraint_params$delay_per_capacity_unit$live
         patients$capacity_delay[i] <- delay_months
 
         # Calculate quality impact
         quality_reduction <- util_info$constraint_severity *
-                           constraint_params$quality_impact_per_capacity_unit$live
+          constraint_params$quality_impact_per_capacity_unit$live
         patients$capacity_quality_impact[i] <- max(0.8, 1.0 - quality_reduction)
 
         # Calculate cost impact
         cost_increase <- util_info$constraint_severity *
-                        constraint_params$cost_impact_per_capacity_unit$live
+          constraint_params$cost_impact_per_capacity_unit$live
         patients$capacity_cost_impact[i] <- 1.0 + cost_increase
       }
     }
@@ -264,10 +264,14 @@ generate_resource_allocation_summary <- function(utilization, patients, referral
     ),
     hospital_utilization = utilization,
     regional_analysis = list(
-      metro_utilization = mean(sapply(utilization[grepl("metro", names(utilization))],
-                                    function(x) x$utilization_rate)),
-      regional_utilization = mean(sapply(utilization[grepl("regional", names(utilization))],
-                                       function(x) x$utilization_rate))
+      metro_utilization = mean(sapply(
+        utilization[grepl("metro", names(utilization))],
+        function(x) x$utilization_rate
+      )),
+      regional_utilization = mean(sapply(
+        utilization[grepl("regional", names(utilization))],
+        function(x) x$utilization_rate
+      ))
     ),
     constraint_impacts = list(
       average_delay_months = mean(patients$capacity_delay, na.rm = TRUE),

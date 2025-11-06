@@ -38,8 +38,10 @@ calculate_dvt_risk <- function(am_curr, dvt_coefficients) {
 
     # BMI risk (categorical)
     bmi_risk <- ifelse(am_curr$bmi[tka_patients] >= 40, dvt_coefficients$bmi40_coeff$live,
-              ifelse(am_curr$bmi[tka_patients] >= 35, dvt_coefficients$bmi35_coeff$live,
-              ifelse(am_curr$bmi[tka_patients] >= 30, dvt_coefficients$bmi30_coeff$live, 0)))
+      ifelse(am_curr$bmi[tka_patients] >= 35, dvt_coefficients$bmi35_coeff$live,
+        ifelse(am_curr$bmi[tka_patients] >= 30, dvt_coefficients$bmi30_coeff$live, 0)
+      )
+    )
     am_curr$dvt_risk_score[tka_patients] <- am_curr$dvt_risk_score[tka_patients] + bmi_risk
 
     # Sex risk
@@ -70,9 +72,12 @@ calculate_dvt_risk <- function(am_curr, dvt_coefficients) {
     # Apply prophylaxis effectiveness modifier
     if ("dvt_prophylaxis" %in% names(am_curr)) {
       prophylaxis_effect <- ifelse(am_curr$dvt_prophylaxis[tka_patients] == "none", 1.0,
-                          ifelse(am_curr$dvt_prophylaxis[tka_patients] == "mechanical", dvt_coefficients$mechanical_rr$live,
-                          ifelse(am_curr$dvt_prophylaxis[tka_patients] == "pharmacological", dvt_coefficients$pharma_rr$live,
-                          ifelse(am_curr$dvt_prophylaxis[tka_patients] == "combined", dvt_coefficients$combined_rr$live, 1.0))))
+        ifelse(am_curr$dvt_prophylaxis[tka_patients] == "mechanical", dvt_coefficients$mechanical_rr$live,
+          ifelse(am_curr$dvt_prophylaxis[tka_patients] == "pharmacological", dvt_coefficients$pharma_rr$live,
+            ifelse(am_curr$dvt_prophylaxis[tka_patients] == "combined", dvt_coefficients$combined_rr$live, 1.0)
+          )
+        )
+      )
       am_curr$dvt_risk_prob[tka_patients] <- am_curr$dvt_risk_prob[tka_patients] * prophylaxis_effect
     }
   }
@@ -167,7 +172,7 @@ model_dvt_treatment <- function(am_curr, dvt_coefficients) {
     am_curr$pe_status[resolved_indices] <- "resolved"
     am_curr$pe_status[chronic_indices] <- "chronic"
     am_curr$pe_status[fatal_indices] <- "fatal"
-    am_curr$dead[fatal_indices] <- 1  # Mark as dead
+    am_curr$dead[fatal_indices] <- 1 # Mark as dead
   }
 
   return(am_curr)
@@ -256,8 +261,11 @@ dvt_module <- function(am_curr, am_new, dvt_params) {
     pe_fatal_cases = sum(am_curr$pe_status == "fatal"),
     total_dvt_cost = sum(am_curr$dvt_cost),
     total_dvt_qaly_loss = sum(am_curr$dvt_qaly_decrement),
-    prophylaxis_distribution = if ("dvt_prophylaxis" %in% names(am_curr))
-      table(am_curr$dvt_prophylaxis) else NULL
+    prophylaxis_distribution = if ("dvt_prophylaxis" %in% names(am_curr)) {
+      table(am_curr$dvt_prophylaxis)
+    } else {
+      NULL
+    }
   )
 
   # Update am_new with DVT status (for tracking across cycles)

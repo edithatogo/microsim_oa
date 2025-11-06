@@ -1,10 +1,10 @@
 #' Ausoa: A Microsimulation Model of Osteoarthritis in Australia
 #'
 #' @description
-#' The AUS-OA package implements a dynamic discrete time microsimulation model 
-#' specifically designed for osteoarthritis (OA) health economics and policy 
-#' evaluation in Australia. It provides policymakers and researchers with 
-#' advanced capacity to evaluate the clinical, economic, and quality-of-life 
+#' The AUS-OA package implements a dynamic discrete time microsimulation model
+#' specifically designed for osteoarthritis (OA) health economics and policy
+#' evaluation in Australia. It provides policymakers and researchers with
+#' advanced capacity to evaluate the clinical, economic, and quality-of-life
 #' impacts of OA interventions across Australia.
 #'
 #' @details
@@ -40,8 +40,8 @@
 #'   \item ABS Demographic Data for OA Epidemiology
 #' }
 #'
-#' @seealso 
-#' \code{\link{simulation_cycle_fcn}}, \code{\link{calculate_costs_fcn}}, 
+#' @seealso
+#' \code{\link{simulation_cycle_fcn}}, \code{\link{calculate_costs_fcn}},
 #' \code{\link{calculate_qaly}}, \code{\link{apply_interventions}}
 #'
 #' @docType package

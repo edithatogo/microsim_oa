@@ -123,8 +123,10 @@ assess_psa_convergence <- function(psa_results, psa_params) {
   assessment <- list()
 
   # Extract successful results
-  successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                              psa_results$simulation_results)
+  successful_results <- Filter(
+    function(x) is.list(x) && !("error" %in% names(x)),
+    psa_results$simulation_results
+  )
 
   n_successful <- length(successful_results)
 
@@ -167,9 +169,9 @@ assess_psa_convergence <- function(psa_results, psa_params) {
 
     # Overall convergence status
     assessment$overall_converged <- assessment$cost_convergence$ci_width_converged &&
-                                    assessment$cost_convergence$rse_converged &&
-                                    assessment$qaly_convergence$ci_width_converged &&
-                                    assessment$qaly_convergence$rse_converged
+      assessment$cost_convergence$rse_converged &&
+      assessment$qaly_convergence$ci_width_converged &&
+      assessment$qaly_convergence$rse_converged
   } else {
     assessment$overall_converged <- FALSE
     assessment$message <- "Insufficient successful simulations for convergence assessment"
@@ -189,8 +191,10 @@ assess_psa_convergence <- function(psa_results, psa_params) {
 #' @return CEAC data for plotting
 generate_ceac <- function(psa_results, wtp_threshold = NULL, wtp_range = NULL) {
   # Extract successful results
-  successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                              psa_results$simulation_results)
+  successful_results <- Filter(
+    function(x) is.list(x) && !("error" %in% names(x)),
+    psa_results$simulation_results
+  )
 
   if (length(successful_results) == 0) {
     warning("No successful simulations for CEAC generation")
@@ -248,11 +252,14 @@ generate_psa_report <- function(psa_results, output_dir = "output") {
   # Basic summary
   report$summary <- list(
     total_simulations = length(psa_results$simulation_results),
-    successful_simulations = sum(sapply(psa_results$simulation_results,
-                                       function(x) is.list(x) && !("error" %in% names(x)))),
+    successful_simulations = sum(sapply(
+      psa_results$simulation_results,
+      function(x) is.list(x) && !("error" %in% names(x))
+    )),
     convergence_status = ifelse("convergence_assessment" %in% names(psa_results),
-                               psa_results$convergence_assessment$overall_converged,
-                               "NOT_ASSESSED"),
+      psa_results$convergence_assessment$overall_converged,
+      "NOT_ASSESSED"
+    ),
     timestamp = Sys.time()
   )
 
@@ -265,8 +272,10 @@ generate_psa_report <- function(psa_results, output_dir = "output") {
 
   # Results summary
   if ("simulation_results" %in% names(psa_results)) {
-    successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                                psa_results$simulation_results)
+    successful_results <- Filter(
+      function(x) is.list(x) && !("error" %in% names(x)),
+      psa_results$simulation_results
+    )
 
     if (length(successful_results) > 0) {
       costs <- sapply(successful_results, function(x) x$total_cost)
@@ -286,8 +295,8 @@ generate_psa_report <- function(psa_results, output_dir = "output") {
           ci_95 = quantile(qalys, c(0.025, 0.975), na.rm = TRUE)
         ),
         icer = list(
-          mean = mean(costs/qalys, na.rm = TRUE),
-          median = median(costs/qalys, na.rm = TRUE)
+          mean = mean(costs / qalys, na.rm = TRUE),
+          median = median(costs / qalys, na.rm = TRUE)
         )
       )
     }
@@ -369,8 +378,8 @@ validate_psa_results <- function(psa_results) {
   if (validation$has_parameter_matrix) {
     param_matrix <- psa_results$parameter_matrix
     validation$parameter_matrix_valid <- is.matrix(param_matrix) &&
-                                        nrow(param_matrix) > 0 &&
-                                        ncol(param_matrix) > 0
+      nrow(param_matrix) > 0 &&
+      ncol(param_matrix) > 0
     validation$n_samples <- nrow(param_matrix)
     validation$n_parameters <- ncol(param_matrix)
   }
@@ -379,8 +388,10 @@ validate_psa_results <- function(psa_results) {
   if (validation$has_simulation_results) {
     sim_results <- psa_results$simulation_results
     validation$n_simulations <- length(sim_results)
-    validation$successful_simulations <- sum(sapply(sim_results,
-                                                   function(x) is.list(x) && !("error" %in% names(x))))
+    validation$successful_simulations <- sum(sapply(
+      sim_results,
+      function(x) is.list(x) && !("error" %in% names(x))
+    ))
     validation$failed_simulations <- validation$n_simulations - validation$successful_simulations
   }
 
@@ -399,8 +410,7 @@ validate_psa_results <- function(psa_results) {
 #' @param output_dir Output directory for reports
 #' @return Complete PSA analysis results
 integrate_psa_framework <- function(config, n_samples = NULL, seed = NULL,
-                                   generate_report = TRUE, output_dir = "output") {
-
+                                    generate_report = TRUE, output_dir = "output") {
   # Run PSA analysis
   psa_results <- run_psa_analysis(config, n_samples, seed)
 
@@ -439,10 +449,11 @@ integrate_psa_framework <- function(config, n_samples = NULL, seed = NULL,
 #' @param n_levels Number of parameter levels for analysis
 #' @return Tornado diagram data
 analyze_parameter_influence <- function(psa_results, outcome_var = "icer", n_levels = 5) {
-
   # Extract successful results
-  successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                              psa_results$simulation_results)
+  successful_results <- Filter(
+    function(x) is.list(x) && !("error" %in% names(x)),
+    psa_results$simulation_results
+  )
 
   if (length(successful_results) == 0) {
     warning("No successful simulations for parameter influence analysis")
@@ -480,9 +491,9 @@ analyze_parameter_influence <- function(psa_results, outcome_var = "icer", n_lev
     param_levels <- quantile(param_values, probs = seq(0, 1, length.out = n_levels))
 
     # Calculate outcome for each level
-    level_outcomes <- sapply(1:(n_levels-1), function(j) {
+    level_outcomes <- sapply(1:(n_levels - 1), function(j) {
       # Find simulations within this parameter range
-      in_range <- param_values >= param_levels[j] & param_values <= param_levels[j+1]
+      in_range <- param_values >= param_levels[j] & param_values <= param_levels[j + 1]
       if (sum(in_range) > 0) {
         return(mean(outcomes[in_range], na.rm = TRUE))
       } else {
@@ -519,10 +530,11 @@ analyze_parameter_influence <- function(psa_results, outcome_var = "icer", n_lev
 #' @param outcome_var Outcome variable to analyze
 #' @return Parameter correlation analysis
 analyze_parameter_correlations <- function(psa_results, outcome_var = "icer") {
-
   # Extract successful results
-  successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                              psa_results$simulation_results)
+  successful_results <- Filter(
+    function(x) is.list(x) && !("error" %in% names(x)),
+    psa_results$simulation_results
+  )
 
   if (length(successful_results) == 0) {
     warning("No successful simulations for correlation analysis")
@@ -601,11 +613,12 @@ analyze_parameter_correlations <- function(psa_results, outcome_var = "icer") {
 #' @param variation_percent Percentage variation for parameters
 #' @return Sensitivity analysis results
 perform_sensitivity_analysis <- function(psa_results, parameters_to_vary = NULL,
-                                       outcome_var = "icer", variation_percent = 0.1) {
-
+                                         outcome_var = "icer", variation_percent = 0.1) {
   # Extract successful results
-  successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                              psa_results$simulation_results)
+  successful_results <- Filter(
+    function(x) is.list(x) && !("error" %in% names(x)),
+    psa_results$simulation_results
+  )
 
   if (length(successful_results) == 0) {
     warning("No successful simulations for sensitivity analysis")
@@ -660,9 +673,9 @@ perform_sensitivity_analysis <- function(psa_results, parameters_to_vary = NULL,
 
     # Find simulations close to low and high values
     low_indices <- which(abs(param_values - low_value) ==
-                        min(abs(param_values - low_value)))[1:10] # Take closest 10
+      min(abs(param_values - low_value)))[1:10] # Take closest 10
     high_indices <- which(abs(param_values - high_value) ==
-                         min(abs(param_values - high_value)))[1:10]
+      min(abs(param_values - high_value)))[1:10]
 
     low_outcomes <- base_outcomes[low_indices]
     high_outcomes <- base_outcomes[high_indices]
@@ -695,8 +708,7 @@ perform_sensitivity_analysis <- function(psa_results, parameters_to_vary = NULL,
 #' @param wtp_threshold Willingness-to-pay threshold (for ICER analysis)
 #' @return Comprehensive uncertainty analysis
 generate_uncertainty_analysis <- function(psa_results, outcome_var = "icer",
-                                        wtp_threshold = 50000) {
-
+                                          wtp_threshold = 50000) {
   analysis <- list()
 
   # Parameter influence analysis (tornado diagram data)

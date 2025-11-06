@@ -165,7 +165,6 @@ test_that("apply_interventions respects the uptake rate", {
 })
 
 
-
 # --- Tests for get_target_indices() ---
 
 test_that("get_target_indices correctly targets by age", {

@@ -109,21 +109,21 @@ calculate_costs_fcn <- function(am_new, costs_config) {
       # Absenteeism: days off work based on pain and function scores
       # Higher pain and lower function = more absenteeism
       pain_factor <- am_new$pain[working_age_indices]
-      function_factor <- 1 - am_new$function_score[working_age_indices]  # invert so lower function = higher cost
+      function_factor <- 1 - am_new$function_score[working_age_indices] # invert so lower function = higher cost
 
       # Normalize and combine factors (simplified model)
       absenteeism_factor <- (pain_factor + function_factor) / 2
 
       # Presenteeism: reduced productivity while at work
-      presenteeism_factor <- absenteeism_factor * 0.7  # Assume presenteeism is 70% of absenteeism impact
+      presenteeism_factor <- absenteeism_factor * 0.7 # Assume presenteeism is 70% of absenteeism impact
 
       # Calculate annual productivity cost
       # Assume average annual wage and working days
-      avg_annual_wage <- 50000  # This should come from config
+      avg_annual_wage <- 50000 # This should come from config
       working_days_per_year <- 220
 
-      annual_absenteeism_cost <- avg_annual_wage * (absenteeism_factor / working_days_per_year) * 5  # 5 days max absenteeism
-      annual_presenteeism_cost <- avg_annual_wage * presenteeism_factor * 0.3  # 30% productivity loss
+      annual_absenteeism_cost <- avg_annual_wage * (absenteeism_factor / working_days_per_year) * 5 # 5 days max absenteeism
+      annual_presenteeism_cost <- avg_annual_wage * presenteeism_factor * 0.3 # 30% productivity loss
 
       am_new$productivity_cost[working_age_indices] <- annual_absenteeism_cost + annual_presenteeism_cost
     }

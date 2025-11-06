@@ -123,11 +123,11 @@ validate_resource_integration <- function(integration_result) {
     has_resource_data = !is.null(integration_result$resource_result),
     has_resource_summary = !is.null(integration_result$resource_summary),
     resource_columns_present = all(c("final_hospital_type", "referral_needed", "capacity_delay") %in%
-                                  names(integration_result$am_curr)),
+      names(integration_result$am_curr)),
     reasonable_utilization = (integration_result$resource_summary$capacity_utilization$overall_utilization >= 0 &&
-                             integration_result$resource_summary$capacity_utilization$overall_utilization <= 2),
+      integration_result$resource_summary$capacity_utilization$overall_utilization <= 2),
     valid_referral_rate = (integration_result$resource_summary$referral_patterns$acceptance_rate >= 0 &&
-                          integration_result$resource_summary$referral_patterns$acceptance_rate <= 1),
+      integration_result$resource_summary$referral_patterns$acceptance_rate <= 1),
     positive_delays = all(integration_result$am_curr$capacity_delay >= 0, na.rm = TRUE)
   )
 
@@ -156,11 +156,12 @@ integrate_resource_allocation_module <- function(am_curr, am_new, config, simula
   # Add region information if not present (default to metro for now)
   if (!"region" %in% names(patients)) {
     # Assign regions based on some criteria (could be enhanced with actual regional data)
-    set.seed(123 + simulation_cycle)  # Reproducible but cycle-dependent
+    set.seed(123 + simulation_cycle) # Reproducible but cycle-dependent
     patients$region <- sample(c("metro", "regional"),
-                             nrow(patients),
-                             replace = TRUE,
-                             prob = c(0.7, 0.3))  # 70% metro, 30% regional
+      nrow(patients),
+      replace = TRUE,
+      prob = c(0.7, 0.3)
+    ) # 70% metro, 30% regional
   }
 
   # Run the resource allocation module

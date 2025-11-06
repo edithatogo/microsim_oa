@@ -47,7 +47,7 @@ update_simulation_with_pathways <- function(am_curr, pathway_summary) {
     # Apply to function scores (higher quality = better outcomes)
     quality_effect <- am_curr$pathway_quality_modifier - 1.0
     am_curr$function_score <- am_curr$function_score * (1 + quality_effect * 0.1)
-    am_curr$function_score <- pmax(0, pmin(100, am_curr$function_score))  # Bound between 0-100
+    am_curr$function_score <- pmax(0, pmin(100, am_curr$function_score)) # Bound between 0-100
   }
 
   # Cost modifiers affect economic calculations
@@ -114,12 +114,16 @@ integrate_public_private_pathways_module <- function(am_curr, am_new, config, si
   pathway_result <- public_private_pathways_module(am_curr, am_new, pathway_params)
 
   # Update simulation state with pathway effects
-  am_curr_updated <- update_simulation_with_pathways(pathway_result$am_curr,
-                                                    pathway_result$pathway_summary)
+  am_curr_updated <- update_simulation_with_pathways(
+    pathway_result$am_curr,
+    pathway_result$pathway_summary
+  )
 
   # Generate integration summary
-  integration_summary <- summarize_pathway_impacts(pathway_result$pathway_summary,
-                                                   simulation_cycle)
+  integration_summary <- summarize_pathway_impacts(
+    pathway_result$pathway_summary,
+    simulation_cycle
+  )
 
   # Update am_new with any additional pathway information
   am_new_updated <- pathway_result$am_new
@@ -147,13 +151,15 @@ validate_pathway_integration <- function(integration_result) {
   validation <- list(
     has_pathway_data = !is.null(integration_result$pathway_summary),
     has_integration_summary = !is.null(integration_result$integration_summary),
-    pathway_columns_present = all(c("pathway_quality_modifier", "pathway_cost_modifier",
-                                   "patient_satisfaction") %in% names(integration_result$am_new)),
+    pathway_columns_present = all(c(
+      "pathway_quality_modifier", "pathway_cost_modifier",
+      "patient_satisfaction"
+    ) %in% names(integration_result$am_new)),
     reasonable_proportions = (integration_result$pathway_summary$public_proportion >= 0 &&
-                             integration_result$pathway_summary$public_proportion <= 1),
+      integration_result$pathway_summary$public_proportion <= 1),
     positive_costs = integration_result$pathway_summary$total_pathway_costs >= 0,
     valid_satisfaction = (integration_result$pathway_summary$average_patient_satisfaction >= 0 &&
-                         integration_result$pathway_summary$average_patient_satisfaction <= 1)
+      integration_result$pathway_summary$average_patient_satisfaction <= 1)
   )
 
   validation$overall_valid <- all(unlist(validation))

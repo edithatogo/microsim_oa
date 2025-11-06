@@ -4,17 +4,17 @@
 # Generate a basic test population
 generate_test_population <- function(n = 100, seed = 123) {
   set.seed(seed)
-  
+
   data.frame(
     id = 1:n,
     age = sample(40:85, n, replace = TRUE),
-    sex = sample(c(0, 1), n, replace = TRUE),  # 0 = female, 1 = male
+    sex = sample(c(0, 1), n, replace = TRUE), # 0 = female, 1 = male
     bmi = rnorm(n, mean = 28, sd = 5),
     kl_score = sample(0:4, n, replace = TRUE, prob = c(0.3, 0.25, 0.2, 0.15, 0.1)), # KL scores with realistic distribution
     tka_status = sample(c(0, 1), n, replace = TRUE, prob = c(0.95, 0.05)), # Most haven't had TKA
     revision_status = sample(c(0, 1), n, replace = TRUE, prob = c(0.98, 0.02)), # Even fewer have had revision
     comorbidities = sample(c(0, 1, 2, 3), n, replace = TRUE, prob = c(0.4, 0.3, 0.2, 0.1)),
-    qaly = runif(n, min = 0.6, max = 1.0),  # Quality adjusted life years
+    qaly = runif(n, min = 0.6, max = 1.0), # Quality adjusted life years
     cost = runif(n, min = 1000, max = 100000), # Annual costs
     stringsAsFactors = FALSE
   )
@@ -47,8 +47,8 @@ generate_test_config <- function() {
       post_tka = 0.78
     ),
     risks = list(
-      tka_annual = 0.02,  # 2% annual probability of TKA
-      revision_annual = 0.03  # 3% annual risk of revision after TKA
+      tka_annual = 0.02, # 2% annual probability of TKA
+      revision_annual = 0.03 # 3% annual risk of revision after TKA
     )
   )
 }
@@ -128,23 +128,23 @@ save_test_fixtures <- function() {
   # Create test population
   test_pop <- generate_test_population(50)
   saveRDS(test_pop, file.path("tests/testthat/fixtures", "test_population.rds"))
-  
+
   # Save minimal test data
   min_data <- generate_minimal_test_data()
   saveRDS(min_data, file.path("tests/testthat/fixtures", "minimal_test_data.rds"))
-  
+
   # Save cost test data
   cost_data <- generate_cost_test_data()
   saveRDS(cost_data, file.path("tests/testthat/fixtures", "cost_test_data.rds"))
-  
+
   # Save configuration
   config <- generate_test_config()
   saveRDS(config, file.path("tests/testthat/fixtures", "test_config.rds"))
-  
+
   # Save intervention parameters
   interventions <- generate_test_interventions()
   saveRDS(interventions, file.path("tests/testthat/fixtures", "test_interventions.rds"))
-  
+
   cat("Test fixtures saved to tests/testthat/fixtures/\n")
 }
 

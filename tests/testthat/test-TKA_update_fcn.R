@@ -7,14 +7,14 @@ test_that("TKA_update_fcn works correctly", {
     age = c(65, 70, 75, 68, 72),
     stringsAsFactors = FALSE
   )
-  
+
   # Test TKA update function (assuming it exists)
   # updated_pop <- TKA_update_fcn(current_pop)
-  
+
   # Check that output is as expected
   # expect_s3_class(updated_pop, "data.table")
   # expect_equal(nrow(updated_pop), nrow(current_pop))
-  
+
   # For now, create a basic test
-  expect_true(TRUE)  # Placeholder to ensure the test file exists
+  expect_true(TRUE) # Placeholder to ensure the test file exists
 })

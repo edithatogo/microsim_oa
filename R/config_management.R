@@ -39,8 +39,8 @@ default_config <- list(
     pji_prob = 0.01
   ),
   pathways = list(
-    public_wait_time = 18,  # months
-    private_wait_time = 0.5,  # months
+    public_wait_time = 18, # months
+    private_wait_time = 0.5, # months
     referral_threshold = 0.7
   ),
   interventions = list(
@@ -60,19 +60,19 @@ create_config_from_parameters <- function(
 ) {
   # Create config from defaults
   config <- default_config
-  
+
   # Override with specified parameters
   config$simulation$time_horizon <- time_horizon
   config$simulation$population_size <- population_size
   config$simulation$start_year <- start_year
   config$simulation$verbose <- verbose
   config$costs$tka_primary$hospital_stay$value <- tka_primary_cost
-  
+
   # Apply custom parameters if provided
   if (is.list(custom_params)) {
     config <- merge_lists(config, custom_params)
   }
-  
+
   return(config)
 }
 
@@ -80,7 +80,7 @@ create_config_from_parameters <- function(
 merge_lists <- function(base, overrides) {
   # Get names of overrides
   override_names <- names(overrides)
-  
+
   # Process each override
   for (name in override_names) {
     if (is.list(overrides[[name]]) && is.list(base[[name]])) {
@@ -91,7 +91,7 @@ merge_lists <- function(base, overrides) {
       base[[name]] <- overrides[[name]]
     }
   }
-  
+
   return(base)
 }
 
@@ -102,7 +102,7 @@ save_config <- function(config, file_path) {
   if (length(validation_errors) > 0) {
     stop("Configuration validation failed:\n", paste("-", validation_errors, collapse = "\n"))
   }
-  
+
   # Use yaml for human-readable format
   yaml::write_yaml(config, file_path)
   cat("Configuration saved to:", file_path, "\n")
@@ -114,20 +114,23 @@ load_and_validate_config <- function(file_path) {
   if (!file.exists(file_path)) {
     stop("Configuration file does not exist: ", file_path)
   }
-  
+
   # Load the file
-  config <- tryCatch({
-    yaml::read_yaml(file_path)
-  }, error = function(e) {
-    stop("Failed to load YAML configuration from '", file_path, "': ", e$message)
-  })
-  
+  config <- tryCatch(
+    {
+      yaml::read_yaml(file_path)
+    },
+    error = function(e) {
+      stop("Failed to load YAML configuration from '", file_path, "': ", e$message)
+    }
+  )
+
   # Validate the loaded configuration
   validation_errors <- validate_config(config)
   if (length(validation_errors) > 0) {
     stop("Loaded configuration validation failed:\n", paste("-", validation_errors, collapse = "\n"))
   }
-  
+
   cat("Configuration loaded and validated from:", file_path, "\n")
   return(config)
 }
@@ -142,12 +145,12 @@ get_config_section <- function(config, section_name) {
   if (is.null(config) || !is.list(config)) {
     stop("Invalid configuration object")
   }
-  
+
   if (!section_name %in% names(config)) {
     available_sections <- paste(names(config), collapse = ", ")
     stop("Section '", section_name, "' not found in configuration. Available sections: ", available_sections)
   }
-  
+
   return(config[[section_name]])
 }
 
@@ -156,11 +159,11 @@ update_config_section <- function(config, section_name, new_values) {
   if (is.null(config) || !is.list(config)) {
     stop("Invalid configuration object")
   }
-  
+
   if (is.null(new_values) || !is.list(new_values)) {
     stop("New values must be provided as a list")
   }
-  
+
   if (section_name %in% names(config)) {
     # Merge existing and new values
     config[[section_name]] <- merge_lists(config[[section_name]], new_values)
@@ -168,18 +171,18 @@ update_config_section <- function(config, section_name, new_values) {
     # Add new section
     config[[section_name]] <- new_values
   }
-  
+
   return(config)
 }
 
 # Validate entire configuration
 validate_entire_config <- function(config) {
   errors <- c()
-  
+
   if (is.null(config) || !is.list(config)) {
     return(c("Configuration must be a list"))
   }
-  
+
   # Validate required sections
   required_sections <- c("simulation", "costs", "utilities")
   for (section in required_sections) {
@@ -187,7 +190,7 @@ validate_entire_config <- function(config) {
       errors <- c(errors, paste("Missing required configuration section:", section))
     }
   }
-  
+
   # Validate specific fields in each section
   if ("simulation" %in% names(config)) {
     sim <- config$simulation
@@ -198,19 +201,19 @@ validate_entire_config <- function(config) {
       errors <- c(errors, "simulation$population_size must be a positive number")
     }
   }
-  
+
   if ("costs" %in% names(config)) {
     costs <- config$costs
     if (is.list(costs$tka_primary)) {
       if (is.list(costs$tka_primary$hospital_stay)) {
-        if (!is.null(costs$tka_primary$hospital_stay$value) && 
-            (!is.numeric(costs$tka_primary$hospital_stay$value) || costs$tka_primary$hospital_stay$value < 0)) {
+        if (!is.null(costs$tka_primary$hospital_stay$value) &&
+          (!is.numeric(costs$tka_primary$hospital_stay$value) || costs$tka_primary$hospital_stay$value < 0)) {
           errors <- c(errors, "Cost values must be non-negative")
         }
       }
     }
   }
-  
+
   return(errors)
 }
 

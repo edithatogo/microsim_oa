@@ -7,13 +7,13 @@ test_that("tka_complications_fcn works correctly", {
     sex = c("M", "F", "M", "F", "M"),
     stringsAsFactors = FALSE
   )
-  
+
   # Test TKA complications calculation (assuming function exists)
   # complications <- tka_complications_fcn(tka_patients)
-  
+
   # Check that output is as expected
   # expect_type(complications, "logical")  # or whatever format is expected
-  
+
   # For now, create a basic test
-  expect_true(TRUE)  # Placeholder to ensure the test file exists
+  expect_true(TRUE) # Placeholder to ensure the test file exists
 })

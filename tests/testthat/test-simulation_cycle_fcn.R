@@ -7,11 +7,11 @@ test_that("OA_update works correctly", {
     kl_score = sample(0:4, 10, replace = TRUE),
     stringsAsFactors = FALSE
   )
-  
+
   # Test the exported OA_update function which is likely the main simulation function
   # Since we don't know the exact parameters, we'll test that the function exists and can be called
   expect_true(exists("OA_update"))
-  
+
   # We'll create a simple test to verify basic functionality if parameters are known
   # For now, test that the function exists and is callable
   expect_type(OA_update, "closure")
@@ -26,7 +26,7 @@ test_that("TKA_update_fcn works correctly", {
     tka_status = sample(0:1, 5, replace = TRUE),
     stringsAsFactors = FALSE
   )
-  
+
   # Test the exported TKA_update_fcn function
   expect_true(exists("TKA_update_fcn"))
   expect_type(TKA_update_fcn, "closure")

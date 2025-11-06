@@ -84,12 +84,15 @@ convert_directory_to_parquet <- function(input_dir, output_dir = NULL, recursive
   converted_files <- character()
 
   for (file_path in all_files) {
-    tryCatch({
-      converted_path <- convert_to_parquet(file_path)
-      converted_files <- c(converted_files, converted_path)
-    }, error = function(e) {
-      warning(sprintf("Failed to convert %s: %s", file_path, e$message))
-    })
+    tryCatch(
+      {
+        converted_path <- convert_to_parquet(file_path)
+        converted_files <- c(converted_files, converted_path)
+      },
+      error = function(e) {
+        warning(sprintf("Failed to convert %s: %s", file_path, e$message))
+      }
+    )
   }
 
   return(converted_files)

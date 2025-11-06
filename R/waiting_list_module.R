@@ -34,16 +34,14 @@ calculate_urgency_score <- function(am_curr, prioritization_scheme = "clinical")
     if (prioritization_scheme == "clinical") {
       # Clinical prioritization based on pain, function, and OA severity
       am_curr$urgency_score[oa_patients] <- (
-        am_curr$pain[oa_patients] * 0.4 +                    # Pain component (40%)
-        (1 - am_curr$function_score[oa_patients]) * 0.3 +    # Function component (30%)
-        (am_curr$kl3[oa_patients] + am_curr$kl4[oa_patients]) * 0.2 +  # OA severity (20%)
-        am_curr$ccount[oa_patients] * 0.1                    # Comorbidities (10%)
+        am_curr$pain[oa_patients] * 0.4 + # Pain component (40%)
+          (1 - am_curr$function_score[oa_patients]) * 0.3 + # Function component (30%)
+          (am_curr$kl3[oa_patients] + am_curr$kl4[oa_patients]) * 0.2 + # OA severity (20%)
+          am_curr$ccount[oa_patients] * 0.1 # Comorbidities (10%)
       )
-
     } else if (prioritization_scheme == "age") {
       # Age-based prioritization (older patients first)
       am_curr$urgency_score[oa_patients] <- am_curr$age[oa_patients] / 100
-
     } else if (prioritization_scheme == "socioeconomic") {
       # Socioeconomic prioritization (lower SEP higher priority)
       if ("year12" %in% names(am_curr)) {
@@ -52,25 +50,26 @@ calculate_urgency_score <- function(am_curr, prioritization_scheme = "clinical")
       } else {
         am_curr$urgency_score[oa_patients] <- am_curr$ccount[oa_patients]
       }
-
     } else if (prioritization_scheme == "combined") {
       # Combined clinical and socioeconomic factors
       clinical_score <- (
         am_curr$pain[oa_patients] * 0.3 +
-        (1 - am_curr$function_score[oa_patients]) * 0.3 +
-        (am_curr$kl3[oa_patients] + am_curr$kl4[oa_patients]) * 0.2 +
-        am_curr$ccount[oa_patients] * 0.2
+          (1 - am_curr$function_score[oa_patients]) * 0.3 +
+          (am_curr$kl3[oa_patients] + am_curr$kl4[oa_patients]) * 0.2 +
+          am_curr$ccount[oa_patients] * 0.2
       )
 
       socioeconomic_score <- ifelse("year12" %in% names(am_curr),
-                                   (1 - am_curr$year12[oa_patients]), 0)
+        (1 - am_curr$year12[oa_patients]), 0
+      )
 
       am_curr$urgency_score[oa_patients] <- clinical_score * 0.7 + socioeconomic_score * 0.3
     }
 
     # Calculate priority rankings (higher score = higher priority)
     am_curr$priority_rank[oa_patients] <- rank(-am_curr$urgency_score[oa_patients],
-                                              ties.method = "first")
+      ties.method = "first"
+    )
   }
 
   return(am_curr)
@@ -123,8 +122,9 @@ model_queue_management <- function(am_curr, capacity_constraints) {
       # Estimate wait times for untreated patients (simplified model)
       # In a full implementation, this would track cumulative wait times
       am_curr$wait_time_months[untreated_patients] <- sample(3:24,
-                                                           length(untreated_patients),
-                                                           replace = TRUE)
+        length(untreated_patients),
+        replace = TRUE
+      )
     }
 
     # Mark treated patients for TKA in next cycle
@@ -174,7 +174,7 @@ calculate_wait_time_impacts <- function(am_curr, wait_time_coefficients) {
 
       # OA progression impacts (KL grade advancement)
       am_curr$kl3[progression_indices] <- pmin(1, am_curr$kl3[progression_indices] +
-                                               am_curr$kl4[progression_indices])
+        am_curr$kl4[progression_indices])
       am_curr$kl4[progression_indices] <- pmin(1, am_curr$kl4[progression_indices] + 0.5)
     }
   }
@@ -201,10 +201,10 @@ model_pathway_selection <- function(am_curr, pathway_coefficients) {
       # Socioeconomic factors favoring private care
       socioeconomic_score <- 0
       if ("year12" %in% names(am_curr) && am_curr$year12[i] == 1) {
-        socioeconomic_score <- socioeconomic_score + 0.3  # Higher education
+        socioeconomic_score <- socioeconomic_score + 0.3 # Higher education
       }
       if ("high_income" %in% names(am_curr) && am_curr$high_income[i] == 1) {
-        socioeconomic_score <- socioeconomic_score + 0.4  # Higher income
+        socioeconomic_score <- socioeconomic_score + 0.4 # Higher income
       }
 
       # Clinical urgency favoring public care (higher urgency = more likely public)
@@ -212,10 +212,10 @@ model_pathway_selection <- function(am_curr, pathway_coefficients) {
 
       # Combined probability of choosing private care
       private_prob <- pathway_coefficients$private_base_prob +
-                     socioeconomic_score * pathway_coefficients$socioeconomic_weight -
-                     urgency_factor * pathway_coefficients$urgency_weight
+        socioeconomic_score * pathway_coefficients$socioeconomic_weight -
+        urgency_factor * pathway_coefficients$urgency_weight
 
-      private_prob <- max(0, min(1, private_prob))  # Bound between 0 and 1
+      private_prob <- max(0, min(1, private_prob)) # Bound between 0 and 1
 
       # Random selection
       if (runif(1) < private_prob) {

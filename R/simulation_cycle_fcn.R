@@ -124,7 +124,8 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
   }
 
   TKA_update_data <- TKA_update_fcn(am_curr, am_new, live_coeffs, TKR_cust, NULL,
-                                   implant_survival_data = NULL, default_implant_type = "standard")
+    implant_survival_data = NULL, default_implant_type = "standard"
+  )
 
   # extract data.tables from output list
   am_curr <- TKA_update_data[["am_curr"]]
@@ -264,7 +265,6 @@ simulation_cycle_fcn <- function(am_curr, cycle.coefficents, am_new,
 
   ############################## Calculate Costs for the cycle
   am_new <- calculate_costs_fcn(am_new, live_coeffs$costs)
-
 
 
   ############################## Determine mortality in the cycle

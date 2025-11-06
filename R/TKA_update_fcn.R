@@ -125,7 +125,6 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
     summarise(mean_tka_risk_adjustment = mean(tkai))
 
 
-
   comparison <- merge(summ_tka_risk_pre, summ_tka_risk_post, by = c("age_cat", "sex"))
   comparison <- merge(comparison, summ_tka_risk_adjustment, by = c("age_cat", "sex"))
 
@@ -178,8 +177,8 @@ TKA_update_fcn <- function(am_curr, am_new, cycle.coefficents, TKR_cust, summary
         implant_data <- implant_survival_data[implant_survival_data$implant_type == implant_type, ]
 
         # Simple lookup for current time period (this could be made more sophisticated)
-        current_survival <- implant_data$survival_probability[implant_data$time_years == 1]  # 1-year survival as example
-        if (length(current_survival) == 0) current_survival <- 0.95  # default
+        current_survival <- implant_data$survival_probability[implant_data$time_years == 1] # 1-year survival as example
+        if (length(current_survival) == 0) current_survival <- 0.95 # default
 
         implant_indices <- which(am_curr$implant_type == implant_type & am_curr$tka1 == 1)
         if (length(implant_indices) > 0) {
