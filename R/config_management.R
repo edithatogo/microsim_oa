@@ -24,26 +24,31 @@ enhanced_load_config <- function(config_path, validate = TRUE) {
   }
 
   # Attempt to load configuration
-  config <- tryCatch({
-    config <- yaml::read_yaml(config_path)
-    
-    # Apply default values if not specified
-    config <- fill_missing_defaults(config)
-    
-    # Validate if requested
-    if (validate) {
-      validation_result <- validate_config_comprehensive(config)
-      if (!validation_result$valid) {
-        stop("Configuration validation failed:\n",
-             paste(validation_result$errors, collapse = "\n"))
+  config <- tryCatch(
+    {
+      config <- yaml::read_yaml(config_path)
+
+      # Apply default values if not specified
+      config <- fill_missing_defaults(config)
+
+      # Validate if requested
+      if (validate) {
+        validation_result <- validate_config_comprehensive(config)
+        if (!validation_result$valid) {
+          stop(
+            "Configuration validation failed:\n",
+            paste(validation_result$errors, collapse = "\n")
+          )
+        }
       }
+
+      return(config)
+    },
+    error = function(e) {
+      stop("Failed to load configuration from ", config_path, ": ", e$message)
     }
-    
-    return(config)
-  }, error = function(e) {
-    stop("Failed to load configuration from ", config_path, ": ", e$message)
-  })
-  
+  )
+
   return(config)
 }
 
@@ -92,29 +97,29 @@ fill_missing_defaults <- function(config) {
       dead = 0.0
     ),
     risks = list(
-      tka_annual = 0.02,  # Annual probability of primary TKA
-      revision_annual = 0.03,  # Annual probability of revision after TKA
-      dvt_prob = 0.05,  # Probability of DVT after TKA
-      pji_prob = 0.01   # Probability of PJI after TKA
+      tka_annual = 0.02, # Annual probability of primary TKA
+      revision_annual = 0.03, # Annual probability of revision after TKA
+      dvt_prob = 0.05, # Probability of DVT after TKA
+      pji_prob = 0.01 # Probability of PJI after TKA
     )
   )
-  
+
   # Fill in missing elements recursively
   for (section_name in names(defaults)) {
     if (is.null(config[[section_name]])) {
       config[[section_name]] <- list()
     }
-    
+
     if (is.list(defaults[[section_name]]) && is.list(config[[section_name]])) {
       for (param_name in names(defaults[[section_name]])) {
         if (is.null(config[[section_name]][[param_name]])) {
           config[[section_name]][[param_name]] <- defaults[[section_name]][[param_name]]
-        } else if (is.list(defaults[[section_name]][[param_name]]) && 
-                   is.list(config[[section_name]][[param_name]])) {
+        } else if (is.list(defaults[[section_name]][[param_name]]) &&
+          is.list(config[[section_name]][[param_name]])) {
           # Nested parameters
           for (nested_param in names(defaults[[section_name]][[param_name]])) {
             if (is.null(config[[section_name]][[param_name]][[nested_param]])) {
-              config[[section_name]][[param_name]][[nested_param]] <- 
+              config[[section_name]][[param_name]][[nested_param]] <-
                 defaults[[section_name]][[param_name]][[nested_param]]
             }
           }
@@ -122,7 +127,7 @@ fill_missing_defaults <- function(config) {
       }
     }
   }
-  
+
   return(config)
 }
 
@@ -134,11 +139,11 @@ fill_missing_defaults <- function(config) {
 #' @return List with validation results (valid: boolean, errors: character vector)
 validate_config_comprehensive <- function(config) {
   errors <- c()
-  
+
   if (is.null(config) || !is.list(config)) {
     return(list(valid = FALSE, errors = "Configuration must be a list"))
   }
-  
+
   # Validate simulation section
   if ("simulation" %in% names(config)) {
     sim <- config$simulation
@@ -152,50 +157,50 @@ validate_config_comprehensive <- function(config) {
       errors <- c(errors, "simulation$seed must be a single numeric value")
     }
   }
-  
+
   # Validate costs section
   if ("costs" %in% names(config)) {
     costs <- config$costs
     if (is.list(costs$tka_primary)) {
       if (is.list(costs$tka_primary$hospital_stay)) {
-        if (!is.null(costs$tka_primary$hospital_stay$value) && 
-            (!is.numeric(costs$tka_primary$hospital_stay$value) || costs$tka_primary$hospital_stay$value < 0)) {
+        if (!is.null(costs$tka_primary$hospital_stay$value) &&
+          (!is.numeric(costs$tka_primary$hospital_stay$value) || costs$tka_primary$hospital_stay$value < 0)) {
           errors <- c(errors, "Cost values must be non-negative")
         }
       }
     }
     if (is.list(costs$tka_revision)) {
       if (is.list(costs$tka_revision$hospital_stay)) {
-        if (!is.null(costs$tka_revision$hospital_stay$value) && 
-            (!is.numeric(costs$tka_revision$hospital_stay$value) || costs$tka_revision$hospital_stay$value < 0)) {
+        if (!is.null(costs$tka_revision$hospital_stay$value) &&
+          (!is.numeric(costs$tka_revision$hospital_stay$value) || costs$tka_revision$hospital_stay$value < 0)) {
           errors <- c(errors, "Revision cost values must be non-negative")
         }
       }
     }
   }
-  
+
   # Validate utilities section
   if ("utilities" %in% names(config)) {
     utils <- config$utilities
     for (util_name in c("kl0", "kl1", "kl2", "kl3", "kl4", "post_tka")) {
-      if (!is.null(utils[[util_name]]) && 
-          (!is.numeric(utils[[util_name]]) || utils[[util_name]] < 0 || utils[[util_name]] > 1)) {
+      if (!is.null(utils[[util_name]]) &&
+        (!is.numeric(utils[[util_name]]) || utils[[util_name]] < 0 || utils[[util_name]] > 1)) {
         errors <- c(errors, paste0("utilities$", util_name, " must be between 0 and 1"))
       }
     }
   }
-  
+
   # Validate risks section
   if ("risks" %in% names(config)) {
     risks <- config$risks
     for (risk_name in c("tka_annual", "revision_annual", "dvt_prob", "pji_prob")) {
-      if (!is.null(risks[[risk_name]]) && 
-          (!is.numeric(risks[[risk_name]]) || risks[[risk_name]] < 0 || risks[[risk_name]] > 1)) {
+      if (!is.null(risks[[risk_name]]) &&
+        (!is.numeric(risks[[risk_name]]) || risks[[risk_name]] < 0 || risks[[risk_name]] > 1)) {
         errors <- c(errors, paste0("risks$", risk_name, " must be between 0 and 1"))
       }
     }
   }
-  
+
   return(list(valid = length(errors) == 0, errors = errors))
 }
 
@@ -212,11 +217,13 @@ save_config_safe <- function(config, file_path, validate = TRUE) {
   if (validate) {
     validation_result <- validate_config_comprehensive(config)
     if (!validation_result$valid) {
-      stop("Config validation failed before saving:\n",
-           paste(validation_result$errors, collapse = "\n"))
+      stop(
+        "Config validation failed before saving:\n",
+        paste(validation_result$errors, collapse = "\n")
+      )
     }
   }
-  
+
   yaml::write_yaml(config, file_path)
   return(TRUE)
 }
@@ -234,29 +241,31 @@ update_config_section_safe <- function(config, section_name, new_values) {
   if (!is.list(config)) {
     stop("Config must be a list")
   }
-  
+
   if (!is.character(section_name) || length(section_name) != 1) {
     stop("section_name must be a single character string")
   }
-  
+
   if (!is.list(new_values)) {
     stop("new_values must be a list")
   }
-  
+
   # Update the section
   if (section_name %in% names(config)) {
     config[[section_name]] <- merge_lists_recursive(config[[section_name]], new_values)
   } else {
     config[[section_name]] <- new_values
   }
-  
+
   # Validate updated configuration
   validation_result <- validate_config_comprehensive(config)
   if (!validation_result$valid) {
-    warning("Updated configuration has validation warnings:\n",
-            paste(validation_result$errors, collapse = "\n"))
+    warning(
+      "Updated configuration has validation warnings:\n",
+      paste(validation_result$errors, collapse = "\n")
+    )
   }
-  
+
   return(config)
 }
 
@@ -269,6 +278,6 @@ merge_lists_recursive <- function(base_list, update_list) {
       base_list[[item_name]] <- update_list[[item_name]]
     }
   }
-  
+
   return(base_list)
 }
