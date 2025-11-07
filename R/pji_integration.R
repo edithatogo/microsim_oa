@@ -53,7 +53,7 @@ integrate_pji_module <- function(am_curr, am_new, cycle_coefficients) {
   # Update the generic 'comp' variable for backward compatibility
   # PJI cases should set comp = 1
   am_new$comp <- ifelse(!is.na(am_curr$pji_status) &
-                       am_curr$pji_status %in% c("early", "delayed", "late", "chronic"), 1, 0)
+    am_curr$pji_status %in% c("early", "delayed", "late", "chronic"), 1, 0)
 
   # Add PJI impacts to SF6D
   am_curr$d_sf6d <- am_curr$d_sf6d + am_curr$pji_qaly_decrement

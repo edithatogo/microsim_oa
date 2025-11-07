@@ -22,7 +22,7 @@ create_test_sim_storage <- function(n = 100) {
 test_that("stats_per_simulation returns a data.frame with the correct columns", {
   sim_storage <- create_test_sim_storage()
   stats <- stats_per_simulation(sim_storage, 1, c("year", "sex"))
-  
+
   expect_true(is.data.frame(stats))
   expect_true(all(c("year", "sex", "variable", "N", "Mean", "Sum", "sim_number") %in% names(stats)))
 })
@@ -36,23 +36,23 @@ test_that("stats_per_simulation correctly filters by age and dead status", {
       some_numeric_var = c(10, 20, 30, 40)
     )
   )
-  
+
   # Expecting only the person aged 50 and 70 to be included
   stats <- stats_per_simulation(sim_storage, 1, "age")
-  
+
   # The age column in the output refers to the grouping, not the original age
   # so we need to check the calculated stats
   # Mean of some_numeric_var should be (20+40)/2 = 30
   mean_val <- stats %>%
     filter(variable == "some_numeric_var") %>%
     pull(Mean)
-    
+
   # There are two age groups, so we can't directly check the mean
   # Instead, let's check the sum
   sum_val <- stats %>%
     filter(variable == "some_numeric_var") %>%
     pull(Sum)
-    
+
   expect_equal(sum(sum_val), 60)
 })
 
@@ -68,17 +68,17 @@ test_that("stats_per_simulation correctly calculates N, Mean, and Sum", {
       some_numeric_var = c(10, 20, 30, 40)
     )
   )
-  
+
   stats <- stats_per_simulation(sim_storage, 1, c("year", "sex"))
-  
+
   binary_stats <- stats %>% filter(variable == "some_binary_var")
   numeric_stats <- stats %>% filter(variable == "some_numeric_var")
-  
+
   expect_equal(binary_stats$N, 2)
   expect_equal(binary_stats$Mean, 0.5)
   expect_equal(binary_stats$Sum, 2)
-  
-  expect_equal(numeric_stats$N, 4) 
+
+  expect_equal(numeric_stats$N, 4)
   expect_equal(numeric_stats$Mean, 25)
   expect_equal(numeric_stats$Sum, 100)
 })
@@ -91,13 +91,13 @@ test_that("stats_per_simulation correctly creates derived variables", {
       bmi = c(24, 26, 31, 28)
     )
   )
-  
+
   stats <- stats_per_simulation(sim_storage, 1, "age_group")
-  
+
   expect_true("age_group" %in% names(stats))
   expect_true("bmi_overweight_or_obese" %in% stats$variable)
   expect_true("bmi_obese" %in% stats$variable)
-  
+
   bmi_obese_stats <- stats %>% filter(variable == "bmi_obese")
   expect_equal(sum(bmi_obese_stats$N), 1)
 })

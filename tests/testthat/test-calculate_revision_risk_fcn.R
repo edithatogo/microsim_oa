@@ -7,14 +7,14 @@ test_that("calculate_revision_risk_fcn works correctly", {
     implant_type = c("TKA", "THA", "TKA", "THA", "TKA"),
     stringsAsFactors = FALSE
   )
-  
+
   # Test revision risk calculation (assuming function exists)
   # revision_risks <- calculate_revision_risk_fcn(joint_replacement_data)
-  
+
   # Check that output is as expected
   # expect_type(revision_risks, "double")
   # expect_length(revision_risks, nrow(joint_replacement_data))
-  
+
   # For now, create a basic test
-  expect_true(TRUE)  # Placeholder to ensure the test file exists
+  expect_true(TRUE) # Placeholder to ensure the test file exists
 })

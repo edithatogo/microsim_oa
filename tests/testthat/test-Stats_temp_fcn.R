@@ -32,14 +32,14 @@ create_am_all_test_data <- function() {
 test_that("f_get_percent_N_from_binary works correctly", {
   df <- create_test_df()
   result <- f_get_percent_N_from_binary(df, "group1")
-  
+
   # Check for group A
   res_A <- result %>% filter(group1 == "A")
   expect_equal(res_A$binary1_percent, 50)
   expect_equal(res_A$binary1_frequency, 1)
   expect_equal(res_A$binary2_percent, 0)
   expect_equal(res_A$binary2_frequency, 0)
-  
+
   # Check for group B
   res_B <- result %>% filter(group1 == "B")
   expect_equal(res_B$binary1_percent, 100)
@@ -51,13 +51,13 @@ test_that("f_get_percent_N_from_binary works correctly", {
 test_that("f_get_means_freq_sum works correctly", {
   df <- create_test_df()
   result <- f_get_means_freq_sum(df, "group1")
-  
+
   # Check for group A
   res_A <- result %>% filter(group1 == "A")
   expect_equal(res_A$numeric1_mean, 15)
   expect_equal(res_A$numeric1_sum, 30)
   expect_equal(res_A$binary1_frequency, 1) # Freq is sum of 1s
-  
+
   # Check for group B
   res_B <- result %>% filter(group1 == "B")
   expect_equal(res_B$numeric2_mean, 30)
@@ -68,16 +68,16 @@ test_that("f_get_means_freq_sum works correctly", {
 test_that("BMI_summary_data filters and calculates correctly", {
   am_all <- create_am_all_test_data()
   result <- BMI_summary_data(am_all)
-  
+
   # Should filter out dead person and people under 35
   # Remaining n = 8
   expect_equal(nrow(result), 5)
-  
+
   # Check a specific calculation
   # 45-54 age group, Female: age 50 (bmi 26), 55 (bmi 21) -> prop = 0.5
   res_45_54_F <- result %>% filter(age_cat == "45-54", sex == "Female")
   expect_equal(res_45_54_F$prop_overweight_obese, 0.5)
-  
+
   # 35-44 age group, Male: age 40 (bmi 22), 45 (bmi 33) -> prop = 0.5
   res_35_44_M <- result %>% filter(age_cat == "35-44", sex == "Male")
   expect_equal(res_35_44_M$prop_overweight_obese, 0.5)
@@ -91,7 +91,7 @@ test_that("BMI_summary_RMSE calculates correctly", {
     prop_overweight_obese = c(0.6, 0.7),
     source = "Simulated"
   )
-  
+
   obs_data <- data.frame(
     year = c(2018, 2018),
     prop_overweight_obese = c(65, 75), # Note: in percent
@@ -100,9 +100,9 @@ test_that("BMI_summary_RMSE calculates correctly", {
     lower_CI = c(60, 70),
     upper_CI = c(70, 80)
   )
-  
+
   result <- BMI_summary_RMSE(obs_data, sim_data, "test")
-  
+
   # Expected RMSE for 45-54: sqrt(((65 - 60)^2)) = 5
   # Expected RMSE for 55-64: sqrt(((75 - 70)^2)) = 5
   expect_equal(result$RMSE[1], 5)
@@ -112,11 +112,11 @@ test_that("BMI_summary_RMSE calculates correctly", {
 test_that("OA_summary_fcn calculates correctly", {
   am_all <- create_am_all_test_data()
   result <- OA_summary_fcn(am_all)
-  
+
   # 8 people alive and > 34. 4 have OA. Overall prevalence = 50%
   res_all <- result %>% filter(age_group == "All ages", sex == "All")
   expect_equal(res_all$percent, 50)
-  
+
   # Males: 4 alive > 34. 3 have OA. Prevalence = 75%
   res_males <- result %>% filter(age_group == "All ages", sex == "Males")
   expect_equal(res_males$percent, 75)

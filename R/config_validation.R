@@ -4,57 +4,59 @@
 #'
 #' Validates the structure and content of configuration objects used throughout the AUS-OA model.
 #' Checks for required sections, parameter validity, and cross-parameter consistency.
-#' 
+#'
 #' @param config The configuration object to validate
 #' @return A list with 'valid' (logical) and 'errors' (character vector) elements
 #' @export
 validate_ausoa_config <- function(config) {
   errors <- c()
-  
+
   if (is.null(config)) {
     return(list(valid = FALSE, errors = "Configuration is NULL"))
   }
-  
+
   # Check required top-level sections
   required_sections <- c("simulation", "costs", "utilities", "risks")
   missing_sections <- setdiff(required_sections, names(config))
-  
+
   if (length(missing_sections) > 0) {
-    errors <- c(errors, paste("Missing required configuration sections:", 
-                              paste(missing_sections, collapse = ", ")))
+    errors <- c(errors, paste(
+      "Missing required configuration sections:",
+      paste(missing_sections, collapse = ", ")
+    ))
   }
-  
+
   # Validate simulation section if present
   if ("simulation" %in% names(config) && is.list(config$simulation)) {
     sim_config <- config$simulation
-    
+
     # Validate time parameters
     if (!is.null(sim_config$time_horizon)) {
       if (!is.numeric(sim_config$time_horizon) || sim_config$time_horizon <= 0) {
         errors <- c(errors, "simulation$time_horizon must be a positive number")
       }
     }
-    
+
     if (!is.null(sim_config$start_year)) {
       if (!is.numeric(sim_config$start_year) || sim_config$start_year < 1900 || sim_config$start_year > 2100) {
         errors <- c(errors, "simulation$start_year must be a valid year (1900-2100)")
       }
     }
-    
+
     if (!is.null(sim_config$population_size)) {
       if (!is.numeric(sim_config$population_size) || sim_config$population_size <= 0) {
         errors <- c(errors, "simulation$population_size must be a positive number")
       }
     }
   }
-  
+
   # Validate costs section if present
   if ("costs" %in% names(config) && is.list(config$costs)) {
     cost_config <- config$costs
-    
+
     if ("tka_primary" %in% names(cost_config) && is.list(cost_config$tka_primary)) {
       primary_costs <- cost_config$tka_primary
-      
+
       if ("hospital_stay" %in% names(primary_costs) && is.list(primary_costs$hospital_stay)) {
         hosp_cost <- primary_costs$hospital_stay
         if (!is.null(hosp_cost$value) && (!is.numeric(hosp_cost$value) || hosp_cost$value < 0)) {
@@ -62,10 +64,10 @@ validate_ausoa_config <- function(config) {
         }
       }
     }
-    
+
     if ("tka_revision" %in% names(cost_config) && is.list(cost_config$tka_revision)) {
       rev_costs <- cost_config$tka_revision
-      
+
       if ("hospital_stay" %in% names(rev_costs) && is.list(rev_costs$hospital_stay)) {
         hosp_cost <- rev_costs$hospital_stay
         if (!is.null(hosp_cost$value) && (!is.numeric(hosp_cost$value) || hosp_cost$value < 0)) {
@@ -74,19 +76,21 @@ validate_ausoa_config <- function(config) {
       }
     }
   }
-  
+
   # Validate utilities section if present
   if ("utilities" %in% names(config) && is.list(config$utilities)) {
     util_config <- config$utilities
-    
+
     # Check for required utility values
     required_utils <- c("kl0", "kl1", "kl2", "kl3", "kl4", "post_tka", "dead")
     missing_utils <- setdiff(required_utils, names(util_config))
     if (length(missing_utils) > 0) {
-      errors <- c(errors, paste("Missing required utility values:", 
-                                paste(missing_utils, collapse = ", ")))
+      errors <- c(errors, paste(
+        "Missing required utility values:",
+        paste(missing_utils, collapse = ", ")
+      ))
     }
-    
+
     # Validate utility ranges (should be between 0 and 1)
     util_names <- intersect(required_utils, names(util_config))
     for (util_name in util_names) {
@@ -96,11 +100,11 @@ validate_ausoa_config <- function(config) {
       }
     }
   }
-  
+
   # Validate risks section if present
   if ("risks" %in% names(config) && is.list(config$risks)) {
     risk_config <- config$risks
-    
+
     # Validate probability ranges
     prob_params <- c("dvt_prob", "pji_prob")
     for (param in prob_params) {
@@ -112,7 +116,7 @@ validate_ausoa_config <- function(config) {
       }
     }
   }
-  
+
   return(list(valid = length(errors) == 0, errors = errors))
 }
 
@@ -129,28 +133,33 @@ load_and_validate_config <- function(config_path, validate = TRUE) {
   if (!file.exists(config_path)) {
     stop("Configuration file does not exist: ", config_path)
   }
-  
+
   # Check file extension
   if (!grepl("\\.(ya?ml)$", tolower(config_path))) {
     warning("Config file may not be in expected YAML format: ", config_path)
   }
-  
+
   # Load the configuration
-  config <- tryCatch({
-    yaml::read_yaml(config_path)
-  }, error = function(e) {
-    stop("Failed to load configuration from '", config_path, "': ", e$message)
-  })
-  
+  config <- tryCatch(
+    {
+      yaml::read_yaml(config_path)
+    },
+    error = function(e) {
+      stop("Failed to load configuration from '", config_path, "': ", e$message)
+    }
+  )
+
   # Validate if requested
   if (validate) {
     validation_result <- validate_ausoa_config(config)
     if (!validation_result$valid) {
-      stop("Configuration validation failed:\n", 
-           paste("-", validation_result$errors, collapse = "\n"))
+      stop(
+        "Configuration validation failed:\n",
+        paste("-", validation_result$errors, collapse = "\n")
+      )
     }
   }
-  
+
   return(config)
 }
 
@@ -165,14 +174,16 @@ load_and_validate_config <- function(config_path, validate = TRUE) {
 merge_config_defaults <- function(custom_config, default_config = get_default_config()) {
   # Use recursive function to merge nested lists
   merged_config <- merge_lists_recursive(default_config, custom_config)
-  
+
   # Validate the merged result
   validation_result <- validate_ausoa_config(merged_config)
   if (!validation_result$valid) {
-    warning("Merged configuration has validation issues:\n", 
-            paste("-", validation_result$errors, collapse = "\n"))
+    warning(
+      "Merged configuration has validation issues:\n",
+      paste("-", validation_result$errors, collapse = "\n")
+    )
   }
-  
+
   return(merged_config)
 }
 
@@ -180,12 +191,12 @@ merge_config_defaults <- function(custom_config, default_config = get_default_co
 merge_lists_recursive <- function(base, overrides) {
   # Get names of overrides
   override_names <- names(overrides)
-  
+
   # Process each override
   for (name in override_names) {
-    if (name %in% names(base) && 
-        is.list(overrides[[name]]) && 
-        is.list(base[[name]])) {
+    if (name %in% names(base) &&
+      is.list(overrides[[name]]) &&
+      is.list(base[[name]])) {
       # Recursively merge nested lists
       base[[name]] <- merge_lists_recursive(base[[name]], overrides[[name]])
     } else {
@@ -193,7 +204,7 @@ merge_lists_recursive <- function(base, overrides) {
       base[[name]] <- overrides[[name]]
     }
   }
-  
+
   return(base)
 }
 
@@ -239,8 +250,8 @@ get_default_config <- function() {
       pji_prob = 0.01
     ),
     pathways = list(
-      public_wait_time = 18,  # months
-      private_wait_time = 0.5,  # months
+      public_wait_time = 18, # months
+      private_wait_time = 0.5, # months
       referral_threshold = 0.7
     ),
     interventions = list(
@@ -259,24 +270,36 @@ get_default_config <- function() {
 #' @export
 generate_config_template <- function(output_path = "ausoa_config_template.yaml") {
   template_config <- get_default_config()
-  
+
   # Add comments to the config
-  comment_attribute(template_config$simulation, 
-                   "Simulation parameters - time horizon (years), start year, and population size")
-  comment_attribute(template_config$costs, 
-                   "Cost parameters in dollars, with perspective (healthcare_system, patient, societal)")
-  comment_attribute(template_config$utilities, 
-                   "Utility weights for different health states (0=completely unhealthy, 1=perfect health)")
-  comment_attribute(template_config$risks, 
-                   "Risk parameters as annual probabilities (0-1)")
-  comment_attribute(template_config$pathways, 
-                   "Pathway parameters for public/private healthcare systems")
-  comment_attribute(template_config$interventions, 
-                   "Intervention parameters for policy analysis")
-  
+  comment_attribute(
+    template_config$simulation,
+    "Simulation parameters - time horizon (years), start year, and population size"
+  )
+  comment_attribute(
+    template_config$costs,
+    "Cost parameters in dollars, with perspective (healthcare_system, patient, societal)"
+  )
+  comment_attribute(
+    template_config$utilities,
+    "Utility weights for different health states (0=completely unhealthy, 1=perfect health)"
+  )
+  comment_attribute(
+    template_config$risks,
+    "Risk parameters as annual probabilities (0-1)"
+  )
+  comment_attribute(
+    template_config$pathways,
+    "Pathway parameters for public/private healthcare systems"
+  )
+  comment_attribute(
+    template_config$interventions,
+    "Intervention parameters for policy analysis"
+  )
+
   # Write to YAML
   yaml::write_yaml(template_config, output_path)
-  
+
   message("Configuration template generated at: ", output_path)
   return(output_path)
 }
@@ -294,11 +317,11 @@ update_config_section <- function(config, section_name, updates) {
   if (!is.list(config)) {
     stop("Configuration must be a list")
   }
-  
+
   if (!is.list(updates)) {
     stop("Updates must be provided as a list")
   }
-  
+
   if (section_name %in% names(config) && is.list(config[[section_name]])) {
     # Update existing section
     config[[section_name]] <- merge_lists_recursive(config[[section_name]], updates)
@@ -306,7 +329,7 @@ update_config_section <- function(config, section_name, updates) {
     # Create new section
     config[[section_name]] <- updates
   }
-  
+
   return(config)
 }
 
@@ -324,12 +347,12 @@ get_config_section <- function(config, section_name, default = list()) {
     warning("Configuration is not a list, returning default")
     return(default)
   }
-  
+
   if (!section_name %in% names(config)) {
     warning("Configuration section '", section_name, "' not found, returning default")
     return(default)
   }
-  
+
   return(config[[section_name]])
 }
 

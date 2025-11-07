@@ -18,8 +18,7 @@
 #' @param subtitle Plot subtitle
 #' @return ggplot object
 plot_ceac <- function(ceac_data, wtp_threshold = NULL, title = "Cost-Effectiveness Acceptability Curve",
-                     subtitle = "Probability of Cost-Effectiveness vs Willingness-to-Pay") {
-
+                      subtitle = "Probability of Cost-Effectiveness vs Willingness-to-Pay") {
   if (is.null(ceac_data) || nrow(ceac_data) == 0) {
     warning("No CEAC data available for plotting")
     return(NULL)
@@ -50,17 +49,24 @@ plot_ceac <- function(ceac_data, wtp_threshold = NULL, title = "Cost-Effectivene
     threshold_data <- ceac_data[which.min(abs(ceac_data$wtp - wtp_threshold)), ]
 
     p <- p +
-      ggplot2::geom_vline(xintercept = wtp_threshold, linetype = "dashed",
-                         color = "#A23B72", linewidth = 1) +
-      ggplot2::geom_hline(yintercept = threshold_data$probability_ce,
-                         linetype = "dashed", color = "#A23B72", linewidth = 1) +
+      ggplot2::geom_vline(
+        xintercept = wtp_threshold, linetype = "dashed",
+        color = "#A23B72", linewidth = 1
+      ) +
+      ggplot2::geom_hline(
+        yintercept = threshold_data$probability_ce,
+        linetype = "dashed", color = "#A23B72", linewidth = 1
+      ) +
       ggplot2::annotate("text",
-                       x = wtp_threshold + max(ceac_data$wtp) * 0.05,
-                       y = threshold_data$probability_ce + 0.05,
-                       label = sprintf("WTP: $%s\nProb: %.1f%%",
-                                     format(wtp_threshold, big.mark = ","),
-                                     threshold_data$probability_ce * 100),
-                       hjust = 0, vjust = 0, size = 3, color = "#A23B72")
+        x = wtp_threshold + max(ceac_data$wtp) * 0.05,
+        y = threshold_data$probability_ce + 0.05,
+        label = sprintf(
+          "WTP: $%s\nProb: %.1f%%",
+          format(wtp_threshold, big.mark = ","),
+          threshold_data$probability_ce * 100
+        ),
+        hjust = 0, vjust = 0, size = 3, color = "#A23B72"
+      )
   }
 
   # Add expected ICER reference line
@@ -68,14 +74,19 @@ plot_ceac <- function(ceac_data, wtp_threshold = NULL, title = "Cost-Effectivene
     expected_icer <- unique(ceac_data$expected_icer)
     if (!is.na(expected_icer) && expected_icer > 0) {
       p <- p +
-        ggplot2::geom_vline(xintercept = expected_icer, linetype = "dotted",
-                           color = "#F18F01", linewidth = 1) +
+        ggplot2::geom_vline(
+          xintercept = expected_icer, linetype = "dotted",
+          color = "#F18F01", linewidth = 1
+        ) +
         ggplot2::annotate("text",
-                         x = expected_icer + max(ceac_data$wtp) * 0.02,
-                         y = 0.9,
-                         label = sprintf("Expected ICER:\n$%s",
-                                       format(expected_icer, big.mark = ",")),
-                         hjust = 0, vjust = 1, size = 3, color = "#F18F01")
+          x = expected_icer + max(ceac_data$wtp) * 0.02,
+          y = 0.9,
+          label = sprintf(
+            "Expected ICER:\n$%s",
+            format(expected_icer, big.mark = ",")
+          ),
+          hjust = 0, vjust = 1, size = 3, color = "#F18F01"
+        )
     }
   }
 
@@ -89,11 +100,12 @@ plot_ceac <- function(ceac_data, wtp_threshold = NULL, title = "Cost-Effectivene
 #' @param title Plot title
 #' @return ggplot object
 plot_psa_scatter <- function(psa_results, wtp_threshold = 50000,
-                           title = "PSA Scatter Plot: Incremental Costs vs QALYs") {
-
+                             title = "PSA Scatter Plot: Incremental Costs vs QALYs") {
   # Extract successful results
-  successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                              psa_results$simulation_results)
+  successful_results <- Filter(
+    function(x) is.list(x) && !("error" %in% names(x)),
+    psa_results$simulation_results
+  )
 
   if (length(successful_results) == 0) {
     warning("No successful simulations for scatter plot")
@@ -113,8 +125,10 @@ plot_psa_scatter <- function(psa_results, wtp_threshold = 50000,
   scatter_data$cost_effective <- scatter_data$icer <= wtp_threshold
 
   # Create plot
-  p <- ggplot2::ggplot(scatter_data, ggplot2::aes(x = incremental_qaly, y = incremental_cost,
-                                                 color = cost_effective)) +
+  p <- ggplot2::ggplot(scatter_data, ggplot2::aes(
+    x = incremental_qaly, y = incremental_cost,
+    color = cost_effective
+  )) +
     ggplot2::geom_point(alpha = 0.6, size = 2) +
     ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
     ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
@@ -143,13 +157,16 @@ plot_psa_scatter <- function(psa_results, wtp_threshold = 50000,
     )
 
     p <- p +
-      ggplot2::geom_line(data = wtp_line, ggplot2::aes(x = qaly, y = cost),
-                        linetype = "dashed", color = "#F18F01", linewidth = 1) +
+      ggplot2::geom_line(
+        data = wtp_line, ggplot2::aes(x = qaly, y = cost),
+        linetype = "dashed", color = "#F18F01", linewidth = 1
+      ) +
       ggplot2::annotate("text",
-                       x = max_qaly * 0.7,
-                       y = wtp_threshold * max_qaly * 0.8,
-                       label = sprintf("WTP = $%s/QALY", format(wtp_threshold, big.mark = ",")),
-                       angle = 45, size = 3, color = "#F18F01")
+        x = max_qaly * 0.7,
+        y = wtp_threshold * max_qaly * 0.8,
+        label = sprintf("WTP = $%s/QALY", format(wtp_threshold, big.mark = ",")),
+        angle = 45, size = 3, color = "#F18F01"
+      )
   }
 
   return(p)
@@ -161,7 +178,6 @@ plot_psa_scatter <- function(psa_results, wtp_threshold = 50000,
 #' @param title Plot title
 #' @return ggplot object or list of plots
 plot_convergence_diagnostics <- function(psa_results, title = "PSA Convergence Diagnostics") {
-
   if (!"convergence_assessment" %in% names(psa_results)) {
     warning("No convergence assessment available")
     return(NULL)
@@ -222,9 +238,8 @@ plot_convergence_diagnostics <- function(psa_results, title = "PSA Convergence D
 #' @param subtitle Plot subtitle
 #' @return ggplot object
 plot_tornado_diagram <- function(influence_data, top_n = 10,
-                               title = "Parameter Influence (Tornado Diagram)",
-                               subtitle = "Impact of Parameter Uncertainty on ICER") {
-
+                                 title = "Parameter Influence (Tornado Diagram)",
+                                 subtitle = "Impact of Parameter Uncertainty on ICER") {
   if (is.null(influence_data) || length(influence_data) == 0) {
     warning("No parameter influence data available for tornado diagram")
     return(NULL)
@@ -273,13 +288,17 @@ plot_tornado_diagram <- function(influence_data, top_n = 10,
   # Create tornado diagram
   p <- ggplot2::ggplot(plot_data) +
     ggplot2::geom_segment(
-      ggplot2::aes(x = base, xend = value, y = reorder(parameter, influence),
-                   yend = reorder(parameter, influence)),
+      ggplot2::aes(
+        x = base, xend = value, y = reorder(parameter, influence),
+        yend = reorder(parameter, influence)
+      ),
       color = "gray70", linewidth = 1
     ) +
     ggplot2::geom_point(
-      ggplot2::aes(x = value, y = reorder(parameter, influence),
-                   color = type, shape = type),
+      ggplot2::aes(
+        x = value, y = reorder(parameter, influence),
+        color = type, shape = type
+      ),
       size = 3
     ) +
     ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "red", alpha = 0.7) +
@@ -318,9 +337,8 @@ plot_tornado_diagram <- function(influence_data, top_n = 10,
 #' @param subtitle Plot subtitle
 #' @return ggplot object
 plot_parameter_correlations <- function(correlation_data,
-                                     title = "Parameter Correlation Matrix",
-                                     subtitle = "Pearson Correlations with ICER") {
-
+                                        title = "Parameter Correlation Matrix",
+                                        subtitle = "Pearson Correlations with ICER") {
   if (is.null(correlation_data) || is.null(correlation_data$correlation_data)) {
     warning("No correlation data available for plotting")
     return(NULL)
@@ -329,12 +347,16 @@ plot_parameter_correlations <- function(correlation_data,
   corr_df <- correlation_data$correlation_data
 
   # Create correlation plot
-  p <- ggplot2::ggplot(corr_df, ggplot2::aes(x = reorder(parameter, abs_correlation),
-                                           y = pearson_correlation)) +
+  p <- ggplot2::ggplot(corr_df, ggplot2::aes(
+    x = reorder(parameter, abs_correlation),
+    y = pearson_correlation
+  )) +
     ggplot2::geom_bar(stat = "identity", fill = "#3498DB", alpha = 0.7) +
     ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-    ggplot2::geom_hline(yintercept = c(-0.3, 0.3), linetype = "dotted",
-                       color = "orange", alpha = 0.7) +
+    ggplot2::geom_hline(
+      yintercept = c(-0.3, 0.3), linetype = "dotted",
+      color = "orange", alpha = 0.7
+    ) +
     ggplot2::labs(
       title = title,
       subtitle = subtitle,
@@ -366,9 +388,8 @@ plot_parameter_correlations <- function(correlation_data,
 #' @param subtitle Plot subtitle
 #' @return ggplot object
 plot_sensitivity_analysis <- function(sensitivity_results,
-                                   title = "Sensitivity Analysis",
-                                   subtitle = "Parameter Impact on ICER") {
-
+                                      title = "Sensitivity Analysis",
+                                      subtitle = "Parameter Impact on ICER") {
   if (is.null(sensitivity_results) || length(sensitivity_results) == 0) {
     warning("No sensitivity analysis data available for plotting")
     return(NULL)
@@ -398,11 +419,15 @@ plot_sensitivity_analysis <- function(sensitivity_results,
   sens_data <- sens_data[order(abs(sens_data$elasticity), decreasing = TRUE), ]
 
   # Create sensitivity plot
-  p <- ggplot2::ggplot(sens_data, ggplot2::aes(x = reorder(parameter, abs(elasticity)),
-                                             y = elasticity)) +
-    ggplot2::geom_bar(stat = "identity",
-                     fill = ifelse(sens_data$elasticity >= 0, "#27AE60", "#E74C3C"),
-                     alpha = 0.7) +
+  p <- ggplot2::ggplot(sens_data, ggplot2::aes(
+    x = reorder(parameter, abs(elasticity)),
+    y = elasticity
+  )) +
+    ggplot2::geom_bar(
+      stat = "identity",
+      fill = ifelse(sens_data$elasticity >= 0, "#27AE60", "#E74C3C"),
+      alpha = 0.7
+    ) +
     ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
     ggplot2::labs(
       title = title,
@@ -434,8 +459,7 @@ plot_sensitivity_analysis <- function(sensitivity_results,
 #' @param wtp_threshold Willingness-to-pay threshold
 #' @return List of generated plots and files
 create_psa_visualization_report <- function(psa_results, output_dir = "output/plots",
-                                          wtp_threshold = 50000) {
-
+                                            wtp_threshold = 50000) {
   # Create output directory
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
@@ -527,9 +551,8 @@ create_psa_visualization_report <- function(psa_results, output_dir = "output/pl
 #' @param subtitle Plot subtitle
 #' @return ggplot object
 plot_ceac_bootstrap <- function(ceac_bootstrap, wtp_threshold = NULL,
-                               title = "CEAC with Bootstrap Confidence Intervals",
-                               subtitle = "Probability Cost-Effective vs Willingness-to-Pay") {
-
+                                title = "CEAC with Bootstrap Confidence Intervals",
+                                subtitle = "Probability Cost-Effective vs Willingness-to-Pay") {
   if (is.null(ceac_bootstrap) || nrow(ceac_bootstrap) == 0) {
     warning("No CEAC bootstrap data available for plotting")
     return(NULL)
@@ -540,7 +563,8 @@ plot_ceac_bootstrap <- function(ceac_bootstrap, wtp_threshold = NULL,
     ggplot2::geom_line(color = "#2E86AB", linewidth = 1.2) +
     ggplot2::geom_point(color = "#2E86AB", size = 2) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = ci_lower, ymax = ci_upper),
-                        fill = "#2E86AB", alpha = 0.2) +
+      fill = "#2E86AB", alpha = 0.2
+    ) +
     ggplot2::labs(
       title = title,
       subtitle = subtitle,
@@ -562,19 +586,26 @@ plot_ceac_bootstrap <- function(ceac_bootstrap, wtp_threshold = NULL,
     threshold_data <- ceac_bootstrap[which.min(abs(ceac_bootstrap$wtp - wtp_threshold)), ]
 
     p <- p +
-      ggplot2::geom_vline(xintercept = wtp_threshold, linetype = "dashed",
-                         color = "#A23B72", linewidth = 1) +
-      ggplot2::geom_hline(yintercept = threshold_data$probability_ce,
-                         linetype = "dashed", color = "#A23B72", linewidth = 1) +
+      ggplot2::geom_vline(
+        xintercept = wtp_threshold, linetype = "dashed",
+        color = "#A23B72", linewidth = 1
+      ) +
+      ggplot2::geom_hline(
+        yintercept = threshold_data$probability_ce,
+        linetype = "dashed", color = "#A23B72", linewidth = 1
+      ) +
       ggplot2::annotate("text",
-                       x = wtp_threshold + max(ceac_bootstrap$wtp) * 0.05,
-                       y = threshold_data$probability_ce + 0.05,
-                       label = sprintf("WTP: $%s\nProb: %.1f%%\n(95%% CI: %.1f%% - %.1f%%)",
-                                     format(wtp_threshold, big.mark = ","),
-                                     threshold_data$probability_ce * 100,
-                                     threshold_data$ci_lower * 100,
-                                     threshold_data$ci_upper * 100),
-                       hjust = 0, vjust = 0, size = 3, color = "#A23B72")
+        x = wtp_threshold + max(ceac_bootstrap$wtp) * 0.05,
+        y = threshold_data$probability_ce + 0.05,
+        label = sprintf(
+          "WTP: $%s\nProb: %.1f%%\n(95%% CI: %.1f%% - %.1f%%)",
+          format(wtp_threshold, big.mark = ","),
+          threshold_data$probability_ce * 100,
+          threshold_data$ci_lower * 100,
+          threshold_data$ci_upper * 100
+        ),
+        hjust = 0, vjust = 0, size = 3, color = "#A23B72"
+      )
   }
 
   # Add expected ICER reference line
@@ -582,14 +613,19 @@ plot_ceac_bootstrap <- function(ceac_bootstrap, wtp_threshold = NULL,
     expected_icer <- unique(ceac_bootstrap$expected_icer)
     if (!is.na(expected_icer) && expected_icer > 0) {
       p <- p +
-        ggplot2::geom_vline(xintercept = expected_icer, linetype = "dotted",
-                           color = "#F18F01", linewidth = 1) +
+        ggplot2::geom_vline(
+          xintercept = expected_icer, linetype = "dotted",
+          color = "#F18F01", linewidth = 1
+        ) +
         ggplot2::annotate("text",
-                         x = expected_icer + max(ceac_bootstrap$wtp) * 0.02,
-                         y = 0.9,
-                         label = sprintf("Expected ICER:\n$%s",
-                                       format(expected_icer, big.mark = ",")),
-                         hjust = 0, vjust = 1, size = 3, color = "#F18F01")
+          x = expected_icer + max(ceac_bootstrap$wtp) * 0.02,
+          y = 0.9,
+          label = sprintf(
+            "Expected ICER:\n$%s",
+            format(expected_icer, big.mark = ",")
+          ),
+          hjust = 0, vjust = 1, size = 3, color = "#F18F01"
+        )
     }
   }
 
@@ -602,7 +638,6 @@ plot_ceac_bootstrap <- function(ceac_bootstrap, wtp_threshold = NULL,
 #' @param title Plot title
 #' @return ggplot object
 plot_nmb_distribution <- function(nmb_stats, title = "Net Monetary Benefit Distribution") {
-
   if (is.null(nmb_stats)) {
     warning("No NMB statistics available for plotting")
     return(NULL)
@@ -612,15 +647,19 @@ plot_nmb_distribution <- function(nmb_stats, title = "Net Monetary Benefit Distr
   # For now, create a summary plot
   nmb_data <- data.frame(
     metric = c("Mean NMB", "Median NMB", "95% CI Lower", "95% CI Upper"),
-    value = c(nmb_stats$mean_nmb, nmb_stats$median_nmb,
-              nmb_stats$ci_nmb[1], nmb_stats$ci_nmb[2]),
+    value = c(
+      nmb_stats$mean_nmb, nmb_stats$median_nmb,
+      nmb_stats$ci_nmb[1], nmb_stats$ci_nmb[2]
+    ),
     type = c("point", "point", "interval", "interval")
   )
 
   p <- ggplot2::ggplot(nmb_data, ggplot2::aes(x = metric, y = value, color = type)) +
     ggplot2::geom_point(size = 3) +
-    ggplot2::geom_line(ggplot2::aes(group = 1), data = nmb_data[nmb_data$type == "interval", ],
-                      color = "#A23B72", linewidth = 1) +
+    ggplot2::geom_line(ggplot2::aes(group = 1),
+      data = nmb_data[nmb_data$type == "interval", ],
+      color = "#A23B72", linewidth = 1
+    ) +
     ggplot2::labs(
       title = title,
       subtitle = sprintf("WTP Threshold: $%s per QALY", format(nmb_stats$wtp_threshold, big.mark = ",")),
@@ -641,10 +680,13 @@ plot_nmb_distribution <- function(nmb_stats, title = "Net Monetary Benefit Distr
   # Add probability positive NMB annotation
   p <- p +
     ggplot2::annotate("text",
-                     x = 2, y = max(nmb_data$value) * 0.9,
-                     label = sprintf("P(NMB > 0): %.1f%%",
-                                   nmb_stats$prob_positive_nmb * 100),
-                     hjust = 0.5, vjust = 1, size = 4, color = "#2E86AB")
+      x = 2, y = max(nmb_data$value) * 0.9,
+      label = sprintf(
+        "P(NMB > 0): %.1f%%",
+        nmb_stats$prob_positive_nmb * 100
+      ),
+      hjust = 0.5, vjust = 1, size = 4, color = "#2E86AB"
+    )
 
   return(p)
 }
@@ -655,7 +697,6 @@ plot_nmb_distribution <- function(nmb_stats, title = "Net Monetary Benefit Distr
 #' @param title Plot title
 #' @return ggplot object
 plot_voi_analysis <- function(voi_stats, title = "Value of Information Analysis") {
-
   if (is.null(voi_stats)) {
     warning("No VOI statistics available for plotting")
     return(NULL)
@@ -690,7 +731,8 @@ plot_voi_analysis <- function(voi_stats, title = "Value of Information Analysis"
   # Add value labels on bars
   p <- p +
     ggplot2::geom_text(ggplot2::aes(label = sprintf("$%s", format(value, big.mark = ","))),
-                      vjust = -0.5, size = 4)
+      vjust = -0.5, size = 4
+    )
 
   return(p)
 }
@@ -702,8 +744,7 @@ plot_voi_analysis <- function(voi_stats, title = "Value of Information Analysis"
 #' @param timestamp Timestamp for file naming
 #' @return Visualization report
 create_enhanced_ceac_report <- function(enhanced_ceac, output_dir = "output",
-                                       timestamp = format(Sys.time(), "%Y%m%d_%H%M%S")) {
-
+                                        timestamp = format(Sys.time(), "%Y%m%d_%H%M%S")) {
   # Create output directory if it doesn't exist
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
@@ -724,7 +765,8 @@ create_enhanced_ceac_report <- function(enhanced_ceac, output_dir = "output",
   # 2. Bootstrap CEAC Plot
   if (!is.null(enhanced_ceac$ceac_bootstrap)) {
     bootstrap_plot <- plot_ceac_bootstrap(enhanced_ceac$ceac_bootstrap,
-                                         wtp_threshold = enhanced_ceac$summary$wtp_threshold)
+      wtp_threshold = enhanced_ceac$summary$wtp_threshold
+    )
     if (!is.null(bootstrap_plot)) {
       bootstrap_file <- file.path(output_dir, paste0("ceac_bootstrap_", timestamp, ".png"))
       ggplot2::ggsave(bootstrap_file, bootstrap_plot, width = 8, height = 6, dpi = 300)
@@ -773,8 +815,7 @@ create_enhanced_ceac_report <- function(enhanced_ceac, output_dir = "output",
 #' @param timestamp Timestamp for file naming
 #' @return List containing plots and file paths
 create_uncertainty_analysis_report <- function(uncertainty_analysis, output_dir = "output",
-                                             timestamp = format(Sys.time(), "%Y%m%d_%H%M%S")) {
-
+                                               timestamp = format(Sys.time(), "%Y%m%d_%H%M%S")) {
   if (is.null(uncertainty_analysis)) {
     warning("No uncertainty analysis data available for report generation")
     return(NULL)

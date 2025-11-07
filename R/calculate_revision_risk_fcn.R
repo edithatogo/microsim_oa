@@ -8,9 +8,9 @@ calculate_revision_risk_fcn <- function(am_curr, rev_coeffs) {
     mutate(
       rev_lpv =
         rev_coeffs$linear_predictor$age * age +
-        rev_coeffs$linear_predictor$female * female +
-        rev_coeffs$linear_predictor$bmi * bmi +
-        rev_coeffs$linear_predictor$public * public
+          rev_coeffs$linear_predictor$female * female +
+          rev_coeffs$linear_predictor$bmi * bmi +
+          rev_coeffs$linear_predictor$public * public
     )
 
   # --- 2. Calculate Hazard and Probability ---

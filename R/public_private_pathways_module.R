@@ -40,7 +40,7 @@ calculate_pathway_outcomes <- function(am_curr, pathway_coefficients) {
   if (length(public_patients) > 0) {
     # Public system: Standardized care, potentially longer waits but equitable access
     am_curr$pathway_quality_modifier[public_patients] <- pathway_coefficients$public_quality_modifier$live
-    am_curr$pathway_cost_modifier[public_patients] <- 1.0  # Cost modifier set in calculate_pathway_costs
+    am_curr$pathway_cost_modifier[public_patients] <- 1.0 # Cost modifier set in calculate_pathway_costs
     am_curr$pathway_access_modifier[public_patients] <- pathway_coefficients$public_access_modifier$live
   }
 
@@ -48,7 +48,7 @@ calculate_pathway_outcomes <- function(am_curr, pathway_coefficients) {
   if (length(private_patients) > 0) {
     # Private system: Potentially higher quality, faster access, higher costs
     am_curr$pathway_quality_modifier[private_patients] <- pathway_coefficients$private_quality_modifier$live
-    am_curr$pathway_cost_modifier[private_patients] <- 1.0  # Cost modifier set in calculate_pathway_costs
+    am_curr$pathway_cost_modifier[private_patients] <- 1.0 # Cost modifier set in calculate_pathway_costs
     am_curr$pathway_access_modifier[private_patients] <- pathway_coefficients$private_access_modifier$live
   }
 
@@ -78,7 +78,6 @@ model_pathway_treatment_effects <- function(am_curr, treatment_coefficients) {
         am_curr$tka_success_modifier[i] <- treatment_coefficients$public_tka_success$live
         am_curr$complication_risk_modifier[i] <- treatment_coefficients$public_complication_risk$live
         am_curr$recovery_time_modifier[i] <- treatment_coefficients$public_recovery_time$live
-
       } else if (pathway == "private") {
         # Private pathway: Potentially more aggressive treatment, better facilities
         am_curr$tka_success_modifier[i] <- treatment_coefficients$private_tka_success$live
@@ -118,7 +117,6 @@ calculate_pathway_costs <- function(am_curr, cost_coefficients) {
         if (am_curr$ccount[i] > 2) {
           additional_cost <- additional_cost * cost_coefficients$complex_case_multiplier$live
         }
-
       } else if (pathway == "private") {
         # Private pathway costs
         base_cost <- cost_coefficients$private_base_tka_cost$live
@@ -174,7 +172,7 @@ model_patient_satisfaction <- function(am_curr, satisfaction_coefficients) {
 
     # Overall experience combines multiple factors
     overall <- (base_satisfaction * 0.4 + wait_satisfaction * 0.3 +
-                am_curr$function_score[i] * 0.3)
+      am_curr$function_score[i] * 0.3)
 
     am_curr$patient_satisfaction[i] <- base_satisfaction
     am_curr$wait_time_satisfaction[i] <- wait_satisfaction
@@ -200,7 +198,7 @@ calculate_equity_metrics <- function(am_curr) {
     equity_summary$high_edu_private_rate <- mean(am_curr$care_pathway[high_edu] == "private", na.rm = TRUE)
     equity_summary$low_edu_private_rate <- mean(am_curr$care_pathway[low_edu] == "private", na.rm = TRUE)
     equity_summary$private_access_ratio <- equity_summary$high_edu_private_rate /
-                                          max(equity_summary$low_edu_private_rate, 0.01)
+      max(equity_summary$low_edu_private_rate, 0.01)
   }
 
   # Access by income (if available)

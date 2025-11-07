@@ -16,7 +16,7 @@ test_that("calculate_costs_fcn maintains expected interface", {
     comorbidity_cost = c(10, 20, 30, 40, 50),
     intervention_cost = c(0, 0, 0, 0, 0)
   )
-  
+
   # Create mock config
   mock_config <- list(
     costs = list(
@@ -26,19 +26,21 @@ test_that("calculate_costs_fcn maintains expected interface", {
       )
     )
   )
-  
+
   # Function should accept the expected parameters and return expected format
   result <- calculate_costs_fcn(mock_data, mock_config)
-  
+
   # Verify result structure
   expect_false(is.null(result))
   expect_true(is.data.frame(result))
-  
+
   # Should have expected cost columns (if they exist)
-  expected_columns <- c("cycle_cost_healthcare", "cycle_cost_patient", 
-                       "cycle_cost_societal", "cycle_cost_total")
+  expected_columns <- c(
+    "cycle_cost_healthcare", "cycle_cost_patient",
+    "cycle_cost_societal", "cycle_cost_total"
+  )
   actual_columns <- names(result)
-  
+
   # Check that result contains cost calculations
   if (any(expected_columns %in% actual_columns)) {
     # Verify that cost values are reasonable (non-negative) where columns exist
@@ -54,7 +56,7 @@ test_that("calculate_costs_fcn maintains expected interface", {
 # Test apply_interventions function contract
 test_that("apply_interventions maintains interface contract", {
   # Apply interventions is an exported function - test with some basic parameters
-  
+
   # Create minimal mock data structure
   mock_data <- data.frame(
     id = 1:5,
@@ -62,7 +64,7 @@ test_that("apply_interventions maintains interface contract", {
     sex = c(1, 0, 1, 0, 1),
     bmi = c(25, 28, 30, 32, 35)
   )
-  
+
   # Create minimal intervention parameters
   mock_intervention_params <- list(
     enabled = TRUE,
@@ -75,10 +77,10 @@ test_that("apply_interventions maintains interface contract", {
       )
     )
   )
-  
+
   # Function should accept parameters and return modified data
   result <- apply_interventions(mock_data, mock_intervention_params, 2025)
-  
+
   expect_false(is.null(result))
   expect_true(is.data.frame(result))
   expect_equal(nrow(result), nrow(mock_data))
@@ -102,15 +104,15 @@ test_that("Configuration loading maintains contract", {
     )
   )
   yaml::write_yaml(config_data, temp_config)
-  
+
   # Should be able to load the config
   config <- load_config(temp_config)
   expect_false(is.null(config))
-  
+
   # Should contain expected sections
   expect_true("parameters" %in% names(config))
   expect_true("paths" %in% names(config))
-  
+
   # Clean up
   unlink(temp_config)
 })

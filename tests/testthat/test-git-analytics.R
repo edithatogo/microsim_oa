@@ -1,7 +1,7 @@
 test_that("git analytics functions work correctly", {
   # Test the git analytics functions
-  expect_true(TRUE)  # Basic placeholder test
-  
+  expect_true(TRUE) # Basic placeholder test
+
   # In a real scenario, we would test the actual functions
   # but testing git operations in a test environment can be complex
 })

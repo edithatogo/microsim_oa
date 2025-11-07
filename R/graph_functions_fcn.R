@@ -80,7 +80,7 @@ f_plot_trend_age_sex <-
            colors,
            x_label,
            y_label) {
-  ggplot(data, aes(x = .data[[x_var]], y = .data[[y_var]], color = .data[[color_var]])) +
+    ggplot(data, aes(x = .data[[x_var]], y = .data[[y_var]], color = .data[[color_var]])) +
       geom_point(size = 2) +
       geom_line(linewidth = 0.8) +
       facet_wrap(as.formula(paste("~", age_group_var)), scales = "free_y") +

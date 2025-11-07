@@ -36,7 +36,7 @@ define_parameter_distributions <- function(config) {
         name = param_name,
         type = "normal",
         mean = param_config$live,
-        sd = abs(param_config$live) * 0.1,  # 10% uncertainty
+        sd = abs(param_config$live) * 0.1, # 10% uncertainty
         live_value = param_config$live
       ))
     }
@@ -49,8 +49,9 @@ define_parameter_distributions <- function(config) {
         type = "normal",
         mean = param_config$live,
         sd = ifelse("std_error" %in% names(param_config),
-                   param_config$std_error,
-                   abs(param_config$live) * 0.1),
+          param_config$std_error,
+          abs(param_config$live) * 0.1
+        ),
         live_value = param_config$live
       ))
     } else if (dist_type == "beta") {
@@ -67,8 +68,9 @@ define_parameter_distributions <- function(config) {
         # Convert mean and uncertainty to beta parameters
         mean_val <- param_config$live
         uncertainty <- ifelse("std_error" %in% names(param_config),
-                             param_config$std_error,
-                             abs(param_config$live) * 0.1)
+          param_config$std_error,
+          abs(param_config$live) * 0.1
+        )
         # Approximate beta parameters from mean and variance
         variance <- uncertainty^2
         alpha <- ((1 - mean_val) / variance - 1 / mean_val) * mean_val^2
@@ -77,7 +79,7 @@ define_parameter_distributions <- function(config) {
         return(list(
           name = param_name,
           type = "beta",
-          alpha = max(alpha, 1),  # Ensure positive parameters
+          alpha = max(alpha, 1), # Ensure positive parameters
           beta = max(beta, 1),
           live_value = param_config$live
         ))
@@ -88,11 +90,13 @@ define_parameter_distributions <- function(config) {
         name = param_name,
         type = "gamma",
         shape = ifelse("shape" %in% names(param_config),
-                      param_config$shape,
-                      2),  # Default shape
+          param_config$shape,
+          2
+        ), # Default shape
         rate = ifelse("rate" %in% names(param_config),
-                     param_config$rate,
-                     1 / (param_config$live / 2)),  # Default rate
+          param_config$rate,
+          1 / (param_config$live / 2)
+        ), # Default rate
         live_value = param_config$live
       ))
     } else {
@@ -187,13 +191,16 @@ run_psa_simulation <- function(parameter_matrix, simulation_function, ...) {
     config_psa <- create_config_from_parameters(params)
 
     # Run simulation with PSA parameters
-    tryCatch({
-      sim_result <- simulation_function(config_psa, ...)
-      results$simulation_results[[i]] <- sim_result
-    }, error = function(e) {
-      warning(sprintf("Simulation failed for parameter set %d: %s", i, e$message))
-      results$simulation_results[[i]] <- list(error = e$message)
-    })
+    tryCatch(
+      {
+        sim_result <- simulation_function(config_psa, ...)
+        results$simulation_results[[i]] <- sim_result
+      },
+      error = function(e) {
+        warning(sprintf("Simulation failed for parameter set %d: %s", i, e$message))
+        results$simulation_results[[i]] <- list(error = e$message)
+      }
+    )
   }
 
   # Calculate convergence diagnostics
@@ -272,7 +279,8 @@ calculate_convergence_diagnostics <- function(psa_results) {
   # Convergence assessment
   diagnostics$sample_size <- n_results
   diagnostics$convergence_status <- ifelse(n_results >= 1000, "CONVERGED",
-                                          ifelse(n_results >= 500, "APPROACHING_CONVERGENCE", "INSUFFICIENT_SAMPLES"))
+    ifelse(n_results >= 500, "APPROACHING_CONVERGENCE", "INSUFFICIENT_SAMPLES")
+  )
 
   return(diagnostics)
 }
@@ -287,7 +295,7 @@ generate_psa_summary <- function(psa_results) {
   summary$overview <- list(
     total_parameter_sets = nrow(psa_results$parameter_sets),
     successful_simulations = length(psa_results$simulation_results) -
-                            sum(sapply(psa_results$simulation_results, function(x) "error" %in% names(x))),
+      sum(sapply(psa_results$simulation_results, function(x) "error" %in% names(x))),
     convergence_status = psa_results$convergence_diagnostics$convergence_status
   )
 
@@ -299,11 +307,15 @@ generate_psa_summary <- function(psa_results) {
   if ("cost_stats" %in% names(psa_results$convergence_diagnostics)) {
     summary$cost_effectiveness <- list(
       expected_cost = psa_results$convergence_diagnostics$cost_stats$mean,
-      cost_ci = c(psa_results$convergence_diagnostics$cost_stats$ci_lower,
-                 psa_results$convergence_diagnostics$cost_stats$ci_upper),
+      cost_ci = c(
+        psa_results$convergence_diagnostics$cost_stats$ci_lower,
+        psa_results$convergence_diagnostics$cost_stats$ci_upper
+      ),
       expected_qaly = psa_results$convergence_diagnostics$qaly_stats$mean,
-      qaly_ci = c(psa_results$convergence_diagnostics$qaly_stats$ci_lower,
-                 psa_results$convergence_diagnostics$qaly_stats$ci_upper),
+      qaly_ci = c(
+        psa_results$convergence_diagnostics$qaly_stats$ci_lower,
+        psa_results$convergence_diagnostics$qaly_stats$ci_upper
+      ),
       expected_icer = psa_results$convergence_diagnostics$icer
     )
   }
@@ -323,8 +335,7 @@ generate_psa_summary <- function(psa_results) {
 #' @param ... Additional arguments for simulation function
 #' @return Complete PSA results
 psa_framework <- function(config, n_samples = 1000, simulation_function,
-                         seed = NULL, ...) {
-
+                          seed = NULL, ...) {
   # Step 1: Define parameter distributions
   distributions <- define_parameter_distributions(config)
 

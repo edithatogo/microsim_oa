@@ -1,5 +1,5 @@
-'Get Percentages and Frequencies of Binary Variables
-'
+"Get Percentages and Frequencies of Binary Variables
+"
 #' Calculates the percentage and frequency of binary (0/1) variables for each
 #' level of specified grouping variables.
 #'
@@ -204,7 +204,7 @@ BMI_summary_plot <- function(percent_overweight_and_obesity_by_sex_joint,
     geom_line(
       data = cycle.plotting.data[which(cycle.plotting.data$source == "Simulated"), ],
       aes(x = year, y = prop_overweight_obese * 100, color = age_cat, group = age_cat)
-  ) +
+    ) +
     facet_wrap(age_cat ~ sex) +
     theme(legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1)) +
     scale_x_continuous(breaks = seq(min(cycle.plotting.data$year), max(cycle.plotting.data$year), 2))
@@ -246,8 +246,6 @@ BMI_summary_RMSE <- function(percent_overweight_and_obesity_by_sex_joint,
   cycle.assessment.data <- BMI_by_sex_and_year[which(BMI_by_sex_and_year$year == 2015 |
     BMI_by_sex_and_year$year == 2018 |
     BMI_by_sex_and_year$year == 2022), ]
-
-
 
 
   # convert cycle assessment prop to % for comparison
@@ -315,7 +313,7 @@ OA_summary_fcn <- function(am_all) {
     # The age cat groups do not match with the validation data
     # so we need to re-calculate the age groups
     mutate(
-  age_group =
+      age_group =
         case_when(
           age > 34 & age <= 44 ~ "35-44",
           age > 44 & age <= 54 ~ "45-54",
@@ -323,7 +321,7 @@ OA_summary_fcn <- function(am_all) {
           age > 64 & age <= 74 ~ "65-74",
           age > 74 ~ "75+"
         ),
-  sex = stringr::str_squish(stringr::str_remove_all(sex, "\\[[0-9]+\\]"))
+      sex = stringr::str_squish(stringr::str_remove_all(sex, "\\[[0-9]+\\]"))
     ) %>%
     mutate(
       sex = ifelse(sex == "Female", "Females", "Males")

@@ -16,7 +16,6 @@
 #' @param ml_config ML configuration
 #' @return Risk predictions with uncertainty estimates
 predict_complication_risk <- function(patient_data, complication_type = "pji", ml_config) {
-
   # Load ML framework
   source("R/ml_framework.R")
 
@@ -33,17 +32,18 @@ predict_complication_risk <- function(patient_data, complication_type = "pji", m
 
   # Define outcome based on complication type
   outcome_var <- switch(complication_type,
-                       "pji" = "pji_risk",
-                       "dvt" = "dvt_risk",
-                       "revision" = "revision_risk",
-                       stop("Unknown complication type"))
+    "pji" = "pji_risk",
+    "dvt" = "dvt_risk",
+    "revision" = "revision_risk",
+    stop("Unknown complication type")
+  )
 
   # Check if outcome data exists
   if (!(outcome_var %in% colnames(patient_data))) {
     warning("Outcome variable ", outcome_var, " not found in data. Using synthetic data for demonstration.")
     # Create synthetic outcome for demonstration
     set.seed(12345)
-    patient_data[[outcome_var]] <- rbinom(nrow(patient_data), 1, 0.05)  # 5% baseline risk
+    patient_data[[outcome_var]] <- rbinom(nrow(patient_data), 1, 0.05) # 5% baseline risk
   }
 
   # Prepare training data
@@ -94,7 +94,6 @@ predict_complication_risk <- function(patient_data, complication_type = "pji", m
 #' @param actual_outcomes Actual outcomes (if available)
 #' @return Uncertainty statistics
 calculate_prediction_uncertainty <- function(predictions, actual_outcomes = NULL) {
-
   stats <- list()
 
   # Prediction variance across models
@@ -129,10 +128,9 @@ calculate_prediction_uncertainty <- function(predictions, actual_outcomes = NULL
 #' @param n_groups Number of risk groups
 #' @return Risk stratification results
 create_risk_stratification <- function(predictions, n_groups = 3) {
-
   # Convert predictions to risk scores
   if (is.factor(predictions)) {
-    risk_scores <- as.numeric(predictions == levels(predictions)[2])  # Assume second level is positive
+    risk_scores <- as.numeric(predictions == levels(predictions)[2]) # Assume second level is positive
   } else {
     risk_scores <- as.numeric(predictions)
   }
@@ -172,9 +170,11 @@ create_risk_stratification <- function(predictions, n_groups = 3) {
     }
   }
 
-  risk_groups <- cut(risk_scores, breaks = group_breaks,
-                    labels = paste0("Risk_Group_", 1:n_groups),
-                    include.lowest = TRUE)
+  risk_groups <- cut(risk_scores,
+    breaks = group_breaks,
+    labels = paste0("Risk_Group_", 1:n_groups),
+    include.lowest = TRUE
+  )
 
   # Group statistics
   group_stats <- data.frame(
@@ -199,7 +199,6 @@ create_risk_stratification <- function(predictions, n_groups = 3) {
 #' @param trained_models Trained ML models
 #' @return Feature importance summary
 extract_feature_importance <- function(trained_models) {
-
   importance_summary <- list()
 
   for (model_name in names(trained_models$models)) {
@@ -249,13 +248,12 @@ extract_feature_importance <- function(trained_models) {
 #' @param actual_outcomes Actual outcomes
 #' @return Calibration assessment
 assess_calibration <- function(predictions, actual_outcomes) {
-
   calibration <- list()
 
   # Hosmer-Lemeshow test for calibration
   if (is.numeric(predictions[[1]]) && length(unique(actual_outcomes)) == 2) {
     # For binary outcomes with continuous predictions
-    pred_probs <- predictions$ensemble  # Use ensemble predictions
+    pred_probs <- predictions$ensemble # Use ensemble predictions
 
     if (is.numeric(pred_probs)) {
       # Remove NA and infinite values
@@ -282,8 +280,10 @@ assess_calibration <- function(predictions, actual_outcomes) {
         }
       }
 
-      deciles <- cut(pred_probs, breaks = quantile_breaks,
-                    include.lowest = TRUE, labels = 1:10)
+      deciles <- cut(pred_probs,
+        breaks = quantile_breaks,
+        include.lowest = TRUE, labels = 1:10
+      )
 
       observed <- tapply(actual_outcomes, deciles, mean)
       expected <- tapply(pred_probs, deciles, mean)
@@ -317,7 +317,6 @@ assess_calibration <- function(predictions, actual_outcomes) {
 #' @param ml_config ML configuration
 #' @return Treatment response predictions
 predict_treatment_response <- function(patient_data, outcome_var = "qaly_gain", ml_config) {
-
   # Load ML framework
   source("R/ml_framework.R")
 
@@ -336,7 +335,7 @@ predict_treatment_response <- function(patient_data, outcome_var = "qaly_gain", 
   if (!(outcome_var %in% colnames(patient_data))) {
     warning("Outcome variable ", outcome_var, " not found. Creating synthetic data.")
     set.seed(12345)
-    patient_data[[outcome_var]] <- rnorm(nrow(patient_data), 0.5, 0.2)  # Synthetic QALY gain
+    patient_data[[outcome_var]] <- rnorm(nrow(patient_data), 0.5, 0.2) # Synthetic QALY gain
   }
 
   # Prepare training data
@@ -352,7 +351,7 @@ predict_treatment_response <- function(patient_data, outcome_var = "qaly_gain", 
   # Generate predictions
   predictions <- lapply(trained_models$models, function(model) {
     if (inherits(model, "list") && "predictions" %in% names(model)) {
-      return(model$predictions)  # Ensemble model
+      return(model$predictions) # Ensemble model
     } else {
       return(predict(model, newdata = features))
     }
@@ -377,7 +376,6 @@ predict_treatment_response <- function(patient_data, outcome_var = "qaly_gain", 
 #' @param patient_data Patient data with treatment information
 #' @return Treatment effectiveness analysis
 analyze_treatment_effectiveness <- function(predictions, patient_data) {
-
   effectiveness <- list()
 
   # Compare effectiveness by treatment type
@@ -424,7 +422,6 @@ analyze_treatment_effectiveness <- function(predictions, patient_data) {
 #' @param metrics Performance metrics to calculate
 #' @return Validation results
 validate_ml_performance <- function(ml_results, validation_data, metrics = c("rmse", "mae", "r_squared")) {
-
   message("Starting validate_ml_performance")
   message("ml_results names: ", paste(names(ml_results), collapse = ", "))
   message("trained_models names: ", paste(names(ml_results$trained_models), collapse = ", "))
@@ -447,8 +444,10 @@ validate_ml_performance <- function(ml_results, validation_data, metrics = c("rm
 
     if (model_name == "ensemble") {
       # For ensemble, use simple averaging of other model predictions
-      ensemble_preds <- lapply(names(ml_results$trained_models$models)[names(ml_results$trained_models$models) != "ensemble"],
-                              function(m) predict(ml_results$trained_models$models[[m]], newdata = val_features))
+      ensemble_preds <- lapply(
+        names(ml_results$trained_models$models)[names(ml_results$trained_models$models) != "ensemble"],
+        function(m) predict(ml_results$trained_models$models[[m]], newdata = val_features)
+      )
       validation_predictions[[model_name]] <- rowMeans(do.call(cbind, ensemble_preds), na.rm = TRUE)
     } else {
       validation_predictions[[model_name]] <- predict(model, newdata = val_features)
@@ -458,10 +457,11 @@ validate_ml_performance <- function(ml_results, validation_data, metrics = c("rm
   # Calculate performance metrics
   # Determine outcome variable from complication type
   outcome_var <- switch(ml_results$complication_type,
-                       "pji" = "pji_risk",
-                       "dvt" = "dvt_risk",
-                       "revision" = "revision_risk",
-                       "qaly_gain")
+    "pji" = "pji_risk",
+    "dvt" = "dvt_risk",
+    "revision" = "revision_risk",
+    "qaly_gain"
+  )
 
   actual_outcomes <- validation_data[[outcome_var]]
 
@@ -518,7 +518,6 @@ validate_ml_performance <- function(ml_results, validation_data, metrics = c("rm
 #' @param ml_config ML configuration
 #' @return Treatment response predictions with effectiveness analysis
 predict_treatment_response <- function(patient_data, outcome_var = "qaly_gain", ml_config) {
-
   # Load ML framework
   source("R/ml_framework.R")
 
@@ -539,9 +538,9 @@ predict_treatment_response <- function(patient_data, outcome_var = "qaly_gain", 
     # Create synthetic outcome for demonstration
     set.seed(12345)
     if (outcome_var == "qaly_gain") {
-      patient_data[[outcome_var]] <- rnorm(nrow(patient_data), 0.6, 0.1)  # Mean QALY gain around 0.6
+      patient_data[[outcome_var]] <- rnorm(nrow(patient_data), 0.6, 0.1) # Mean QALY gain around 0.6
     } else {
-      patient_data[[outcome_var]] <- rnorm(nrow(patient_data), 0, 1)  # Generic numeric outcome
+      patient_data[[outcome_var]] <- rnorm(nrow(patient_data), 0, 1) # Generic numeric outcome
     }
   }
 
@@ -595,7 +594,6 @@ predict_treatment_response <- function(patient_data, outcome_var = "qaly_gain", 
 #' @param patient_data Patient data with treatment information
 #' @return Effectiveness analysis results
 analyze_treatment_effectiveness <- function(predictions, patient_data) {
-
   effectiveness <- list()
 
   # Use ensemble predictions for analysis
@@ -604,38 +602,51 @@ analyze_treatment_effectiveness <- function(predictions, patient_data) {
   if (!is.null(ensemble_preds) && length(ensemble_preds) > 0) {
     # Effectiveness by treatment type
     if ("implant_type" %in% colnames(patient_data) && length(unique(patient_data$implant_type)) > 1) {
-      tryCatch({
-        effectiveness$by_implant <- tapply(ensemble_preds, patient_data$implant_type,
-                                          function(x) mean(x, na.rm = TRUE))
-      }, error = function(e) {
-        warning("Could not analyze effectiveness by implant type: ", e$message)
-        effectiveness$by_implant <- NULL
-      })
+      tryCatch(
+        {
+          effectiveness$by_implant <- tapply(
+            ensemble_preds, patient_data$implant_type,
+            function(x) mean(x, na.rm = TRUE)
+          )
+        },
+        error = function(e) {
+          warning("Could not analyze effectiveness by implant type: ", e$message)
+          effectiveness$by_implant <- NULL
+        }
+      )
     }
 
     # Effectiveness by surgical approach
     if ("surgical_approach" %in% colnames(patient_data) && length(unique(patient_data$surgical_approach)) > 1) {
-      tryCatch({
-        effectiveness$by_approach <- tapply(ensemble_preds, patient_data$surgical_approach,
-                                           function(x) mean(x, na.rm = TRUE))
-      }, error = function(e) {
-        warning("Could not analyze effectiveness by surgical approach: ", e$message)
-        effectiveness$by_approach <- NULL
-      })
+      tryCatch(
+        {
+          effectiveness$by_approach <- tapply(
+            ensemble_preds, patient_data$surgical_approach,
+            function(x) mean(x, na.rm = TRUE)
+          )
+        },
+        error = function(e) {
+          warning("Could not analyze effectiveness by surgical approach: ", e$message)
+          effectiveness$by_approach <- NULL
+        }
+      )
     }
 
     # Overall effectiveness statistics
-    tryCatch({
-      effectiveness$overall <- list(
-        mean_effectiveness = mean(ensemble_preds, na.rm = TRUE),
-        sd_effectiveness = sd(ensemble_preds, na.rm = TRUE),
-        median_effectiveness = median(ensemble_preds, na.rm = TRUE),
-        range_effectiveness = range(ensemble_preds, na.rm = TRUE)
-      )
-    }, error = function(e) {
-      warning("Could not calculate overall effectiveness statistics: ", e$message)
-      effectiveness$overall <- NULL
-    })
+    tryCatch(
+      {
+        effectiveness$overall <- list(
+          mean_effectiveness = mean(ensemble_preds, na.rm = TRUE),
+          sd_effectiveness = sd(ensemble_preds, na.rm = TRUE),
+          median_effectiveness = median(ensemble_preds, na.rm = TRUE),
+          range_effectiveness = range(ensemble_preds, na.rm = TRUE)
+        )
+      },
+      error = function(e) {
+        warning("Could not calculate overall effectiveness statistics: ", e$message)
+        effectiveness$overall <- NULL
+      }
+    )
   }
 
   return(effectiveness)

@@ -89,7 +89,6 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   am_new$kl2 <- am_curr$oa_initiation_prob + am_curr$kl2
 
 
-
   # update medication status, if newly OA test if the also get meds,
   # should only happen when a person is newly OA
   # 0.56 from Hilda data 2013 per C. Schilling
@@ -137,7 +136,6 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
   am_curr$oa_progression_prob <- as.numeric(am_curr$oa_progression_prob > oa_progression_rand)
 
 
-
   am_new$kl3 <- am_curr$oa_progression_prob + am_curr$kl3
   am_new$kl2 <- am_curr$kl2 - am_curr$oa_progression_prob
 
@@ -180,10 +178,8 @@ OA_update <- function(am_curr, am_new, cycle.coefficents, OA_cust) {
     oa_progression_kl3_kl4_rand)
 
 
-
   am_new$kl4 <- am_curr$oa_progression_kl3_kl4_prob + am_curr$kl4
   am_new$kl3 <- am_curr$kl3 - am_curr$oa_progression_kl3_kl4_prob
-
 
 
   am_new$kl_score <- (2 * am_new$kl2) + (3 * am_new$kl3) + (4 * am_new$kl4)

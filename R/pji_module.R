@@ -32,15 +32,17 @@
 #' @return Data.table with PJI risk scores and stratification
 calculate_pji_risk <- function(am_curr, pji_coefficients) {
   # Ensure required columns exist
-  required_cols <- c("age", "bmi", "diabetes", "smoking", "immunosuppression",
-                     "surgical_complexity", "previous_infection", "tka1", "time_since_tka")
+  required_cols <- c(
+    "age", "bmi", "diabetes", "smoking", "immunosuppression",
+    "surgical_complexity", "previous_infection", "tka1", "time_since_tka"
+  )
 
   for (col in required_cols) {
     if (!(col %in% names(am_curr))) {
       if (col %in% c("diabetes", "smoking", "immunosuppression", "surgical_complexity", "previous_infection")) {
-        am_curr[[col]] <- 0  # Default to 0 for risk factors
+        am_curr[[col]] <- 0 # Default to 0 for risk factors
       } else if (col == "time_since_tka") {
-        am_curr[[col]] <- 0  # Default to 0 for non-TKA patients
+        am_curr[[col]] <- 0 # Default to 0 for non-TKA patients
       }
     }
   }
@@ -58,7 +60,8 @@ calculate_pji_risk <- function(am_curr, pji_coefficients) {
 
     # BMI component (obesity increases risk)
     bmi_risk <- ifelse(am_curr$bmi[tka_patients] >= 35, 2,
-                      ifelse(am_curr$bmi[tka_patients] >= 30, 1, 0))
+      ifelse(am_curr$bmi[tka_patients] >= 30, 1, 0)
+    )
     am_curr$pji_risk_score[tka_patients] <- am_curr$pji_risk_score[tka_patients] +
       pji_coefficients$bmi_coeff * bmi_risk
 
@@ -83,9 +86,11 @@ calculate_pji_risk <- function(am_curr, pji_coefficients) {
       pji_coefficients$previous_infection_coeff * am_curr$previous_infection[tka_patients]
 
     # Time-dependent risk (early post-op period has higher risk)
-    time_risk <- ifelse(am_curr$time_since_tka[tka_patients] <= 3, 2,  # Early: 3 months
-                       ifelse(am_curr$time_since_tka[tka_patients] <= 12, 1,  # Delayed: 3-12 months
-                             0.5))  # Late: >12 months
+    time_risk <- ifelse(am_curr$time_since_tka[tka_patients] <= 3, 2, # Early: 3 months
+      ifelse(am_curr$time_since_tka[tka_patients] <= 12, 1, # Delayed: 3-12 months
+        0.5
+      )
+    ) # Late: >12 months
     am_curr$pji_risk_score[tka_patients] <- am_curr$pji_risk_score[tka_patients] * time_risk
   }
 
@@ -94,9 +99,10 @@ calculate_pji_risk <- function(am_curr, pji_coefficients) {
 
   # Risk stratification
   am_curr$pji_risk_category <- cut(am_curr$pji_risk_prob,
-                                  breaks = c(0, 0.01, 0.03, 0.1, 1),
-                                  labels = c("Low", "Moderate", "High", "Very High"),
-                                  include.lowest = TRUE)
+    breaks = c(0, 0.01, 0.03, 0.1, 1),
+    labels = c("Low", "Moderate", "High", "Very High"),
+    include.lowest = TRUE
+  )
 
   return(am_curr)
 }
@@ -111,8 +117,8 @@ simulate_pji_events <- function(am_curr) {
 
   # Determine PJI events
   am_curr$pji_incident <- ifelse(am_curr$pji_risk_prob > pji_rand &
-                                am_curr$tka1 == 1 &
-                                is.na(am_curr$pji_status), 1, 0)
+    am_curr$tka1 == 1 &
+    is.na(am_curr$pji_status), 1, 0)
 
   # Initialize PJI status if not exists
   if (!("pji_status" %in% names(am_curr))) {
@@ -125,7 +131,8 @@ simulate_pji_events <- function(am_curr) {
     # Classify by timing
     time_since_tka <- am_curr$time_since_tka[new_pji_cases]
     am_curr$pji_status[new_pji_cases] <- ifelse(time_since_tka <= 3, "early",
-                                               ifelse(time_since_tka <= 12, "delayed", "late"))
+      ifelse(time_since_tka <= 12, "delayed", "late")
+    )
   }
 
   return(am_curr)
@@ -147,11 +154,12 @@ model_pji_treatment <- function(am_curr, pji_treatment_params) {
 
       # Base treatment success probability
       success_prob <- switch(infection_type,
-                           "early" = pji_treatment_params$early_success_prob,
-                           "delayed" = pji_treatment_params$delayed_success_prob,
-                           "late" = pji_treatment_params$late_success_prob,
-                           "chronic" = pji_treatment_params$chronic_success_prob,
-                           0.5)  # Default
+        "early" = pji_treatment_params$early_success_prob,
+        "delayed" = pji_treatment_params$delayed_success_prob,
+        "late" = pji_treatment_params$late_success_prob,
+        "chronic" = pji_treatment_params$chronic_success_prob,
+        0.5
+      ) # Default
 
       # Adjust for risk factors
       if (am_curr$diabetes[i] == 1) success_prob <- success_prob * 0.8
@@ -203,23 +211,25 @@ calculate_pji_impacts <- function(am_curr, pji_cost_params, pji_qaly_params) {
 
       # Cost calculation
       base_cost <- switch(infection_type,
-                        "early" = pji_cost_params$early_treatment_cost,
-                        "delayed" = pji_cost_params$delayed_treatment_cost,
-                        "late" = pji_cost_params$late_treatment_cost,
-                        "chronic" = pji_cost_params$chronic_treatment_cost,
-                        "amputation" = pji_cost_params$amputation_cost,
-                        0)
+        "early" = pji_cost_params$early_treatment_cost,
+        "delayed" = pji_cost_params$delayed_treatment_cost,
+        "late" = pji_cost_params$late_treatment_cost,
+        "chronic" = pji_cost_params$chronic_treatment_cost,
+        "amputation" = pji_cost_params$amputation_cost,
+        0
+      )
 
       am_curr$pji_cost[i] <- base_cost
 
       # QALY decrement
       base_qaly_decrement <- switch(infection_type,
-                                  "early" = pji_qaly_params$early_qaly_decrement,
-                                  "delayed" = pji_qaly_params$delayed_qaly_decrement,
-                                  "late" = pji_qaly_params$late_qaly_decrement,
-                                  "chronic" = pji_qaly_params$chronic_qaly_decrement,
-                                  "amputation" = pji_qaly_params$amputation_qaly_decrement,
-                                  0)
+        "early" = pji_qaly_params$early_qaly_decrement,
+        "delayed" = pji_qaly_params$delayed_qaly_decrement,
+        "late" = pji_qaly_params$late_qaly_decrement,
+        "chronic" = pji_qaly_params$chronic_qaly_decrement,
+        "amputation" = pji_qaly_params$amputation_qaly_decrement,
+        0
+      )
 
       am_curr$pji_qaly_decrement[i] <- base_qaly_decrement
     }

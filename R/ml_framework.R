@@ -1,12 +1,12 @@
-      # Comorbidity score
-      # comorbidity_score = comorbidities
+# Comorbidity score
+# comorbidity_score = comorbidities
 
-      # KL grade severity
-      # kl_severity = case_when(
-      #   kl_grade %in% c(0, 1) ~ "mild",
-      #   kl_grade %in% c(2, 3) ~ "moderate",
-      #   kl_grade >= 4 ~ "severe"
-      # )
+# KL grade severity
+# kl_severity = case_when(
+#   kl_grade %in% c(0, 1) ~ "mild",
+#   kl_grade %in% c(2, 3) ~ "moderate",
+#   kl_grade >= 4 ~ "severe"
+# )
 #'
 #' Key Components:
 #' - Predictive Modeling Framework: ML models for outcome prediction
@@ -100,28 +100,30 @@ initialize_ml_framework <- function(config) {
 #' @param config ML configuration
 #' @return Processed feature matrix
 create_feature_pipeline <- function(patient_data, config) {
-
   # Extract features
   features <- config$features
 
   # Basic feature engineering (idempotent - safe to run multiple times)
   processed_data <- patient_data %>%
-
     # Age categories (handle edge cases)
     mutate(
       age = ifelse(is.na(age), median(age, na.rm = TRUE), age),
-      age_category = cut(age, breaks = c(-Inf, 50, 65, 75, 85, Inf),
-                        labels = c("young", "middle", "senior", "elderly", "very_elderly"),
-                        include.lowest = TRUE),
+      age_category = cut(age,
+        breaks = c(-Inf, 50, 65, 75, 85, Inf),
+        labels = c("young", "middle", "senior", "elderly", "very_elderly"),
+        include.lowest = TRUE
+      ),
 
       # BMI categories (handle edge cases)
       bmi = ifelse(is.na(bmi), median(bmi, na.rm = TRUE), bmi),
-      bmi_category = cut(bmi, breaks = c(-Inf, 18.5, 25, 30, 35, Inf),
-                        labels = c("underweight", "normal", "overweight", "obese", "severely_obese"),
-                        include.lowest = TRUE),
+      bmi_category = cut(bmi,
+        breaks = c(-Inf, 18.5, 25, 30, 35, Inf),
+        labels = c("underweight", "normal", "overweight", "obese", "severely_obese"),
+        include.lowest = TRUE
+      ),
 
       # Comorbidity score (handle missing comorbidity columns)
-      comorbidity_score = if("comorbidities" %in% colnames(.)) comorbidities else 0,
+      comorbidity_score = if ("comorbidities" %in% colnames(.)) comorbidities else 0,
 
       # KL grade severity
       kl_severity = case_when(
@@ -130,16 +132,13 @@ create_feature_pipeline <- function(patient_data, config) {
         kl_grade >= 4 ~ "severe"
       )
     ) %>%
-
     # One-hot encoding for categorical variables
     mutate(
       sex_male = as.numeric(sex == "male"),
       sex_female = as.numeric(sex == "female"),
-
       approach_anterior = as.numeric(surgical_approach == "anterior"),
       approach_posterior = as.numeric(surgical_approach == "posterior"),
       approach_lateral = as.numeric(surgical_approach == "lateral"),
-
       implant_cemented = as.numeric(implant_type == "cemented"),
       implant_uncemented = as.numeric(implant_type == "uncemented"),
       implant_hybrid = as.numeric(implant_type == "hybrid")
@@ -168,8 +167,8 @@ create_feature_pipeline <- function(patient_data, config) {
 
   # Handle missing values
   feature_matrix <- feature_matrix %>%
-    mutate(across(where(is.numeric), ~ifelse(is.na(.), median(., na.rm = TRUE), .))) %>%
-    mutate(across(where(is.factor), ~ifelse(is.na(.), names(sort(table(.), decreasing = TRUE))[1], .)))
+    mutate(across(where(is.numeric), ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %>%
+    mutate(across(where(is.factor), ~ ifelse(is.na(.), names(sort(table(.), decreasing = TRUE))[1], .)))
 
   return(list(
     feature_matrix = feature_matrix,
@@ -185,7 +184,6 @@ create_feature_pipeline <- function(patient_data, config) {
 #' @param config ML configuration
 #' @return Trained models and performance metrics
 train_predictive_models <- function(training_data, outcome_var, config) {
-
   # Prepare data
   features <- training_data$feature_matrix
   outcome <- training_data$processed_data[[outcome_var]]
@@ -214,16 +212,18 @@ train_predictive_models <- function(training_data, outcome_var, config) {
     class_probs <- FALSE
   }
 
-  message(sprintf("Training ML models for %s prediction (type: %s, metric: %s)...",
-                  outcome_var,
-                  ifelse(is_classification, "classification", "regression"),
-                  performance_metric))
+  message(sprintf(
+    "Training ML models for %s prediction (type: %s, metric: %s)...",
+    outcome_var,
+    ifelse(is_classification, "classification", "regression"),
+    performance_metric
+  ))
 
   # Create training control
   train_control <- caret::trainControl(
     method = "cv",
     number = config$framework$cv_folds,
-    repeats = if(!is.null(config$framework$cv_repeats)) config$framework$cv_repeats else 1,
+    repeats = if (!is.null(config$framework$cv_repeats)) config$framework$cv_repeats else 1,
     savePredictions = "final",
     classProbs = class_probs,
     summaryFunction = summary_function
@@ -300,20 +300,23 @@ train_predictive_models <- function(training_data, outcome_var, config) {
 
   # Performance comparison
   message("Creating performance comparison...")
-  performance <- tryCatch({
-    caret::resamples(models)
-  }, error = function(e) {
-    warning("Error in resamples(): ", e$message)
-    message("Models in list: ", paste(names(models), collapse = ", "))
-    for (model_name in names(models)) {
-      model <- models[[model_name]]
-      message("Model ", model_name, " class: ", class(model)[1])
-      if (is.list(model) && "predictions" %in% names(model)) {
-        message("  Ensemble model with predictions length: ", length(model$predictions))
+  performance <- tryCatch(
+    {
+      caret::resamples(models)
+    },
+    error = function(e) {
+      warning("Error in resamples(): ", e$message)
+      message("Models in list: ", paste(names(models), collapse = ", "))
+      for (model_name in names(models)) {
+        model <- models[[model_name]]
+        message("Model ", model_name, " class: ", class(model)[1])
+        if (is.list(model) && "predictions" %in% names(model)) {
+          message("  Ensemble model with predictions length: ", length(model$predictions))
+        }
       }
+      return(NULL)
     }
-    return(NULL)
-  })
+  )
 
   message("Training completed successfully")
   return(list(
@@ -331,32 +334,34 @@ train_predictive_models <- function(training_data, outcome_var, config) {
 #' @param outcome Outcome vector
 #' @return Ensemble model
 create_model_ensemble <- function(models, features, outcome) {
-
   message("Starting ensemble creation with ", length(models), " models for ", ifelse(is.factor(outcome), "classification", "regression"))
 
   # Get predictions from each model
   predictions <- lapply(names(models), function(model_name) {
     model <- models[[model_name]]
-    tryCatch({
-      if (is.factor(outcome)) {
-        # For classification, get class predictions
-        pred <- predict(model, newdata = features, type = "raw")
-        # Ensure predictions are factors with correct levels
-        if (!is.factor(pred)) {
-          pred <- factor(pred, levels = levels(outcome))
+    tryCatch(
+      {
+        if (is.factor(outcome)) {
+          # For classification, get class predictions
+          pred <- predict(model, newdata = features, type = "raw")
+          # Ensure predictions are factors with correct levels
+          if (!is.factor(pred)) {
+            pred <- factor(pred, levels = levels(outcome))
+          }
+          message("Model ", model_name, ": ", length(pred), " predictions, levels: ", paste(levels(pred), collapse = ", "))
+          pred
+        } else {
+          # For regression, get numeric predictions
+          pred <- as.numeric(predict(model, newdata = features))
+          message("Model ", model_name, ": ", length(pred), " numeric predictions")
+          pred
         }
-        message("Model ", model_name, ": ", length(pred), " predictions, levels: ", paste(levels(pred), collapse = ", "))
-        pred
-      } else {
-        # For regression, get numeric predictions
-        pred <- as.numeric(predict(model, newdata = features))
-        message("Model ", model_name, ": ", length(pred), " numeric predictions")
-        pred
+      },
+      error = function(e) {
+        warning("Prediction failed for model ", model_name, ": ", e$message)
+        return(NULL)
       }
-    }, error = function(e) {
-      warning("Prediction failed for model ", model_name, ": ", e$message)
-      return(NULL)
-    })
+    )
   })
 
   names(predictions) <- names(models)
@@ -382,11 +387,15 @@ create_model_ensemble <- function(models, features, outcome) {
     ensemble_pred <- apply(pred_matrix, 1, function(x) {
       # Remove NA values
       x <- x[!is.na(x)]
-      if (length(x) == 0) return(levels(outcome)[1])  # Return first level if no valid predictions
+      if (length(x) == 0) {
+        return(levels(outcome)[1])
+      } # Return first level if no valid predictions
 
       # Get most frequent prediction
       tbl <- table(x)
-      if (length(tbl) == 0) return(levels(outcome)[1])  # Return first level if table is empty
+      if (length(tbl) == 0) {
+        return(levels(outcome)[1])
+      } # Return first level if table is empty
 
       names(tbl)[which.max(tbl)]
     })
@@ -404,8 +413,8 @@ create_model_ensemble <- function(models, features, outcome) {
   ensemble_performance <- list(
     predictions = ensemble_pred,
     actual = outcome,
-    rmse = if(is.numeric(outcome)) sqrt(mean((ensemble_pred - outcome)^2, na.rm = TRUE)) else NA,
-    accuracy = if(is.factor(outcome)) mean(ensemble_pred == outcome, na.rm = TRUE) else NA
+    rmse = if (is.numeric(outcome)) sqrt(mean((ensemble_pred - outcome)^2, na.rm = TRUE)) else NA,
+    accuracy = if (is.factor(outcome)) mean(ensemble_pred == outcome, na.rm = TRUE) else NA
   )
 
   return(list(
@@ -422,7 +431,6 @@ create_model_ensemble <- function(models, features, outcome) {
 #' @param output_dir Output directory
 #' @return Interpretability report
 generate_interpretability_report <- function(trained_models, feature_data, output_dir = "output") {
-
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
@@ -452,8 +460,9 @@ generate_interpretability_report <- function(trained_models, feature_data, outpu
       for (feature in top_features) {
         try({
           pdp_plot <- pdp::partial(model$finalModel,
-                                 pred.var = feature,
-                                 train = feature_data)
+            pred.var = feature,
+            train = feature_data
+          )
           pdp_plots[[feature]] <- pdp_plot
         })
       }

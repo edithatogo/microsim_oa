@@ -7,8 +7,7 @@
 #' @param conf_level Confidence level for intervals
 #' @return CEAC data with bootstrap confidence intervals
 generate_ceac_bootstrap <- function(psa_results, wtp_threshold = NULL, wtp_range = NULL,
-                                   n_bootstrap = 1000, conf_level = 0.95) {
-
+                                    n_bootstrap = 1000, conf_level = 0.95) {
   # Generate base CEAC
   base_ceac <- generate_ceac(psa_results, wtp_threshold, wtp_range)
 
@@ -17,8 +16,10 @@ generate_ceac_bootstrap <- function(psa_results, wtp_threshold = NULL, wtp_range
   }
 
   # Extract successful results
-  successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                              psa_results$simulation_results)
+  successful_results <- Filter(
+    function(x) is.list(x) && !("error" %in% names(x)),
+    psa_results$simulation_results
+  )
 
   if (length(successful_results) == 0) {
     warning("No successful simulations for bootstrap CEAC")
@@ -71,10 +72,11 @@ generate_ceac_bootstrap <- function(psa_results, wtp_threshold = NULL, wtp_range
 #' @param wtp_threshold Willingness-to-pay threshold
 #' @return NMB statistics
 calculate_nmb <- function(psa_results, wtp_threshold) {
-
   # Extract successful results
-  successful_results <- Filter(function(x) is.list(x) && !("error" %in% names(x)),
-                              psa_results$simulation_results)
+  successful_results <- Filter(
+    function(x) is.list(x) && !("error" %in% names(x)),
+    psa_results$simulation_results
+  )
 
   if (length(successful_results) == 0) {
     warning("No successful simulations for NMB calculation")
@@ -110,7 +112,6 @@ calculate_nmb <- function(psa_results, wtp_threshold) {
 #' @param wtp_threshold Willingness-to-pay threshold
 #' @return VOI statistics
 calculate_voi <- function(psa_results, wtp_threshold) {
-
   # Calculate NMB
   nmb_stats <- calculate_nmb(psa_results, wtp_threshold)
 
@@ -149,8 +150,7 @@ calculate_voi <- function(psa_results, wtp_threshold) {
 #' @param n_bootstrap Number of bootstrap samples
 #' @return Enhanced CEAC analysis
 generate_enhanced_ceac <- function(psa_results, wtp_threshold = 50000,
-                                  include_bootstrap = TRUE, n_bootstrap = 1000) {
-
+                                   include_bootstrap = TRUE, n_bootstrap = 1000) {
   analysis <- list()
 
   # Basic CEAC
@@ -159,7 +159,8 @@ generate_enhanced_ceac <- function(psa_results, wtp_threshold = 50000,
   # Bootstrap CEAC if requested
   if (include_bootstrap) {
     analysis$ceac_bootstrap <- generate_ceac_bootstrap(psa_results, wtp_threshold,
-                                                      n_bootstrap = n_bootstrap)
+      n_bootstrap = n_bootstrap
+    )
   }
 
   # NMB analysis
@@ -172,8 +173,10 @@ generate_enhanced_ceac <- function(psa_results, wtp_threshold = 50000,
   analysis$summary <- list(
     wtp_threshold = wtp_threshold,
     n_simulations = length(psa_results$simulation_results),
-    successful_simulations = sum(sapply(psa_results$simulation_results,
-                                       function(x) is.list(x) && !("error" %in% names(x)))),
+    successful_simulations = sum(sapply(
+      psa_results$simulation_results,
+      function(x) is.list(x) && !("error" %in% names(x))
+    )),
     ceac_probability = if (!is.null(analysis$ceac)) {
       analysis$ceac$probability_ce[which.min(abs(analysis$ceac$wtp - wtp_threshold))]
     } else {
