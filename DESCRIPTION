@@ -1,6 +1,6 @@
 Package: ausoa
 Title: A Microsimulation Model of Osteoarthritis in Australia
-Version: 2.2.1
+Version: 2.2.2
 Date: 2025-02-28
 Authors@R: c(
     person("Dylan", "Mordaunt", email = "dylan.mordaunt@vuw.ac.nz", role = c("aut", "cre", "maint")),

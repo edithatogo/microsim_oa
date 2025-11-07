@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: "ausoa: A Microsimulation Model of Osteoarthritis in Australia"
+abstract: "AUS-OA is a dynamic discrete-time microsimulation model specifically designed for osteoarthritis (OA) health economics and policy evaluation in Australia. It provides policymakers and researchers with advanced capacity to evaluate the clinical, economic, and quality-of-life impacts of OA interventions across Australia."
+message: "To cite the AUS-OA package in publications, please use:"
+type: software
+authors:
+  - family-names: "Mordaunt"
+    given-names: "Dylan"
+    orcid: "https://orcid.org/0000-0000-0000-0000"  # Replace with actual ORCID if available
+    email: "dylan.mordaunt@vuw.ac.nz"
+    affiliation: "University of Melbourne, School of Population and Global Health"
+    
+  - family-names: "AUS-OA Team"
+    given-names: ""
+    affiliation: "University of Melbourne"
+
+repository-code: https://github.com/edithatogo/microsim_oa
+version: 2.2.2
+doi: 10.5281/zenodo.####  # Add Zenodo DOI after deposit
+date-released: 2025-02-28
+license-url: https://spdx.org/licenses/GPL-3.0-or-later
+keywords:
+  - "microsimulation"
+  - "osteoarthritis"
+  - "health-economics"
+  - "policy-evaluation" 
+  - "australia"
+  - "health-modelling"
+  - "machine-learning"
+  - "cost-effectiveness"
