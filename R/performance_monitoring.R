@@ -28,7 +28,7 @@ benchmark_core_functions <- function(iterations = 5) {
     qaly = runif(1000, min = 0.6, max = 1.0),
     stringsAsFactors = FALSE
   )
-  
+
   # Create test cost data
   cost_test_data <- data.frame(
     tka = c(rep(0, 500), rep(1, 500)),
@@ -41,7 +41,7 @@ benchmark_core_functions <- function(iterations = 5) {
     intervention_cost = runif(1000, 0, 2000),
     stringsAsFactors = FALSE
   )
-  
+
   # Create test configuration
   test_config <- list(
     costs = list(
@@ -55,7 +55,7 @@ benchmark_core_functions <- function(iterations = 5) {
       )
     )
   )
-  
+
   # Create test interventions
   test_interventions <- list(
     enabled = TRUE,
@@ -68,9 +68,9 @@ benchmark_core_functions <- function(iterations = 5) {
       )
     )
   )
-  
+
   cat("Benchmarking core functions with", nrow(test_data), "rows...\n")
-  
+
   # Benchmark apply_interventions
   cat("Benchmarking apply_interventions...\n")
   bench_interventions <- bench::mark(
@@ -78,7 +78,7 @@ benchmark_core_functions <- function(iterations = 5) {
     iterations = iterations,
     check = FALSE
   )
-  
+
   # Benchmark calculate_costs_fcn
   cat("Benchmarking calculate_costs_fcn...\n")
   bench_costs <- bench::mark(
@@ -86,7 +86,7 @@ benchmark_core_functions <- function(iterations = 5) {
     iterations = iterations,
     check = FALSE
   )
-  
+
   # Benchmark calculate_qaly
   cat("Benchmarking calculate_qaly...\n")
   bench_qaly <- bench::mark(
@@ -94,7 +94,7 @@ benchmark_core_functions <- function(iterations = 5) {
     iterations = iterations,
     check = FALSE
   )
-  
+
   # Benchmark load_config
   cat("Benchmarking load_config...\n")
   temp_config <- tempfile(fileext = ".yaml")
@@ -105,7 +105,7 @@ benchmark_core_functions <- function(iterations = 5) {
     check = FALSE
   )
   unlink(temp_config)
-  
+
   # Combine results
   results <- list(
     apply_interventions = bench_interventions,
@@ -113,7 +113,7 @@ benchmark_core_functions <- function(iterations = 5) {
     calculate_qaly = bench_qaly,
     load_config = bench_config
   )
-  
+
   return(results)
 }
 
@@ -124,10 +124,13 @@ benchmark_core_functions <- function(iterations = 5) {
 #' @return Profiled memory usage
 profile_memory <- function(func, ...) {
   # Memory profiling
-  prof_result <- profmem({
-    func(...)
-  }, threshold = 1024^2)  # Only show allocations > 1MB
-  
+  prof_result <- profmem(
+    {
+      func(...)
+    },
+    threshold = 1024^2
+  ) # Only show allocations > 1MB
+
   return(prof_result)
 }
 
@@ -138,28 +141,28 @@ profile_memory <- function(func, ...) {
 #' @return List of all benchmark results
 run_performance_benchmarks <- function(iterations = 3) {
   cat("Running comprehensive performance benchmarks...\n")
-  
+
   # Run the benchmark
   results <- benchmark_core_functions(iterations)
-  
+
   # Print summary
   cat("\n=== PERFORMANCE BENCHMARK SUMMARY ===\n")
   for (func_name in names(results)) {
     if (nrow(results[[func_name]]) > 0) {
       median_time <- median(results[[func_name]]$time)
-      median_time_ms <- median_time / 1e6  # Convert to milliseconds
-      
+      median_time_ms <- median_time / 1e6 # Convert to milliseconds
+
       cat(sprintf("%s: Median time = %.2f ms\n", func_name, median_time_ms))
     }
   }
-  
+
   # Save results
   timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
   filename <- paste0("performance_benchmarks_", timestamp, ".rds")
   saveRDS(results, file.path("tests/testthat", filename))
-  
+
   cat(sprintf("\nBenchmark results saved to: %s\n", filename))
-  
+
   return(results)
 }
 
@@ -174,19 +177,19 @@ compare_function_performance <- function(func1, func2, data, iterations = 5) {
   # Benchmark both functions
   # Use bench::press with a different name to avoid conflict with reserved word
   fun_list <- list(func1 = func1, func2 = func2)
-  
+
   result_list <- list()
   for (i in seq_along(fun_list)) {
     func_name <- names(fun_list)[i]
     func <- fun_list[[i]]
-    
+
     result_list[[func_name]] <- bench::mark(
       func(data),
       iterations = iterations,
       check = FALSE
     )
   }
-  
+
   return(result_list)
 }
 
@@ -197,31 +200,37 @@ compare_function_performance <- function(func1, func2, data, iterations = 5) {
 #' @return Performance report as text
 #' @export
 generate_performance_report <- function(results) {
-  report <- c("AUS-OA Package Performance Report", 
-              replicate(50, "=", simplify = TRUE),
-              "",
-              "Function Performance Benchmarks:")
-  
+  report <- c(
+    "AUS-OA Package Performance Report",
+    replicate(50, "=", simplify = TRUE),
+    "",
+    "Function Performance Benchmarks:"
+  )
+
   for (func_name in names(results)) {
     if (nrow(results[[func_name]]) > 0) {
       median_time <- median(results[[func_name]]$time)
-      median_time_ms <- median_time / 1e6  # Convert to milliseconds
+      median_time_ms <- median_time / 1e6 # Convert to milliseconds
       mem_alloc <- median(results[[func_name]]$mem_alloc)
-      
-      report <- c(report, 
-                  sprintf("  %s:", func_name),
-                  sprintf("    Median execution time: %.2f ms", median_time_ms),
-                  sprintf("    Median memory allocation: %.2f MB", mem_alloc / 1024^2),
-                  "")
+
+      report <- c(
+        report,
+        sprintf("  %s:", func_name),
+        sprintf("    Median execution time: %.2f ms", median_time_ms),
+        sprintf("    Median memory allocation: %.2f MB", mem_alloc / 1024^2),
+        ""
+      )
     }
   }
-  
-  report <- c(report, 
-              "Recommendations:",
-              "  - Functions should execute in under 1000ms for reasonable dataset sizes",
-              "  - Memory usage should be proportional to data size",
-              "  - Consider optimizations if performance degrades significantly")
-  
+
+  report <- c(
+    report,
+    "Recommendations:",
+    "  - Functions should execute in under 1000ms for reasonable dataset sizes",
+    "  - Memory usage should be proportional to data size",
+    "  - Consider optimizations if performance degrades significantly"
+  )
+
   return(paste(report, collapse = "\n"))
 }
 
