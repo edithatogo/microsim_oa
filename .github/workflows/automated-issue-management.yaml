@@ -12,7 +12,12 @@ jobs:
     if: github.event_name == 'issues' && github.event.action == 'opened'
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Analyze issue content
         id: analyze
@@ -44,7 +49,7 @@ jobs:
           fi
 
       - name: Add priority labels
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const title = '${{ steps.analyze.outputs.title }}';
@@ -74,7 +79,7 @@ jobs:
             });
 
       - name: Add type labels
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const issueType = '${{ steps.analyze.outputs.issue_type }}';
@@ -106,7 +111,7 @@ jobs:
             }
 
       - name: Add welcome comment for new issues
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const issueType = '${{ steps.analyze.outputs.issue_type }}';
@@ -149,6 +154,11 @@ jobs:
     if: github.event_name == 'issues' && github.event.action == 'opened'
 
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
       - name: Check issue quality
         run: |
           TITLE="${{ github.event.issue.title }}"
@@ -191,7 +201,12 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
     steps:
-      - uses: actions/stale@v9
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           stale-issue-message: |
@@ -224,6 +239,11 @@ jobs:
     if: github.event_name == 'schedule'
 
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
       - name: Generate issue analytics
         run: |
           echo "## 📊 Issue Analytics Report" >> $GITHUB_STEP_SUMMARY
